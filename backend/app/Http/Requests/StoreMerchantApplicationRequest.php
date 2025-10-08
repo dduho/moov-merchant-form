@@ -61,7 +61,16 @@ class StoreMerchantApplicationRequest extends FormRequest
             'signature' => 'required|string',
             'accept_terms' => 'required|accepted',
             
-            // Documents (fichiers)
+            // Documents (fichiers) - Individual fields
+            'id_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'anid_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'cfe_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'business_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'residence_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'residence_proof' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'nif_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            
+            // Legacy documents array (for backward compatibility)
             'documents' => 'nullable|array',
             'documents.*' => 'file|mimes:pdf,jpg,jpeg,png|max:5120',
         ];
@@ -94,6 +103,23 @@ class StoreMerchantApplicationRequest extends FormRequest
             'usage_type.in' => 'Type d\'utilisation invalide (TRADER, MERC, TRADERWNIF, CORP)',
             'signature.required' => 'La signature est obligatoire',
             'accept_terms.accepted' => 'Vous devez accepter les conditions générales',
+            // Document validation messages
+            'id_card.mimes' => 'La pièce d\'identité doit être un fichier PDF, JPG ou PNG',
+            'id_card.max' => 'La pièce d\'identité ne doit pas dépasser 5MB',
+            'anid_card.mimes' => 'La carte ANID doit être un fichier PDF, JPG ou PNG',
+            'anid_card.max' => 'La carte ANID ne doit pas dépasser 5MB',
+            'cfe_document.mimes' => 'Le document CFE doit être un fichier PDF, JPG ou PNG',
+            'cfe_document.max' => 'Le document CFE ne doit pas dépasser 5MB',
+            'business_document.mimes' => 'Le document commercial doit être un fichier PDF, JPG ou PNG',
+            'business_document.max' => 'Le document commercial ne doit pas dépasser 5MB',
+            'residence_card.mimes' => 'La carte de résidence doit être un fichier PDF, JPG ou PNG',
+            'residence_card.max' => 'La carte de résidence ne doit pas dépasser 5MB',
+            'residence_proof.mimes' => 'La preuve de résidence doit être un fichier PDF, JPG ou PNG',
+            'residence_proof.max' => 'La preuve de résidence ne doit pas dépasser 5MB',
+            'nif_document.mimes' => 'Le document NIF doit être un fichier PDF, JPG ou PNG',
+            'nif_document.max' => 'Le document NIF ne doit pas dépasser 5MB',
+            
+            // Legacy documents array messages
             'documents.*.mimes' => 'Le document doit être un fichier PDF, JPG ou PNG',
             'documents.*.max' => 'Le fichier ne doit pas dépasser 5MB',
         ];

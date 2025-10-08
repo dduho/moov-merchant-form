@@ -2,15 +2,18 @@
 
 namespace App\Services;
 
+use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Intervention\Image\Laravel\Facades\Image;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class DocumentStorageService
 {
     protected string $disk;
     protected string $basePath;
+    protected ?ImageManager $imageManager = null;
     
     public function __construct()
     {
@@ -77,17 +80,33 @@ class DocumentStorageService
     
     protected function processImage(UploadedFile $file): string
     {
-        $image = Image::read($file->path());
-        
-        // Redimensionnement
-        if ($image->width() > 1200 || $image->height() > 1200) {
-            $image->scale(width: 1200, height: 1200);
+        // Check if image processing extensions are available
+        if (!extension_loaded('gd') && !extension_loaded('imagick')) {
+            // If no image processing extension is available, return the file content as-is
+            return file_get_contents($file->path());
         }
         
-        // Compression
-        $quality = $this->calculateOptimalQuality($file->getSize());
-        
-        return $image->toJpeg($quality)->toString();
+        try {
+            // Initialize ImageManager only when needed
+            if ($this->imageManager === null) {
+                $this->imageManager = new ImageManager(new Driver());
+            }
+            
+            $image = $this->imageManager->read($file->path());
+            
+            // Redimensionnement
+            if ($image->width() > 1200 || $image->height() > 1200) {
+                $image->scale(width: 1200, height: 1200);
+            }
+            
+            // Compression
+            $quality = $this->calculateOptimalQuality($file->getSize());
+            
+            return $image->toJpeg($quality)->toString();
+        } catch (Exception $e) {
+            // If image processing fails, return the original file content
+            return file_get_contents($file->path());
+        }
     }
     
     protected function calculateOptimalQuality(int $filesize): int

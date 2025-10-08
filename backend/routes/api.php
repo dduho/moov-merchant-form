@@ -95,13 +95,34 @@ Route::middleware(['throttle:api'])->group(function () {
     
     // Route de test pour vérifier FormData
     Route::post('/test-form', function (Request $request) {
+        $documentFields = ['id_card', 'anid_card', 'residence_card', 'residence_proof', 'business_document', 'cfe_document', 'nif_document'];
+        $hasFiles = [];
+        $fileDetails = [];
+        
+        foreach ($documentFields as $field) {
+            $hasFiles[$field] = $request->hasFile($field);
+            if ($request->hasFile($field)) {
+                $file = $request->file($field);
+                $fileDetails[$field] = [
+                    'name' => $file->getClientOriginalName(),
+                    'size' => $file->getSize(),
+                    'mime' => $file->getMimeType()
+                ];
+            }
+        }
+        
         return response()->json([
-            'message' => 'Test route',
+            'message' => 'Test route - Document upload test',
             'content_type' => $request->header('Content-Type'),
             'method' => $request->method(),
-            'has_files' => $request->hasFile(),
-            'all_data' => $request->all(),
-            'input_count' => count($request->all())
+            'has_files' => $hasFiles,
+            'file_details' => $fileDetails,
+            'all_data_keys' => array_keys($request->all()),
+            'input_count' => count($request->all()),
+            'total_files_found' => count($fileDetails)
         ]);
     });
+    
+    // Public route to test merchant application creation without auth
+    Route::post('/test-merchant-application', [MerchantApplicationController::class, 'store']);
 });

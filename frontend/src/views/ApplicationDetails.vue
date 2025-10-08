@@ -347,7 +347,7 @@
             <template v-else>
               <h2 class="text-xl font-semibold text-orange-600 mb-6">Documents</h2>
               
-              <div class="space-y-4">
+              <div v-if="application?.documents?.length > 0" class="space-y-4">
                 <div v-for="doc in application?.documents" :key="doc.id" 
                      class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 transition-colors">
                   <div class="flex items-center space-x-4">
@@ -385,6 +385,16 @@
                     </a>
                   </div>
                 </div>
+              </div>
+              
+              <div v-else class="text-center py-12">
+                <div class="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <svg class="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Aucun document</h3>
+                <p class="text-gray-500">Cette candidature ne contient aucun document pour le moment.</p>
               </div>
             </template>
           </div>
@@ -613,6 +623,8 @@ export default {
         const response = await ApiService.getApplication(route.params.id)
         console.log('Response from API:', response.data)
         application.value = response.data.data
+        console.log('Documents in application:', application.value?.documents)
+        console.log('Number of documents:', application.value?.documents?.length)
       } catch (error) {
         console.error('Erreur chargement candidature:', error)
         // Rediriger vers le dashboard en cas d'erreur

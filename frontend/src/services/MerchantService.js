@@ -26,6 +26,8 @@ class MerchantService {
   
   // Soumission d'une candidature marchand
   async submitApplication(formData) {
+    console.log('=== SUBMIT APPLICATION START ===')
+    console.log('Form data received:', formData)
     const submitData = new FormData()
     
     // Informations personnelles - N'ajouter que si les valeurs existent et ne sont pas vides
@@ -156,32 +158,208 @@ class MerchantService {
       submitData.append('accept_terms', '1')
     }
     
+    // Helper function to extract file from object or return direct file
+    const getFile = (fileObj) => {
+      if (!fileObj) return null
+      
+      console.log('getFile input:', fileObj)
+      
+      // Direct File check
+      if (fileObj instanceof File) return fileObj
+      if (fileObj instanceof Blob && fileObj.name) {
+        return new File([fileObj], fileObj.name, { 
+          type: fileObj.type,
+          lastModified: fileObj.lastModified || Date.now()
+        })
+      }
+      
+      // Check for Vue proxy objects with 'dataUrl' property (base64 encoded files)
+      
+      if (fileObj && typeof fileObj === 'object' && fileObj.dataUrl && typeof fileObj.dataUrl === 'string') {
+        console.log('Found dataUrl property, converting base64 to File')
+        try {
+          // Convert base64 data URL to Blob synchronously
+          const dataUrl = fileObj.dataUrl
+          const arr = dataUrl.split(',')
+          const mime = arr[0].match(/:(.*?);/)[1]
+          const bstr = atob(arr[1])
+          let n = bstr.length
+          const u8arr = new Uint8Array(n)
+          while (n--) {
+            u8arr[n] = bstr.charCodeAt(n)
+          }
+          const blob = new Blob([u8arr], { type: mime })
+          
+          // Create File from Blob with metadata
+          const file = new File([blob], fileObj.name || 'document', {
+            type: fileObj.type || mime,
+            lastModified: fileObj.lastModified || Date.now()
+          })
+          console.log('Successfully converted dataUrl to File:', file)
+          return file
+        } catch (error) {
+          console.error('Failed to convert dataUrl to File:', error)
+        }
+      }
+      
+      // Check for Vue proxy objects with 'file' property (most common case)
+      if (fileObj && typeof fileObj === 'object' && fileObj.file) {
+        console.log('Found file property:', fileObj.file)
+        if (fileObj.file instanceof File) {
+          return fileObj.file
+        }
+        if (fileObj.file instanceof Blob) {
+          // Use metadata from the wrapper object
+          return new File([fileObj.file], fileObj.name || 'document', { 
+            type: fileObj.type || fileObj.file.type,
+            lastModified: fileObj.lastModified || Date.now()
+          })
+        }
+      }
+      
+      // Check if it's a File-like object with data property
+      if (fileObj.data instanceof File) return fileObj.data
+      if (fileObj.data instanceof Blob && fileObj.name) {
+        return new File([fileObj.data], fileObj.name, { 
+          type: fileObj.type,
+          lastModified: fileObj.lastModified || Date.now()
+        })
+      }
+      if (fileObj.value instanceof File) return fileObj.value
+      
+      // Try array access (in case it's wrapped in an array)
+      if (Array.isArray(fileObj) && fileObj.length > 0) {
+        if (fileObj[0] instanceof File) return fileObj[0]
+        if (fileObj[0] instanceof Blob && fileObj.name) {
+          return new File([fileObj[0]], fileObj.name, { 
+            type: fileObj.type,
+            lastModified: fileObj.lastModified || Date.now()
+          })
+        }
+      }
+      
+      // Try accessing properties dynamically for any File or Blob
+      if (typeof fileObj === 'object') {
+        for (const key of Object.keys(fileObj)) {
+          if (fileObj[key] instanceof File) {
+            console.log(`Found File in property '${key}':`, fileObj[key])
+            return fileObj[key]
+          }
+          if (fileObj[key] instanceof Blob) {
+            console.log(`Found Blob in property '${key}':`, fileObj[key])
+            return new File([fileObj[key]], fileObj.name || `document.${key}`, { 
+              type: fileObj.type || fileObj[key].type,
+              lastModified: fileObj.lastModified || Date.now()
+            })
+          }
+        }
+      }
+      
+      console.log('getFile failed to extract file from:', fileObj)
+      return null
+    }
+
+    console.log('=== ABOUT TO PROCESS DOCUMENTS ===')
+    console.log('formData.documents check:', formData.documents)
+    console.log('formData.documents truthy?:', !!formData.documents)
+
     // Documents - S'assurer que ce sont des objets File valides
     if (formData.documents) {
-      if (formData.documents.idCard && formData.documents.idCard instanceof File) {
-        submitData.append('id_card', formData.documents.idCard)
+      console.log('Processing documents section...')
+      console.log('Documents object:', formData.documents)
+      
+      const file_idCard = getFile(formData.documents.idCard)
+      console.log('ID Card extraction result:', file_idCard ? `File(${file_idCard.name}, ${file_idCard.size} bytes)` : 'null')
+      if (file_idCard) {
+        submitData.append('id_card', file_idCard)
       }
-      if (formData.documents.anidCard && formData.documents.anidCard instanceof File) {
-        submitData.append('anid_card', formData.documents.anidCard)
+      
+      const file_anidCard = getFile(formData.documents.anidCard)
+      console.log('ANID Card extraction result:', file_anidCard ? `File(${file_anidCard.name}, ${file_anidCard.size} bytes)` : 'null')
+      if (file_anidCard) {
+        submitData.append('anid_card', file_anidCard)
       }
-      if (formData.documents.residenceCard && formData.documents.residenceCard instanceof File) {
-        submitData.append('residence_card', formData.documents.residenceCard)
+      
+      const file_cfeCard = getFile(formData.documents.cfeCard)
+      console.log('CFE Card extraction result:', file_cfeCard ? `File(${file_cfeCard.name}, ${file_cfeCard.size} bytes)` : 'null')
+      if (file_cfeCard) {
+        submitData.append('cfe_document', file_cfeCard)
       }
-      if (formData.documents.residenceProof && formData.documents.residenceProof instanceof File) {
-        submitData.append('residence_proof', formData.documents.residenceProof)
+      
+      // Legacy field names for backward compatibility
+      const file_residenceCard = getFile(formData.documents.residenceCard)
+      if (file_residenceCard) {
+        submitData.append('residence_card', file_residenceCard)
       }
-      if (formData.documents.businessDocument && formData.documents.businessDocument instanceof File) {
-        submitData.append('business_document', formData.documents.businessDocument)
+      
+      const file_residenceProof = getFile(formData.documents.residenceProof)
+      if (file_residenceProof) {
+        submitData.append('residence_proof', file_residenceProof)
       }
-      if (formData.documents.cfeDocument && formData.documents.cfeDocument instanceof File) {
-        submitData.append('cfe_document', formData.documents.cfeDocument)
+      
+      const file_businessDocument = getFile(formData.documents.businessDocument)
+      if (file_businessDocument) {
+        submitData.append('business_document', file_businessDocument)
       }
-      if (formData.documents.nifDocument && formData.documents.nifDocument instanceof File) {
-        submitData.append('nif_document', formData.documents.nifDocument)
+      
+      const file_nifDocument = getFile(formData.documents.nifDocument)
+      if (file_nifDocument) {
+        submitData.append('nif_document', file_nifDocument)
       }
     }
 
-    // Debug: Log des données envoyées
+    // Debug: Log document processing and FormData being sent
+    console.log('=== Document Processing Debug ===')
+    console.log('formData.documents exists:', !!formData.documents)
+    if (formData.documents) {
+      console.log('Available documents:', Object.keys(formData.documents))
+      Object.entries(formData.documents).forEach(([key, doc]) => {
+        console.log(`\n${key} analysis:`)
+        if (!doc) {
+          console.log('  - Value is null/undefined')
+        } else {
+          console.log('  - Type:', typeof doc)
+          console.log('  - Is File:', doc instanceof File)
+          console.log('  - Has file property:', doc && typeof doc === 'object' && doc.file instanceof File)
+          console.log('  - Keys in object:', Object.keys(doc))
+          console.log('  - Full structure:', JSON.parse(JSON.stringify(doc)))
+          
+          // Try different property access patterns
+          console.log('  - doc.file:', doc.file)
+          console.log('  - doc.data:', doc.data)
+          console.log('  - doc.value:', doc.value)
+          console.log('  - doc[0]:', doc[0])
+          
+          // Test the getFile function
+          const extractedFile = getFile(doc)
+          console.log('  - Extracted file:', extractedFile)
+          console.log('  - Extracted file is File:', extractedFile instanceof File)
+        }
+      })
+      
+      // Test individual extractions
+      const testIdCard = getFile(formData.documents.idCard)
+      const testAnidCard = getFile(formData.documents.anidCard) 
+      const testCfeCard = getFile(formData.documents.cfeCard)
+      
+      console.log('\n=== Individual Extractions ===')
+      console.log('ID Card extracted:', testIdCard ? testIdCard.name : 'null')
+      console.log('ANID Card extracted:', testAnidCard ? testAnidCard.name : 'null')
+      console.log('CFE Card extracted:', testCfeCard ? testCfeCard.name : 'null')
+    } else {
+      console.log('No formData.documents object found!')
+    }
+    
+    // Log what's being appended to FormData
+    console.log('\n=== FormData Entries ===')
+    for (let [key, value] of submitData.entries()) {
+      if (value instanceof File) {
+        console.log(`${key}: File(${value.name}, ${value.size} bytes)`)
+      } else {
+        console.log(`${key}: ${value}`)
+      }
+    }
+    
     console.log('=== FormData being sent ===')
     for (let [key, value] of submitData.entries()) {
       if (value instanceof File) {
@@ -388,13 +566,50 @@ class MerchantService {
     // Conditions (required field)
     submitData.append('accept_terms', formData.acceptTerms ? '1' : '0')
 
-    // Documents
-    if (formData.documents && Object.keys(formData.documents).length > 0) {
-      Object.entries(formData.documents).forEach(([type, file]) => {
-        if (file instanceof File) {
-          submitData.append(`documents[${type}]`, file)
-        }
-      })
+    // Documents - Individual fields (matching backend expectations)
+    if (formData.documents) {
+      // Helper function to extract file from object or return direct file
+      const getFile = (fileObj) => {
+        if (!fileObj) return null
+        if (fileObj instanceof File) return fileObj
+        if (fileObj.file instanceof File) return fileObj.file
+        return null
+      }
+      
+      const file_idCard = getFile(formData.documents.idCard)
+      if (file_idCard) {
+        submitData.append('id_card', file_idCard)
+      }
+      
+      const file_anidCard = getFile(formData.documents.anidCard)
+      if (file_anidCard) {
+        submitData.append('anid_card', file_anidCard)
+      }
+      
+      const file_cfeCard = getFile(formData.documents.cfeCard)
+      if (file_cfeCard) {
+        submitData.append('cfe_document', file_cfeCard)
+      }
+      
+      const file_businessDocument = getFile(formData.documents.businessDocument)
+      if (file_businessDocument) {
+        submitData.append('business_document', file_businessDocument)
+      }
+      
+      const file_residenceCard = getFile(formData.documents.residenceCard)
+      if (file_residenceCard) {
+        submitData.append('residence_card', file_residenceCard)
+      }
+      
+      const file_residenceProof = getFile(formData.documents.residenceProof)
+      if (file_residenceProof) {
+        submitData.append('residence_proof', file_residenceProof)
+      }
+      
+      const file_nifDocument = getFile(formData.documents.nifDocument)
+      if (file_nifDocument) {
+        submitData.append('nif_document', file_nifDocument)
+      }
     }
 
     try {

@@ -855,9 +855,27 @@ export default {
         router.push('/success')
       } catch (error) {
         console.error('Erreur lors de l\'envoi:', error)
+        
+        // Handle 422 validation errors specifically
+        if (error.response && error.response.status === 422) {
+          const validationErrors = error.response.data.errors
+          if (validationErrors) {
+            // Extract the first validation error message
+            const firstError = Object.values(validationErrors)[0]
+            const errorMessage = Array.isArray(firstError) ? firstError[0] : firstError
+            
+            notificationStore.error(
+              'Erreur de validation',
+              errorMessage || error.response.data.message || 'Veuillez corriger les données saisies'
+            )
+            return
+          }
+        }
+        
+        // Handle other types of errors
         notificationStore.error(
           'Erreur lors de l\'envoi',
-          error.message || 'Une erreur inattendue s\'est produite'
+          error.message || error.response?.data?.message || 'Une erreur inattendue s\'est produite'
         )
       } finally {
         isSubmitting.value = false

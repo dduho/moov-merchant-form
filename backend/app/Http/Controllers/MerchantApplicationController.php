@@ -143,14 +143,47 @@ class MerchantApplicationController extends Controller
                     $applicationData['user_id'] = $request->user()->id;
                 }
                 
+                // Remove document files from application data (they're handled separately)
+                $documentFields = ['id_card', 'anid_card', 'residence_card', 'residence_proof', 'business_document', 'cfe_document', 'nif_document'];
+                foreach ($documentFields as $field) {
+                    unset($applicationData[$field]);
+                }
+                
+                // Legacy documents array handling
                 $documents = $applicationData['documents'] ?? [];
                 unset($applicationData['documents']);
                 
                 $application = MerchantApplication::create($applicationData);
                 
-                if ($request->hasFile('documents')) {
-                    foreach ($request->file('documents') as $type => $file) {
-                        $this->storeDocument($application, $type, $file, $request->ip());
+                // Handle individual document fields - with debug logging
+                $documentFields = [
+                    'id_card' => 'id_card',
+                    'anid_card' => 'anid_card',
+                    'residence_card' => 'residence_card',
+                    'residence_proof' => 'other',  // Map to 'other' as it's not in enum
+                    'business_document' => 'business_license',  // Use correct enum value
+                    'cfe_document' => 'cfe_card',  // Use correct enum value 
+                    'nif_document' => 'nif_document',
+                ];
+                
+                // Debug: Log all request files
+                Log::info('Checking for document files', [
+                    'application_id' => $application->id,
+                    'all_files' => array_keys($request->allFiles()),
+                    'has_files_check' => array_map(function($field) use ($request) {
+                        return [$field => $request->hasFile($field)];
+                    }, array_keys($documentFields))
+                ]);
+                
+                foreach ($documentFields as $fieldName => $documentType) {
+                    if ($request->hasFile($fieldName)) {
+                        Log::info('Processing document file', [
+                            'field_name' => $fieldName,
+                            'document_type' => $documentType,
+                            'file_size' => $request->file($fieldName)->getSize(),
+                            'file_name' => $request->file($fieldName)->getClientOriginalName()
+                        ]);
+                        $this->storeDocument($application, $documentType, $request->file($fieldName), $request->ip());
                     }
                 }
                 
@@ -358,12 +391,22 @@ class MerchantApplicationController extends Controller
             DB::transaction(function () use ($merchantApplication, $validated, $request) {
                 $merchantApplication->update($validated);
 
-                // Gestion des nouveaux documents si fournis
-                if ($request->hasFile('documents')) {
-                    foreach ($request->file('documents') as $type => $file) {
+                // Gestion des nouveaux documents si fournis - handle individual document fields
+                $documentFields = [
+                    'id_card' => 'id_card',
+                    'anid_card' => 'anid_card',
+                    'residence_card' => 'residence_card',
+                    'residence_proof' => 'other',  // Map to 'other' as it's not in enum
+                    'business_document' => 'business_license',  // Use correct enum value
+                    'cfe_document' => 'cfe_card',  // Use correct enum value 
+                    'nif_document' => 'nif_document',
+                ];
+                
+                foreach ($documentFields as $fieldName => $documentType) {
+                    if ($request->hasFile($fieldName)) {
                         // Supprimer l'ancien document de ce type s'il existe
                         $existingDocument = $merchantApplication->documents()
-                            ->where('document_type', $type)
+                            ->where('document_type', $documentType)
                             ->first();
                         
                         if ($existingDocument) {
@@ -373,7 +416,7 @@ class MerchantApplicationController extends Controller
                         }
                         
                         // Ajouter le nouveau document
-                        $this->storeDocument($merchantApplication, $type, $file, $request->ip());
+                        $this->storeDocument($merchantApplication, $documentType, $request->file($fieldName), $request->ip());
                     }
                 }
             });
