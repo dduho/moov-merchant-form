@@ -584,6 +584,131 @@
               </div>
             </form>
           </div>
+
+          <!-- Section Localisation -->
+      <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div class="p-6">
+          <template v-if="loading">
+            <!-- Skeleton pour Localisation -->
+            <div class="w-32 h-6 bg-gray-200 rounded animate-pulse mb-6"></div>
+            <div class="space-y-4">
+              <div class="flex space-x-4">
+                <div class="flex-1">
+                  <div class="w-24 h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                  <div class="w-full h-10 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+                <div class="flex-1">
+                  <div class="w-32 h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                  <div class="w-full h-10 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              </div>
+              <div>
+                <div class="w-28 h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                <div class="w-full h-24 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+          </template>
+
+          <template v-else>
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Localisation du commerce</h2>
+            
+            <div class="space-y-4">
+              <!-- Coordonnées GPS -->
+              <div class="flex space-x-4">
+                <div class="flex-1">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
+                  <div class="bg-gray-50 rounded-lg p-3">
+                    <span class="text-sm font-mono text-gray-700">
+                      {{ application?.latitude || 'Non renseignée' }}
+                    </span>
+                  </div>
+                </div>
+                <div class="flex-1">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
+                  <div class="bg-gray-50 rounded-lg p-3">
+                    <span class="text-sm font-mono text-gray-700">
+                      {{ application?.longitude || 'Non renseignée' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Adresse du commerce -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Adresse du commerce</label>
+                <div class="bg-gray-50 rounded-lg p-3">
+                  <p class="text-sm text-gray-700">
+                    {{ application?.shop_address || 'Non renseignée' }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Description de la localisation -->
+              <div v-if="application?.location_description">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Description de la localisation</label>
+                <div class="bg-gray-50 rounded-lg p-3">
+                  <p class="text-sm text-gray-700 whitespace-pre-wrap">
+                    {{ application.location_description }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Carte intégrée -->
+              <div v-if="application?.latitude && application?.longitude" class="pt-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Localisation sur la carte</label>
+                <div class="bg-gray-50 rounded-lg p-3">
+                  <div 
+                    ref="mapContainer" 
+                    id="location-map"
+                    class="w-full h-80 rounded-lg border border-gray-200"
+                    style="min-height: 320px;"
+                  ></div>
+                  <p class="text-xs text-gray-500 mt-2 text-center">
+                    📍 {{ application.latitude }}, {{ application.longitude }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- Section Signature -->
+      <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div class="p-6">
+          <template v-if="loading">
+            <!-- Skeleton pour Signature -->
+            <div class="w-28 h-6 bg-gray-200 rounded animate-pulse mb-6"></div>
+            <div class="w-full h-48 bg-gray-200 rounded-lg animate-pulse"></div>
+          </template>
+
+          <template v-else>
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Signature du demandeur</h2>
+            
+            <div v-if="application?.signature" class="bg-gray-50 rounded-lg p-4">
+              <div class="flex items-center justify-center">
+                <img 
+                  :src="application.signature" 
+                  alt="Signature du demandeur"
+                  class="max-w-full h-auto max-h-48 border border-gray-200 rounded-lg shadow-sm bg-white"
+                />
+              </div>
+              <p class="text-xs text-gray-500 text-center mt-2">
+                Signature enregistrée le {{ formatDate(application?.submitted_at) }}
+              </p>
+            </div>
+            
+            <div v-else class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 text-yellow-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <span class="text-sm text-yellow-800">Aucune signature disponible</span>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
         </div>
       </div>
     </div>
@@ -591,11 +716,21 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notifications'
 import ApiService from '../services/ApiService'
+import * as L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+
+// Fix pour les icônes Leaflet dans Vite
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+})
 
 export default {
   name: 'ApplicationDetails',
@@ -610,6 +745,8 @@ export default {
     const newNote = ref('')
     const isEditing = ref(false)
     const editedNote = ref('')
+    const mapContainer = ref(null)
+    const map = ref(null)
 
     // Permissions calculées
     const canEdit = computed(() => authStore.canEditApplications)
@@ -816,9 +953,77 @@ export default {
     const formatBoolean = (value) => {
       return value ? 'Oui' : 'Non'
     }
+
+    const initializeMap = async () => {
+      if (!application.value?.latitude || !application.value?.longitude || !mapContainer.value) {
+        return
+      }
+
+      await nextTick()
+      
+      // Détruire la carte existante s'il y en a une
+      if (map.value) {
+        map.value.remove()
+      }
+
+      try {
+        // Créer la carte
+        map.value = L.map('location-map').setView(
+          [parseFloat(application.value.latitude), parseFloat(application.value.longitude)], 
+          16 // Niveau de zoom approprié pour voir le commerce
+        )
+
+        // Ajouter les tuiles OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 19
+        }).addTo(map.value)
+
+        // Créer une icône personnalisée pour le marqueur
+        const customIcon = L.divIcon({
+          className: 'custom-marker',
+          html: `
+            <div class="flex items-center justify-center w-8 h-8 bg-orange-500 rounded-full shadow-lg border-2 border-white">
+              <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+              </svg>
+            </div>
+          `,
+          iconSize: [32, 32],
+          iconAnchor: [16, 32]
+        })
+
+        // Ajouter le marqueur
+        L.marker([parseFloat(application.value.latitude), parseFloat(application.value.longitude)], {
+          icon: customIcon
+        })
+        .addTo(map.value)
+        .bindPopup(`
+          <div class="p-2">
+            <h3 class="font-semibold text-sm mb-1">${application.value.business_name || 'Commerce'}</h3>
+            <p class="text-xs text-gray-600 mb-1">${application.value.shop_address || 'Adresse non renseignée'}</p>
+            <p class="text-xs text-gray-500">📍 ${application.value.latitude}, ${application.value.longitude}</p>
+          </div>
+        `)
+        .openPopup()
+
+        // Permettre le zoom et la navigation
+        map.value.scrollWheelZoom.enable()
+        map.value.doubleClickZoom.enable()
+        map.value.boxZoom.enable()
+        map.value.keyboard.enable()
+        if (map.value.tap) map.value.tap.enable()
+
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation de la carte:', error)
+      }
+    }
     
-    onMounted(() => {
-      loadApplication()
+    onMounted(async () => {
+      await loadApplication()
+      // Initialiser la carte après le chargement de l'application
+      await nextTick()
+      initializeMap()
     })
     
     return {
@@ -835,6 +1040,8 @@ export default {
       getIdTypeLabel,
       getUsageTypeLabel,
       formatBoolean,
+      mapContainer,
+      initializeMap,
       isEditing,
       editedNote,
       startEditing,
@@ -852,3 +1059,40 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+/* Styles pour la carte */
+#location-map {
+  position: relative;
+  z-index: 1;
+}
+
+/* Fix pour les icônes Leaflet manquantes */
+:global(.leaflet-default-icon-path) {
+  background-image: url('https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png');
+}
+
+/* Style pour le marqueur personnalisé */
+:global(.custom-marker) {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Amélioration du popup */
+:global(.leaflet-popup-content) {
+  margin: 8px 12px !important;
+  line-height: 1.4 !important;
+}
+
+:global(.leaflet-popup-content-wrapper) {
+  border-radius: 8px !important;
+}
+
+/* Responsive pour la carte */
+@media (max-width: 640px) {
+  #location-map {
+    height: 250px !important;
+    min-height: 250px !important;
+  }
+}
+</style>

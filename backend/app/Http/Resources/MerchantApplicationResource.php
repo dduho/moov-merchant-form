@@ -60,6 +60,9 @@ class MerchantApplicationResource extends JsonResource
             'shop_address' => $this->shop_address,
             'shop_city' => $this->shop_city,
             
+            // Signature
+            'signature' => $this->signature,
+            
             // Statut
             'status' => $this->status,
             'status_label' => $this->status_label,
