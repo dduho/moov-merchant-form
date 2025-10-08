@@ -433,7 +433,7 @@
             </template>
 
             <template v-else>
-              <h2 class="text-xl font-semibold text-gray-800 mb-6">Timeline</h2>
+              <h2 class="text-xl font-semibold text-orange-600 mb-6">Timeline</h2>
               
               <div class="flow-root">
                 <ul class="-mb-8">
@@ -505,7 +505,7 @@
             </template>
 
             <template v-else>
-              <h2 class="text-xl font-semibold text-gray-800 mb-6">Notes administrateur</h2>
+              <h2 class="text-xl font-semibold text-orange-600 mb-6">Notes administrateur</h2>
               
               <!-- Note existante -->
               <div v-if="application?.admin_notes && !isEditing" class="bg-gray-50 rounded-lg p-4">
@@ -610,13 +610,13 @@
           </template>
 
           <template v-else>
-            <h2 class="text-xl font-semibold text-gray-800 mb-6">Localisation du commerce</h2>
+            <h2 class="text-xl font-semibold text-orange-600 mb-6">Localisation du commerce</h2>
             
             <div class="space-y-4">
               <!-- Coordonnées GPS -->
               <div class="flex space-x-4">
                 <div class="flex-1">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
+                  <label class="block text-sm font-medium mb-2" style="color: #005BA4">Latitude</label>
                   <div class="bg-gray-50 rounded-lg p-3">
                     <span class="text-sm font-mono text-gray-700">
                       {{ application?.latitude || 'Non renseignée' }}
@@ -624,7 +624,7 @@
                   </div>
                 </div>
                 <div class="flex-1">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
+                  <label class="block text-sm font-medium mb-2" style="color: #005BA4">Longitude</label>
                   <div class="bg-gray-50 rounded-lg p-3">
                     <span class="text-sm font-mono text-gray-700">
                       {{ application?.longitude || 'Non renseignée' }}
@@ -635,7 +635,7 @@
 
               <!-- Adresse du commerce -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Adresse du commerce</label>
+                <label class="block text-sm font-medium mb-2" style="color: #005BA4">Adresse du commerce</label>
                 <div class="bg-gray-50 rounded-lg p-3">
                   <p class="text-sm text-gray-700">
                     {{ application?.shop_address || 'Non renseignée' }}
@@ -645,7 +645,7 @@
 
               <!-- Description de la localisation -->
               <div v-if="application?.location_description">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Description de la localisation</label>
+                <label class="block text-sm font-medium mb-2" style="color: #005BA4">Description de la localisation</label>
                 <div class="bg-gray-50 rounded-lg p-3">
                   <p class="text-sm text-gray-700 whitespace-pre-wrap">
                     {{ application.location_description }}
@@ -655,9 +655,9 @@
 
               <!-- Carte intégrée -->
               <div v-if="application?.latitude && application?.longitude" class="pt-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Localisation sur la carte</label>
+                <label class="block text-sm font-medium mb-2" style="color: #005BA4">Localisation sur la carte</label>
                 <div class="bg-gray-50 rounded-lg p-3">
-                  <div 
+                  <div
                     ref="mapContainer" 
                     id="location-map"
                     class="w-full h-80 rounded-lg border border-gray-200"

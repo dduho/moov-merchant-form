@@ -34,6 +34,7 @@ class StoreMerchantApplicationRequest extends FormRequest
             'id_expiry_date' => 'required|date|after:today',
             'has_anid_card' => 'nullable|boolean',
             'anid_number' => 'nullable|string|max:50',
+            'anid_expiry_date' => 'nullable|date|after:today',
             'is_foreigner' => 'nullable|boolean',
             
             // Informations commerciales
@@ -46,6 +47,7 @@ class StoreMerchantApplicationRequest extends FormRequest
             'usage_type' => 'required|in:TRADER,MERC,TRADERWNIF,CORP',
             'has_cfe' => 'nullable|boolean',
             'cfe_number' => 'nullable|string|max:50',
+            'cfe_expiry_date' => 'nullable|date|after:today',
             'has_nif' => 'nullable|boolean',
             'nif_number' => 'nullable|string|max:50',
             
@@ -94,6 +96,8 @@ class StoreMerchantApplicationRequest extends FormRequest
             'id_type.in' => 'Type de pièce invalide',
             'id_number.unique' => 'Ce numéro de pièce d\'identité existe déjà',
             'id_expiry_date.after' => 'La pièce d\'identité est expirée',
+            'anid_expiry_date.after' => 'La carte ANID est expirée',
+            'cfe_expiry_date.after' => 'La carte CFE est expirée',
             'business_name.required' => 'Le nom du commerce est obligatoire',
             'business_type.required' => 'Le type d\'activité est obligatoire',
             'business_type.in' => 'Type d\'activité invalide',

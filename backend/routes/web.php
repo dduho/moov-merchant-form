@@ -3,10 +3,28 @@
 use Illuminate\Support\Facades\Route;
 use App\Models\MerchantApplication;
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Route pour servir les documents privés
+Route::get('/documents/{path}', function (Request $request, $path) {
+    \Log::info("Documents route accessed with path: " . $path);
+    
+    // Ajouter le préfixe merchant-documents
+    $fullPath = 'merchant-documents/' . $path;
+    
+    if (!Storage::exists($fullPath)) {
+        \Log::error("File not found: " . $fullPath);
+        abort(404);
+    }
+    
+    \Log::info("Serving file: " . $fullPath);
+    return Storage::response($fullPath);
+})->where('path', '.*');
 
 Route::get('/test-filter', function() {
     // Test du filtrage pour l'utilisateur commercial

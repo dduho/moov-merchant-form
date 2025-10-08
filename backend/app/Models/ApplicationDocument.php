@@ -47,7 +47,7 @@ class ApplicationDocument extends Model
     protected function url(): Attribute
     {
         return Attribute::make(
-            get: fn () => Storage::url($this->file_path)
+            get: fn () => url('/documents/' . str_replace('merchant-documents/', '', $this->file_path))
         );
     }
 

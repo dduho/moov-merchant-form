@@ -36,6 +36,7 @@ class MerchantApplicationResource extends JsonResource
             'id_expiry_date' => $this->id_expiry_date?->format('Y-m-d'),
             'has_anid_card' => $this->has_anid_card,
             'anid_number' => $this->anid_number,
+            'anid_expiry_date' => $this->anid_expiry_date?->format('Y-m-d'),
             'is_foreigner' => $this->is_foreigner,
             
             // Informations commerciales
@@ -49,6 +50,7 @@ class MerchantApplicationResource extends JsonResource
             'usage_type_label' => $this->usage_type_label,
             'has_cfe' => $this->has_cfe,
             'cfe_number' => $this->cfe_number,
+            'cfe_expiry_date' => $this->cfe_expiry_date?->format('Y-m-d'),
             'has_nif' => $this->has_nif,
             'nif_number' => $this->nif_number,
             

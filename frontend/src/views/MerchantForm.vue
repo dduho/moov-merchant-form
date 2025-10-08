@@ -10,6 +10,58 @@
 
     <!-- Contenu du formulaire -->
     <div class="w-full max-w-none lg:max-w-4xl mx-auto px-4 sm:px-3 py-8 relative z-10 pb-24 sm:pb-0">
+      
+      <!-- Skeleton Loader pour le mode édition -->
+      <div v-if="isLoadingApplication" class="space-y-6">
+        <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+          <div class="animate-pulse">
+            <div class="h-4 bg-gray-200 rounded-full mb-4"></div>
+            <div class="flex justify-between">
+              <div class="h-3 bg-gray-200 rounded w-20"></div>
+              <div class="h-3 bg-gray-200 rounded w-16"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
+          <div class="animate-pulse space-y-6">
+            <div class="space-y-2">
+              <div class="h-6 bg-gray-200 rounded w-3/4"></div>
+              <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-3">
+                <div class="h-4 bg-gray-200 rounded w-1/3"></div>
+                <div class="h-12 bg-gray-200 rounded"></div>
+              </div>
+              <div class="space-y-3">
+                <div class="h-4 bg-gray-200 rounded w-1/3"></div>
+                <div class="h-12 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-3">
+                <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div class="h-12 bg-gray-200 rounded"></div>
+              </div>
+              <div class="space-y-3">
+                <div class="h-4 bg-gray-200 rounded w-1/3"></div>
+                <div class="h-12 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+            
+            <div class="flex justify-between mt-8">
+              <div class="h-12 bg-gray-200 rounded w-20"></div>
+              <div class="h-12 bg-gray-200 rounded w-24"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulaire normal -->
+      <div v-else>
       <!-- Barre de progression -->
       <div class="mb-8 bg-white rounded-2xl shadow-lg p-4 sm:p-6">
         <div class="progress-bar mb-2">
@@ -39,7 +91,7 @@
                 <div class="form-section">
                   <h2 class="section-title">
                     <i class="fas fa-user-circle text-orange-500 mr-2"></i>
-                    Informations Personnelles du Représentant
+                    {{ isEditMode ? 'Modifier les Informations Personnelles' : 'Informations Personnelles du Représentant' }}
                   </h2>
 
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -483,15 +535,18 @@
         </button>
       </div>
     </nav>
+    
+    </div> <!-- Fin du formulaire normal -->
   </div>
 </template>
 
 <script>
 import { ref, computed, watch, onMounted, nextTick, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useMerchantStore } from '../stores/merchant'
 import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notifications'
+import MerchantService from '../services/MerchantService'
 import FileUpload from '../components/FileUpload.vue'
 import LocationPicker from '../components/LocationPicker.vue'
 import SignaturePad from '../components/SignaturePad.vue'
@@ -510,6 +565,7 @@ export default {
   setup() {
     // Services et Stores
     const router = useRouter();
+    const route = useRoute();
     const merchantStore = useMerchantStore();
     const authStore = useAuthStore();
     const notificationStore = useNotificationStore();
@@ -525,6 +581,12 @@ export default {
     const autoSaveStatus = ref('');
     const direction = ref(1);
     const errors = ref({});
+
+    // États pour l'édition
+    const isEditMode = computed(() => !!route.params.id);
+    const applicationId = computed(() => route.params.id);
+    const isLoadingApplication = ref(false);
+    const loadingError = ref(null);
 
     // État de la mise en page
     const stage = ref(null);
@@ -553,6 +615,7 @@ export default {
       businessName: '',
       businessType: '',
       businessAddress: '',
+      businessEmail: '',
       usageType: '',
       businessPhone: '',
       hasCFE: false,
@@ -590,59 +653,137 @@ export default {
         const height = child.offsetHeight
         stageHeight.value = height + 'px'
       }
-    }    // Données du formulaire
-    const formData = ref({
-      // Informations personnelles du représentant
-      lastName: '',
-      firstName: '',
-      birthDate: '',
-      birthPlace: '',
-      gender: '',
-      nationality: '',
-      personalPhone: '',
-      email: '',
-      address: '',
+    }
 
-      // Documents d'identité
-      idType: '',
-      idNumber: '',
-      idExpiryDate: '',
-      hasAnidCard: false,
-      anidNumber: '',
-      anidExpiryDate: '',
-
-      // Informations commerciales
-      businessName: '',
-      businessType: '',
-      businessAddress: '',
-      usageType: '',
-      businessPhone: '',
-      hasCFE: false,
-      cfeNumber: '',
-      cfeExpiryDate: '',
-      hasNIF: false,
-      nifNumber: '',
-
-      // Informations du commercial
-      commercialLastName: '',
-      commercialFirstName: '',
-      commercialPhone: '',
-
-      // Localisation
-      location: null,
-      locationDescription: '',
-
-      // Signature et acceptation
-      signature: null,
-      acceptTerms: false,
-
-      // Documents
-      documents: {
-        idCard: null,
-        anidCard: null,
-        cfeCard: null
+    // Fonction pour charger les données d'une candidature existante
+    const loadApplicationData = async (id) => {
+      if (!id) return;
+      
+      isLoadingApplication.value = true;
+      loadingError.value = null;
+      
+      try {
+        const response = await MerchantService.getApplicationForEdit(id);
+        
+        // La réponse peut avoir différentes structures selon l'API
+        const data = response.data || response;
+        
+        if (data) {
+          // Pré-remplir les données du formulaire
+          Object.keys(defaultFormData).forEach(key => {
+            if (data[key] !== undefined && data[key] !== null) {
+              formData.value[key] = data[key];
+            }
+          });
+          
+          // Gérer les champs spécifiques de l'API
+          if (data.last_name) formData.value.lastName = data.last_name;
+          if (data.first_name) formData.value.firstName = data.first_name;
+          if (data.birth_date) formData.value.birthDate = data.birth_date;
+          if (data.birth_place) formData.value.birthPlace = data.birth_place;
+          if (data.gender) formData.value.gender = data.gender;
+          if (data.nationality) formData.value.nationality = data.nationality;
+          // Le téléphone personnel est dans le champ 'phone' pas 'personal_phone'
+          if (data.phone) formData.value.personalPhone = data.phone;
+          if (data.email) formData.value.email = data.email;
+          if (data.address) formData.value.address = data.address;
+          if (data.id_type) formData.value.idType = data.id_type;
+          if (data.id_number) formData.value.idNumber = data.id_number;
+          if (data.id_expiry_date) formData.value.idExpiryDate = data.id_expiry_date;
+          if (data.has_anid_card !== undefined) formData.value.hasAnidCard = data.has_anid_card;
+          if (data.anid_number) formData.value.anidNumber = data.anid_number;
+          if (data.anid_expiry_date) formData.value.anidExpiryDate = data.anid_expiry_date;
+          if (data.business_name) formData.value.businessName = data.business_name;
+          if (data.business_type) formData.value.businessType = data.business_type;
+          if (data.business_address) formData.value.businessAddress = data.business_address;
+          if (data.business_email) formData.value.businessEmail = data.business_email;
+          if (data.usage_type) formData.value.usageType = data.usage_type;
+          // Le téléphone business peut être dans merchant_phone selon les données
+          if (data.merchant_phone) formData.value.businessPhone = data.merchant_phone;
+          if (data.has_cfe !== undefined) formData.value.hasCFE = data.has_cfe;
+          if (data.cfe_number) formData.value.cfeNumber = data.cfe_number;
+          if (data.cfe_expiry_date) formData.value.cfeExpiryDate = data.cfe_expiry_date;
+          if (data.has_nif !== undefined) formData.value.hasNIF = data.has_nif;
+          if (data.nif_number) formData.value.nifNumber = data.nif_number;
+          
+          // Gérer les informations commerciales depuis l'objet 'commercial'
+          if (data.commercial) {
+            if (data.commercial.last_name) formData.value.commercialLastName = data.commercial.last_name;
+            if (data.commercial.first_name) formData.value.commercialFirstName = data.commercial.first_name;
+            if (data.commercial.phone) formData.value.commercialPhone = data.commercial.phone;
+          }
+          
+          if (data.location_description) formData.value.locationDescription = data.location_description;
+          if (data.accept_terms !== undefined) formData.value.acceptTerms = data.accept_terms;
+          
+          // Gérer la localisation
+          if (data.latitude && data.longitude) {
+            formData.value.location = {
+              lat: parseFloat(data.latitude),
+              lng: parseFloat(data.longitude)
+            };
+          }
+          
+          // Gérer la signature
+          if (data.signature) {
+            formData.value.signature = data.signature;
+          }
+          
+          // Gérer les documents depuis le tableau 'documents'
+          if (data.documents && Array.isArray(data.documents)) {
+            data.documents.forEach(doc => {
+              // Construire l'URL complète du document
+              let documentUrl = doc.url || doc.file_path;
+              // Si l'URL est relative, préfixer avec l'URL du backend
+              if (documentUrl && documentUrl.startsWith('/storage/')) {
+                const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+                const backendURL = baseURL.replace('/api', ''); // Enlever /api pour avoir l'URL de base
+                documentUrl = backendURL + documentUrl;
+              }
+              
+              // Créer un objet document compatible avec FileUpload
+              const documentObject = {
+                name: doc.original_name || doc.file_name,
+                type: doc.mime_type,
+                size: doc.file_size,
+                url: documentUrl,
+                uploaded: true, // Marquer comme déjà uploadé
+                id: doc.id
+              };
+              
+              switch (doc.type) {
+                case 'id_card':
+                  formData.value.documents.idCard = documentObject;
+                  break;
+                case 'anid_card':
+                  formData.value.documents.anidCard = documentObject;
+                  break;
+                case 'cfe_card':
+                  formData.value.documents.cfeCard = documentObject;
+                  break;
+              }
+            });
+          }
+          
+          console.log('Application data loaded:', data);
+          console.log('Form data updated:', formData.value);
+        } else {
+          throw new Error('Aucune donnée reçue');
+        }
+      } catch (error) {
+        console.error('Error loading application:', error);
+        loadingError.value = 'Erreur lors du chargement';
+        notificationStore.addNotification({
+          type: 'error',
+          message: 'Erreur lors du chargement de la candidature: ' + (error.message || error)
+        });
+      } finally {
+        isLoadingApplication.value = false;
       }
-    })
+    };
+
+    // Données du formulaire
+    const formData = ref({ ...defaultFormData })
 
     // Progression calculée
     const progress = computed(() => (currentStep.value / totalSteps.value) * 100)
@@ -931,11 +1072,15 @@ export default {
       try {
         await setStageHeightToCurrent();
         
-        // Charger les données sauvegardées
-        const savedData = await merchantStore.loadFormData();
-        
-        // Initialiser avec les données par défaut
-        formData.value = { ...defaultFormData };
+        // Si on est en mode édition, charger les données de la candidature
+        if (isEditMode.value) {
+          await loadApplicationData(applicationId.value);
+        } else {
+          // Charger les données sauvegardées pour un nouveau formulaire
+          const savedData = await merchantStore.loadFormData();
+          
+          // Initialiser avec les données par défaut
+          formData.value = { ...defaultFormData };
         
         // Remplir le formulaire pour un commercial connecté
         if (isCommercial.value && userInfo.value) {
@@ -965,13 +1110,14 @@ export default {
           else if (savedData) {
             formData.value = { ...formData.value, ...savedData };
           }
+        }
           
-          // Configuration de la mise en page
-          await setStageHeightToCurrent();
-          window.addEventListener('resize', setStageHeightToCurrent);
-          } catch (error) {
-          console.error('Erreur lors de l\'initialisation du formulaire:', error);
-          }
+        // Configuration de la mise en page
+        await setStageHeightToCurrent();
+        window.addEventListener('resize', setStageHeightToCurrent);
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation du formulaire:', error);
+      }
         })
         onBeforeUnmount(() => {
           window.removeEventListener('resize', setStageHeightToCurrent)
@@ -1001,7 +1147,12 @@ export default {
       leave,
       // Add commercial properties
       isCommercial,
-      userInfo
+      userInfo,
+      // Add edit mode properties
+      isEditMode,
+      applicationId,
+      isLoadingApplication,
+      loadingError
     }
   }
 }

@@ -40,6 +40,7 @@ class MerchantApplication extends Model
         'id_expiry_date',
         'has_anid_card',
         'anid_number',
+        'anid_expiry_date',
         'is_foreigner',
         
         // Informations commerciales
@@ -51,6 +52,7 @@ class MerchantApplication extends Model
         'usage_type',
         'has_cfe',
         'cfe_number',
+        'cfe_expiry_date',
         'has_nif',
         'nif_number',
         
@@ -79,6 +81,8 @@ class MerchantApplication extends Model
         return [
             'birth_date' => 'date',
             'id_expiry_date' => 'date',
+            'anid_expiry_date' => 'date',
+            'cfe_expiry_date' => 'date',
             'has_anid_card' => 'boolean',
             'is_foreigner' => 'boolean',
             'has_cfe' => 'boolean',
