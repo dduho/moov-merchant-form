@@ -77,4 +77,19 @@ class ApplicationDocument extends Model
         $currentHash = hash_file('sha256', Storage::path($this->file_path));
         return $currentHash === $this->hash_sha256;
     }
+
+    public function getTypeLabel(): string
+    {
+        $labels = [
+            'id_card' => "Pièce d'identité",
+            'anid_card' => "Carte ANID", 
+            'cfe_document' => "Document CFE",
+            'business_document' => "Document commercial",
+            'residence_card' => "Carte de séjour",
+            'residence_proof' => "Justificatif de résidence",
+            'nif_document' => "Document NIF",
+        ];
+        
+        return $labels[$this->document_type] ?? ucfirst(str_replace('_', ' ', $this->document_type));
+    }
 }

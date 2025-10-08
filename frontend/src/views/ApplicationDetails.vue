@@ -358,7 +358,9 @@
                     </div>
                     <div>
                       <h4 class="text-sm font-medium" style="color: #005BA4">{{ doc.type_label }}</h4>
-                      <p class="text-sm text-gray-500">{{ formatFileSize(doc.size) }}</p>
+                      <p class="text-sm text-gray-500">
+                        {{ doc.size || 'Taille inconnue' }}
+                      </p>
                     </div>
                   </div>
                   <div class="flex items-center space-x-3">
@@ -433,46 +435,52 @@
             </template>
 
             <template v-else>
-              <h2 class="text-xl font-semibold text-orange-600 mb-6">Timeline</h2>
+              <h2 class="text-xl font-semibold text-orange-600 mb-6">Historique</h2>
               
-              <div class="flow-root">
+              <div v-if="timelineEvents && timelineEvents.length > 0" class="flow-root">
                 <ul class="-mb-8">
-                  <li v-for="(event, index) in application?.timeline" :key="event.id">
+                  <li v-for="(event, index) in timelineEvents" :key="event.id">
                     <div class="relative pb-8">
-                      <span v-if="index !== application.timeline.length - 1" 
+                      <span v-if="index !== timelineEvents.length - 1" 
                             class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" 
                             aria-hidden="true"></span>
                       <div class="relative flex space-x-3">
                         <div>
                           <span :class="[
                             'h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white',
-                            event.type === 'status_change' && 'bg-blue-500',
+                            event.type === 'submitted' && 'bg-blue-500',
                             event.type === 'document_added' && 'bg-green-500',
-                            event.type === 'note_added' && 'bg-yellow-500'
+                            event.type === 'note_added' && 'bg-yellow-500',
+                            event.type === 'reviewed' && 'bg-purple-500'
                           ]">
                             <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path v-if="event.type === 'status_change'" 
+                              <path v-if="event.type === 'submitted'" 
                                     stroke-linecap="round" 
                                     stroke-linejoin="round" 
                                     stroke-width="2" 
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                               <path v-else-if="event.type === 'document_added'" 
                                     stroke-linecap="round" 
                                     stroke-linejoin="round" 
                                     stroke-width="2" 
                                     d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                              <path v-else
+                              <path v-else-if="event.type === 'note_added'"
                                     stroke-linecap="round" 
                                     stroke-linejoin="round" 
                                     stroke-width="2" 
                                     d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                              <path v-else
+                                    stroke-linecap="round" 
+                                    stroke-linejoin="round" 
+                                    stroke-width="2" 
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           </span>
                         </div>
                         <div class="min-w-0 flex-1">
                           <div>
                             <div class="text-sm font-medium text-gray-900">{{ event.title }}</div>
-                            <p class="mt-0.5 text-sm text-gray-500">{{ formatDate(event.created_at) }}</p>
+                            <p class="mt-0.5 text-sm text-gray-500">{{ formatDate(event.date) }}</p>
                           </div>
                           <div v-if="event.description" class="mt-2 text-sm text-gray-700">
                             {{ event.description }}
@@ -482,6 +490,16 @@
                     </div>
                   </li>
                 </ul>
+              </div>
+              
+              <div v-else class="text-center py-8">
+                <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <svg class="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 class="text-sm font-medium text-gray-900 mb-1">Aucun historique disponible</h3>
+                <p class="text-sm text-gray-500">L'historique de cette candidature n'est pas encore disponible.</p>
               </div>
             </template>
           </div>
@@ -753,6 +771,65 @@ export default {
     const canValidate = computed(() => authStore.canValidateApplications)
     const canReject = computed(() => authStore.canRejectApplications)
     const canDelete = computed(() => authStore.canDeleteApplications)
+
+    // Timeline calculée à partir des données disponibles
+    const timelineEvents = computed(() => {
+      if (!application.value) return []
+      
+      const events = []
+      
+      // Événement de soumission
+      if (application.value.submitted_at) {
+        // Déterminer le mode de soumission de la candidature
+        let description = ''
+        let title = 'Candidature soumise'
+        
+        if (application.value.user_id) {
+          // Candidature soumise via un compte utilisateur
+          title = 'Candidature soumise via compte utilisateur'
+          description = `Candidature #${application.value.reference_number} pour ${application.value.full_name} soumise via un compte utilisateur`
+        } else {
+          // Candidature soumise directement par le représentant légal
+          title = 'Candidature soumise directement'
+          description = `Candidature #${application.value.reference_number} soumise directement par ${application.value.full_name}`
+        }
+        
+        events.push({
+          id: 'submitted',
+          type: 'submitted',
+          title: title,
+          description: description,
+          date: application.value.submitted_at
+        })
+      }
+      
+      // Événements des documents
+      if (application.value.documents && application.value.documents.length > 0) {
+        application.value.documents.forEach((doc, index) => {
+          events.push({
+            id: `document-${doc.id}`,
+            type: 'document_added',
+            title: `Document ajouté : ${doc.type_label}`,
+            description: `${doc.original_name} (${doc.size || 'Taille inconnue'})`,
+            date: doc.created_at
+          })
+        })
+      }
+      
+      // Événement de révision (si disponible)
+      if (application.value.reviewed_at && application.value.admin_notes) {
+        events.push({
+          id: 'reviewed',
+          type: 'note_added',
+          title: 'Note administrative ajoutée',
+          description: 'Une note administrative a été ajoutée par l\'équipe de révision',
+          date: application.value.reviewed_at
+        })
+      }
+      
+      // Trier les événements par date (plus récent en premier)
+      return events.sort((a, b) => new Date(b.date) - new Date(a.date))
+    })
     
     const loadApplication = async () => {
       loading.value = true
@@ -910,10 +987,16 @@ export default {
     }
     
     const formatFileSize = (bytes) => {
-      if (!bytes) return '0 B'
+      // Vérifier si bytes est valide (nombre positif)
+      if (!bytes || isNaN(bytes) || bytes <= 0) return '0 B'
+      
       const k = 1024
       const sizes = ['B', 'KB', 'MB', 'GB']
       const i = Math.floor(Math.log(bytes) / Math.log(k))
+      
+      // S'assurer que l'index est valide
+      if (i < 0 || i >= sizes.length) return bytes + ' B'
+      
       return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
     }
 
@@ -1050,6 +1133,8 @@ export default {
       editApplication,
       confirmDelete,
       deleteApplication,
+      // Timeline
+      timelineEvents,
       // Permissions
       canEdit,
       canValidate,
