@@ -1,0 +1,109 @@
+<?php
+
+namespace App\Services;
+
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Intervention\Image\Laravel\Facades\Image;
+
+class DocumentStorageService
+{
+    protected string $disk;
+    protected string $basePath;
+    
+    public function __construct()
+    {
+        $this->disk = config('filesystems.default');
+        $this->basePath = 'merchant-documents';
+    }
+    
+    public function store(UploadedFile $file, string $documentType): array
+    {
+        $this->validateFile($file);
+        
+        $filename = $this->generateSecureFilename($file, $documentType);
+        $path = $this->basePath . '/' . $documentType . '/' . date('Y/m');
+        $fullPath = $path . '/' . $filename;
+        
+        if ($this->isImage($file)) {
+            $processedFile = $this->processImage($file);
+            Storage::disk($this->disk)->put($fullPath, $processedFile);
+        } else {
+            Storage::disk($this->disk)->putFileAs($path, $file, $filename);
+        }
+        
+        $hash = hash_file('sha256', Storage::disk($this->disk)->path($fullPath));
+        
+        return [
+            'filename' => $filename,
+            'path' => $fullPath,
+            'size' => $file->getSize(),
+            'type' => $file->getMimeType(),
+            'hash' => $hash
+        ];
+    }
+    
+    protected function validateFile(UploadedFile $file): void
+    {
+        $realExtension = strtolower($file->getClientOriginalExtension());
+        $mimeType = $file->getMimeType();
+        
+        $allowedTypes = [
+            'jpg' => ['image/jpeg', 'image/jpg'],
+            'jpeg' => ['image/jpeg', 'image/jpg'],
+            'png' => ['image/png'],
+            'pdf' => ['application/pdf'],
+        ];
+        
+        if (!isset($allowedTypes[$realExtension]) || 
+            !in_array($mimeType, $allowedTypes[$realExtension])) {
+            throw new \InvalidArgumentException('Type de fichier non autorisé');
+        }
+        
+        if ($file->getSize() > 5 * 1024 * 1024) {
+            throw new \InvalidArgumentException('Fichier trop volumineux (5MB max)');
+        }
+    }
+    
+    protected function generateSecureFilename(UploadedFile $file, string $documentType): string
+    {
+        $extension = $file->getClientOriginalExtension();
+        $timestamp = now()->format('YmdHis');
+        $random = Str::random(12);
+        
+        return "{$documentType}_{$timestamp}_{$random}.{$extension}";
+    }
+    
+    protected function processImage(UploadedFile $file): string
+    {
+        $image = Image::read($file->path());
+        
+        // Redimensionnement
+        if ($image->width() > 1200 || $image->height() > 1200) {
+            $image->scale(width: 1200, height: 1200);
+        }
+        
+        // Compression
+        $quality = $this->calculateOptimalQuality($file->getSize());
+        
+        return $image->toJpeg($quality)->toString();
+    }
+    
+    protected function calculateOptimalQuality(int $filesize): int
+    {
+        if ($filesize > 2 * 1024 * 1024) return 70;
+        if ($filesize > 1 * 1024 * 1024) return 80;
+        return 85;
+    }
+    
+    protected function isImage(UploadedFile $file): bool
+    {
+        return str_starts_with($file->getMimeType(), 'image/');
+    }
+    
+    public function delete(string $filePath): bool
+    {
+        return Storage::disk($this->disk)->delete($filePath);
+    }
+}

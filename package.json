@@ -1,0 +1,44 @@
+{
+  "name": "moov-merchant-form-monorepo",
+  "version": "1.0.0",
+  "description": "Application complète de recrutement marchand Moov Money",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/moov-money/merchant-form.git"
+  },
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && php artisan serve",
+    "build": "npm run build:frontend",
+    "build:frontend": "cd frontend && npm run build",
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "cd frontend && npm run test",
+    "test:backend": "cd backend && php artisan test",
+    "deploy": "npm run deploy:frontend && npm run deploy:backend",
+    "deploy:frontend": "cd frontend && npm run build && ./deploy-frontend.sh",
+    "deploy:backend": "./deploy-backend.sh",
+    "setup": "npm run setup:frontend && npm run setup:backend",
+    "setup:frontend": "cd frontend && npm install && cp .env.example .env",
+    "setup:backend": "cd backend && composer install && cp .env.example .env && php artisan key:generate"
+  },
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "moov-money",
+    "merchant",
+    "form",
+    "pwa",
+    "vue",
+    "laravel",
+    "togo",
+    "mobile-money"
+  ],
+  "author": "Moov Money Development Team",
+  "license": "PROPRIETARY"
+}

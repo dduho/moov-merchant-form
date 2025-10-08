@@ -1,0 +1,363 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Variables du design orange */
+:root {
+  --orange-primary: #FF8C42;
+  --orange-light: #FFB380;
+  --orange-bg: #FF8C42;
+  --white: #FFFFFF;
+  --gray-light: #F5F5F5;
+  --gray-medium: #E0E0E0;
+  --gray-dark: #666666;
+  --text-dark: #333333;
+}
+
+@layer base {
+  body {
+    @apply font-sans antialiased bg-orange-100;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+}
+
+@layer components {
+  /* Container principal avec cercles décoratifs */
+  .form-container {
+    @apply min-h-screen flex items-center justify-center p-4 relative overflow-hidden;
+    background: linear-gradient(135deg, #FF8C42 0%, #FF6B35 100%);
+  }
+
+  /* Cercles décoratifs */
+  .decorative-circle {
+    @apply absolute rounded-full opacity-20;
+    background: rgba(255, 255, 255, 0.75);
+  }
+
+  .circle-1 {
+    width: 400px;
+    height: 400px;
+    top: -200px;
+    left: -100px;
+  }
+
+  .circle-2 {
+    width: 300px;
+    height: 300px;
+    top: 100px;
+    right: -150px;
+  }
+
+  .circle-3 {
+    width: 500px;
+    height: 500px;
+    bottom: -250px;
+    left: -200px;
+  }
+
+  .circle-4 {
+    width: 250px;
+    height: 250px;
+    bottom: 100px;
+    right: -100px;
+  }
+
+  .circle-5 {
+    width: 200px;
+    height: 200px;
+    top: 315px;
+    left: 80px;
+  }
+
+  .circle-6 {
+    width: 400px;
+    height: 400px;
+    top: 380px;
+    right: 155px;
+  }
+
+  .main-content {
+    min-height: calc(100vh - 150px); ;
+  }
+
+  /* Carte principale du formulaire */
+  .form-card {
+    @apply bg-white rounded-3xl shadow-2xl p-7 md:p-12 relative z-10;
+    max-width: 750px;
+    width: 750px;
+    /* width: 100%; */
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  }
+
+  /* En-tête du formulaire */
+  .form-header {
+    @apply text-center mb-8;
+  }
+
+  .form-title {
+    @apply text-2xl font-bold mb-2;
+    color: var(--text-dark);
+  }
+
+  .form-subtitle {
+    @apply text-sm;
+    color: var(--gray-dark);
+  }
+
+  /* Tabs/Onglets */
+  .form-tabs {
+    @apply flex justify-center gap-4 mb-8;
+  }
+
+  .form-tab {
+    @apply px-6 py-2 rounded-full text-sm font-medium transition-all cursor-pointer;
+    color: var(--gray-dark);
+    background: transparent;
+  }
+
+  .form-tab.active {
+    background: var(--orange-primary);
+    color: white;
+  }
+
+  /* Sections du formulaire */
+  .form-section {
+    @apply mb-6;
+  }
+
+  .section-title {
+    @apply text-base font-semibold mb-4;
+    color: var(--text-dark);
+  }
+
+  /* Groupes de champs */
+  .form-group {
+    @apply mb-4;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium mb-2;
+    color: var(--text-dark);
+  }
+
+  /* Inputs style orange design */
+  .form-input {
+    @apply w-full px-4 py-3 rounded-xl border-2 text-sm;
+    background: var(--gray-light);
+    border-color: transparent;
+    color: var(--text-dark);
+    transition: all 0.3s;
+  }
+
+  .form-input:focus {
+    @apply outline-none;
+    background: white;
+    border-color: var(--orange-primary);
+  }
+
+  .form-input::placeholder {
+    color: var(--gray-medium);
+  }
+
+  /* Input avec icône */
+  .input-with-icon {
+    @apply relative;
+  }
+
+  .input-icon {
+    @apply absolute left-4 top-1/2 transform -translate-y-1/2 text-orange-500;
+  }
+
+  .input-with-icon .form-input {
+    @apply pl-12;
+  }
+
+  /* Radio buttons et checkboxes style orange */
+  .radio-group,
+  .checkbox-group {
+    @apply flex flex-wrap gap-4;
+  }
+
+  .radio-option,
+  .checkbox-option {
+    @apply flex items-center gap-2 cursor-pointer;
+  }
+
+  .radio-option input[type="radio"],
+  .checkbox-option input[type="checkbox"] {
+    @apply appearance-none w-5 h-5 rounded-full border-2 cursor-pointer transition-all;
+    border-color: var(--gray-medium);
+  }
+
+  .checkbox-option input[type="checkbox"] {
+    @apply rounded-md;
+  }
+
+  .radio-option input[type="radio"]:checked,
+  .checkbox-option input[type="checkbox"]:checked {
+    background: var(--orange-primary);
+    border-color: var(--orange-primary);
+    position: relative;
+  }
+
+  .radio-option input[type="radio"]:checked::before {
+    content: '';
+    @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
+    width: 10px;
+    height: 10px;
+    background: white;
+    border-radius: 50%;
+  }
+
+  .checkbox-option input[type="checkbox"]:checked::before {
+    content: '✓';
+    @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .radio-option label,
+  .checkbox-option label {
+    @apply text-sm cursor-pointer;
+    color: var(--text-dark);
+  }
+
+  /* Grid pour 2 colonnes */
+  .form-grid-2 {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+  }
+
+  /* Bouton principal orange */
+  .btn-primary {
+    @apply w-full py-3 px-6 rounded-xl font-semibold text-white transition-all;
+    background: linear-gradient(135deg, #FF8C42 0%, #FF6B35 100%);
+    box-shadow: 0 4px 15px rgba(255, 140, 66, 0.4);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 140, 66, 0.5);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  /* Bouton secondaire */
+  .btn-secondary {
+    @apply w-full py-3 px-6 rounded-xl font-semibold transition-all;
+    background: white;
+    color: var(--orange-primary);
+    border: 2px solid var(--orange-primary);
+  }
+
+  .btn-secondary:hover {
+    background: var(--gray-light);
+  }
+
+  /* Upload de fichier */
+  .file-upload {
+    @apply border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all;
+    border-color: var(--gray-medium);
+    background: var(--gray-light);
+  }
+
+  .file-upload:hover {
+    border-color: var(--orange-primary);
+    background: white;
+  }
+
+  .file-upload-icon {
+    @apply text-4xl mb-2;
+    color: var(--orange-primary);
+  }
+
+  /* Progress indicator */
+  .progress-steps {
+    @apply flex justify-between items-center mb-8;
+  }
+
+  .progress-step {
+    @apply flex flex-col items-center gap-2 relative flex-1;
+  }
+
+  .progress-step-circle {
+    @apply w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all;
+    background: var(--gray-light);
+    color: var(--gray-dark);
+  }
+
+  .progress-step.active .progress-step-circle {
+    background: var(--orange-primary);
+    color: white;
+  }
+
+  .progress-step.completed .progress-step-circle {
+    background: #4CAF50;
+    color: white;
+  }
+
+  .progress-step-line {
+    @apply absolute top-5 left-1/2 h-0.5 bg-gray-300 -z-10;
+    width: calc(100% - 40px);
+  }
+
+  .progress-step.completed .progress-step-line {
+    background: #4CAF50;
+  }
+
+  .progress-step-label {
+    @apply text-xs font-medium text-center;
+    color: var(--gray-dark);
+  }
+
+  .progress-step.active .progress-step-label {
+    color: var(--orange-primary);
+    font-weight: 600;
+  }
+
+  /* Animations */
+  .fade-in {
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  .slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .form-card {
+    @apply p-6;
+  }
+
+  .progress-steps {
+    @apply flex-col gap-4;
+  }
+
+  .progress-step-line {
+    display: none;
+  }
+}

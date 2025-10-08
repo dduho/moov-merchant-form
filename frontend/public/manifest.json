@@ -1,0 +1,24 @@
+{
+  "name": "Moov Money - Recrutement Marchand",
+  "short_name": "MoovMarchand",
+  "description": "Application de candidature pour devenir marchand Moov Money",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#ff6b35",
+  "background_color": "#ffffff",
+  "lang": "fr",
+  "scope": "/",
+  "icons": [
+    { "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/pwa-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["business", "finance"],
+  "screenshots": [
+    {
+      "src": "screenshot1.png",
+      "sizes": "540x720",
+      "type": "image/png"
+    }
+  ]
+}
