@@ -13,8 +13,6 @@ class StoreMerchantApplicationRequest extends FormRequest
 
     public function rules(): array
     {
-        $applicationId = $this->route('merchantApplication') ? $this->route('merchantApplication')->id : null;
-        
         return [
             // Informations personnelles
             'first_name' => 'required|string|max:255',
@@ -23,14 +21,14 @@ class StoreMerchantApplicationRequest extends FormRequest
             'birth_place' => 'required|string|max:255',
             'gender' => 'required|in:M,F',
             'nationality' => 'required|string|max:255',
-            'phone' => 'required|string|max:20|unique:merchant_applications,phone' . ($applicationId ? ",$applicationId" : ''),
+            'phone' => 'required|string|max:20',
             'merchant_phone' => 'required|string|max:20',
-            'email' => 'nullable|email|max:255|unique:merchant_applications,email' . ($applicationId ? ",$applicationId" : ''),
+            'email' => 'nullable|email|max:255',
             'address' => 'required|string',
             
             // Documents d'identité
             'id_type' => 'required|in:cni,passport,residence,elector',
-            'id_number' => 'required|string|max:50|unique:merchant_applications,id_number' . ($applicationId ? ",$applicationId" : ''),
+            'id_number' => 'required|string|max:50',
             'id_expiry_date' => 'required|date|after:today',
             'has_anid_card' => 'nullable|boolean',
             'anid_number' => 'nullable|string|max:50',
@@ -46,10 +44,10 @@ class StoreMerchantApplicationRequest extends FormRequest
             'business_address' => 'required|string',
             'usage_type' => 'required|in:TRADER,MERC,TRADERWNIF,CORP',
             'has_cfe' => 'nullable|boolean',
-            'cfe_number' => 'nullable|string|max:50',
-            'cfe_expiry_date' => 'nullable|date|after:today',
+            'cfe_number' => 'required_if:has_cfe,true|nullable|string|max:50',
+            'cfe_expiry_date' => 'required_if:has_cfe,true|nullable|date|after:today',
             'has_nif' => 'nullable|boolean',
-            'nif_number' => 'nullable|string|max:50',
+            'nif_number' => 'required_if:has_nif,true|nullable|string|max:50',
             
             // Localisation
             'latitude' => 'nullable|numeric|between:-90,90',
@@ -88,16 +86,16 @@ class StoreMerchantApplicationRequest extends FormRequest
             'gender.in' => 'Le sexe doit être M ou F',
             'nationality.required' => 'La nationalité est obligatoire',
             'phone.required' => 'Le numéro de téléphone est obligatoire',
-            'phone.unique' => 'Ce numéro de téléphone est déjà utilisé',
             'merchant_phone.required' => 'Le téléphone marchand est obligatoire',
-            'email.unique' => 'Cette adresse email est déjà utilisée',
             'birth_date.before' => 'La date de naissance doit être antérieure à aujourd\'hui',
             'id_type.required' => 'Le type de pièce d\'identité est obligatoire',
             'id_type.in' => 'Type de pièce invalide',
-            'id_number.unique' => 'Ce numéro de pièce d\'identité existe déjà',
             'id_expiry_date.after' => 'La pièce d\'identité est expirée',
             'anid_expiry_date.after' => 'La carte ANID est expirée',
+            'cfe_number.required_if' => 'Le numéro CFE est obligatoire si vous possédez une carte CFE',
+            'cfe_expiry_date.required_if' => 'La date d\'expiration CFE est obligatoire si vous possédez une carte CFE',
             'cfe_expiry_date.after' => 'La carte CFE est expirée',
+            'nif_number.required_if' => 'Le numéro NIF est obligatoire si vous possédez un numéro NIF',
             'business_name.required' => 'Le nom du commerce est obligatoire',
             'business_type.required' => 'Le type d\'activité est obligatoire',
             'business_type.in' => 'Type d\'activité invalide',
@@ -147,5 +145,73 @@ class StoreMerchantApplicationRequest extends FormRequest
                 'full_name' => trim($this->first_name . ' ' . $this->last_name)
             ]);
         }
+    }
+
+    /**
+     * Obtenir les règles de validation pour une mise à jour avec l'ID de l'application
+     */
+    public static function rulesFor(?int $applicationId = null): array
+    {
+        return [
+            // Informations personnelles
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'birth_date' => 'required|date|before:today',
+            'birth_place' => 'required|string|max:255',
+            'gender' => 'required|in:M,F',
+            'nationality' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'merchant_phone' => 'required|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'address' => 'required|string',
+            
+            // Documents d'identité
+            'id_type' => 'required|in:cni,passport,elector',
+            'id_number' => 'required|string|max:50',
+            'id_expiry_date' => 'required|date|after:today',
+            'has_anid_card' => 'nullable|boolean',
+            'anid_number' => 'nullable|string|max:50',
+            'anid_expiry_date' => 'nullable|date|after:today',
+            'is_foreigner' => 'nullable|boolean',
+            
+            // Informations commerciales
+            'business_name' => 'required|string|max:255',
+            'business_type' => 'required|in:boutique,pharmacie,station-service,supermarche,autre',
+            'business_phones' => 'nullable|array',
+            'business_phones.*' => 'nullable|string|max:20',
+            'business_email' => 'nullable|email|max:255',
+            'business_address' => 'required|string',
+            'usage_type' => 'required|in:TRADER,MERC,TRADERWNIF,CORP',
+            'has_cfe' => 'nullable|boolean',
+            'cfe_number' => 'required_if:has_cfe,true|nullable|string|max:50',
+            'cfe_expiry_date' => 'required_if:has_cfe,true|nullable|date|after:today',
+            'has_nif' => 'nullable|boolean',
+            'nif_number' => 'required_if:has_nif,true|nullable|string|max:50',
+            
+            // Localisation
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+            'location_accuracy' => 'nullable|numeric',
+            'location_description' => 'nullable|string',
+            'shop_address' => 'nullable|string',
+            'shop_city' => 'nullable|string|max:255',
+            
+            // Signature
+            'signature' => 'required|string',
+            'accept_terms' => 'required|accepted',
+            
+            // Documents (fichiers) - Individual fields
+            'id_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'anid_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'cfe_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'business_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'residence_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'residence_proof' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'nif_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            
+            // Legacy documents array (for backward compatibility)
+            'documents' => 'nullable|array',
+            'documents.*' => 'file|mimes:pdf,jpg,jpeg,png|max:5120',
+        ];
     }
 }

@@ -136,6 +136,15 @@ class MerchantApplicationController extends Controller
     {
         return DB::transaction(function () use ($request) {
             try {
+                // DEBUG CFE - Temporaire
+                Log::info('CFE Debug - Données reçues', [
+                    'has_cfe' => $request->has_cfe,
+                    'cfe_number' => $request->cfe_number,
+                    'cfe_expiry_date' => $request->cfe_expiry_date,
+                    'has_nif' => $request->has_nif,
+                    'nif_number' => $request->nif_number,
+                ]);
+                
                 $applicationData = $request->validated();
                 
                 // Attacher l'utilisateur connecté s'il y en a un
@@ -313,6 +322,18 @@ class MerchantApplicationController extends Controller
                 'content_type' => $request->header('Content-Type'),
                 'has_documents' => $request->hasFile('documents'),
                 'document_keys' => $docKeys,
+            ]);
+
+            // DEBUG CFE - Voir exactement ce qui est envoyé lors de l'UPDATE
+            Log::info('CFE Debug - fullUpdate données reçues', [
+                'has_cfe' => $request->has_cfe,
+                'cfe_number' => $request->cfe_number,
+                'cfe_expiry_date' => $request->cfe_expiry_date,
+                'has_nif' => $request->has_nif,
+                'nif_number' => $request->nif_number,
+                'all_request_keys' => array_keys($request->all()),
+                'request_input_has_cfe' => $request->has('has_cfe'),
+                'request_input_cfe_expiry' => $request->has('cfe_expiry_date'),
             ]);
             
             if (!$user) {

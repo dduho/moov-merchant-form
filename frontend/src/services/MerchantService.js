@@ -123,6 +123,9 @@ class MerchantService {
     if (formData.cfeNumber && formData.cfeNumber.trim()) {
       submitData.append('cfe_number', formData.cfeNumber.trim())
     }
+    if (formData.cfeExpiryDate) {
+      submitData.append('cfe_expiry_date', formData.cfeExpiryDate)
+    }
     submitData.append('has_nif', formData.hasNIF ? '1' : '0')
     if (formData.nifNumber && formData.nifNumber.trim()) {
       submitData.append('nif_number', formData.nifNumber.trim())
@@ -435,7 +438,7 @@ class MerchantService {
       gender: formData.gender || '',
       nationality: formData.nationality || '',
       phone: formData.personalPhone || '',
-      merchant_phone: formData.merchantPhone || '',
+      merchant_phone: formData.merchantPhone || formData.personalPhone || '',
       email: formData.email || '',
       address: formData.address || '',
       
@@ -445,6 +448,7 @@ class MerchantService {
       id_expiry_date: formData.idExpiryDate || '',
       has_anid_card: formData.hasAnidCard ? 1 : 0,
       anid_number: formData.anidNumber || null,
+      anid_expiry_date: formData.anidExpiryDate || null,
       is_foreigner: formData.isForeigner ? 1 : 0,
       
       // Informations business
@@ -456,6 +460,7 @@ class MerchantService {
       usage_type: formData.usageType || '',
       has_cfe: formData.hasCfe ? 1 : 0,
       cfe_number: formData.cfeNumber || null,
+      cfe_expiry_date: formData.cfeExpiryDate || null,
       has_nif: formData.hasNif ? 1 : 0,
       nif_number: formData.nifNumber || null,
       
@@ -510,7 +515,7 @@ class MerchantService {
     submitData.append('gender', formData.gender || '')
     submitData.append('nationality', (formData.nationality && formData.nationality.trim()) || '')
     submitData.append('phone', (formData.personalPhone && formData.personalPhone.trim()) || '')
-    submitData.append('merchant_phone', (formData.merchantPhone && formData.merchantPhone.trim()) || '')
+    submitData.append('merchant_phone', (formData.merchantPhone && formData.merchantPhone.trim()) || (formData.personalPhone && formData.personalPhone.trim()) || '')
     if (formData.email && formData.email.trim()) {
       submitData.append('email', formData.email.trim())
     }
@@ -523,6 +528,9 @@ class MerchantService {
     submitData.append('has_anid_card', formData.hasAnidCard ? '1' : '0')
     if (formData.anidNumber && formData.anidNumber.trim()) {
       submitData.append('anid_number', formData.anidNumber.trim())
+    }
+    if (formData.anidExpiryDate) {
+      submitData.append('anid_expiry_date', formData.anidExpiryDate)
     }
     submitData.append('is_foreigner', formData.isForeigner ? '1' : '0')
 
@@ -540,6 +548,9 @@ class MerchantService {
     submitData.append('has_cfe', formData.hasCfe ? '1' : '0')
     if (formData.cfeNumber && formData.cfeNumber.trim()) {
       submitData.append('cfe_number', formData.cfeNumber.trim())
+    }
+    if (formData.cfeExpiryDate) {
+      submitData.append('cfe_expiry_date', formData.cfeExpiryDate)
     }
     submitData.append('has_nif', formData.hasNif ? '1' : '0')
     if (formData.nifNumber && formData.nifNumber.trim()) {

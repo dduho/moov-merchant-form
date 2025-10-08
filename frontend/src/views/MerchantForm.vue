@@ -364,20 +364,27 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                       <div v-if="formData.hasCFE" class="form-group">
-                        <label class="form-label">Numéro CFE</label>
-                        <input v-model="formData.cfeNumber" type="text" class="form-input h-12"
-                          placeholder="Numéro CFE">
+                        <label class="form-label">Numéro CFE *</label>
+                        <input v-model="formData.cfeNumber" type="text" 
+                          class="form-input h-12" :class="{ 'border-red-500': errors.cfeNumber }"
+                          placeholder="Numéro CFE" required>
+                        <p v-if="errors.cfeNumber" class="mt-1 text-sm text-red-600">{{ errors.cfeNumber }}</p>
                       </div>
 
                       <div v-if="formData.hasCFE" class="form-group">
-                        <label class="form-label">Date d'expiration CFE</label>
-                        <input v-model="formData.cfeExpiryDate" type="date" class="form-input h-12">
+                        <label class="form-label">Date d'expiration CFE *</label>
+                        <input v-model="formData.cfeExpiryDate" type="date" 
+                          class="form-input h-12" :class="{ 'border-red-500': errors.cfeExpiryDate }"
+                          required>
+                        <p v-if="errors.cfeExpiryDate" class="mt-1 text-sm text-red-600">{{ errors.cfeExpiryDate }}</p>
                       </div>
 
                       <div v-if="formData.hasNIF" class="form-group">
-                        <label class="form-label">Numéro NIF</label>
-                        <input v-model="formData.nifNumber" type="text" class="form-input h-12"
-                          placeholder="Numéro NIF">
+                        <label class="form-label">Numéro NIF *</label>
+                        <input v-model="formData.nifNumber" type="text" 
+                          class="form-input h-12" :class="{ 'border-red-500': errors.nifNumber }"
+                          placeholder="Numéro NIF" required>
+                        <p v-if="errors.nifNumber" class="mt-1 text-sm text-red-600">{{ errors.nifNumber }}</p>
                       </div>
                     </div>
 
@@ -395,6 +402,16 @@
                       Informations du Commercial
                     </h3>
                     
+                    <!-- Note d'information si les champs ne sont pas modifiables -->
+                    <div v-if="isCommercialInfoDisabled" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div class="flex items-start">
+                        <i class="fas fa-info-circle text-blue-500 mr-2 mt-0.5"></i>
+                        <div class="text-sm text-blue-700">
+                          <strong>Information :</strong> Ces informations ne peuvent pas être modifiées car cette candidature est liée à un utilisateur commercial spécifique.
+                        </div>
+                      </div>
+                    </div>
+                    
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
                       <div class="form-group">
                         <label class="form-label">
@@ -402,8 +419,8 @@
                         </label>
                         <input v-model="formData.commercialLastName" type="text" 
                           class="form-input h-12" :class="{ 'border-red-500': errors.commercialLastName }"
-                          placeholder="Nom" :required="isCommercial" :disabled="isCommercial"
-                          :title="isCommercial ? 'Pré-rempli avec le nom du commercial connecté' : ''">
+                          placeholder="Nom" :required="isCommercial" :disabled="isCommercial || isCommercialInfoDisabled"
+                          :title="isCommercialInfoDisabled ? 'Non modifiable - Candidature liée à un utilisateur' : (isCommercial ? 'Pré-rempli avec le nom du commercial connecté' : '')">
                         <p v-if="errors.commercialLastName" class="mt-1 text-sm text-red-600">{{ errors.commercialLastName }}</p>
                       </div>
 
@@ -413,8 +430,8 @@
                         </label>
                         <input v-model="formData.commercialFirstName" type="text" 
                           class="form-input h-12" :class="{ 'border-red-500': errors.commercialFirstName }"
-                          placeholder="Prénoms" :required="isCommercial" :disabled="isCommercial"
-                          :title="isCommercial ? 'Pré-rempli avec le prénom du commercial connecté' : ''">
+                          placeholder="Prénoms" :required="isCommercial" :disabled="isCommercial || isCommercialInfoDisabled"
+                          :title="isCommercialInfoDisabled ? 'Non modifiable - Candidature liée à un utilisateur' : (isCommercial ? 'Pré-rempli avec le prénom du commercial connecté' : '')">
                         <p v-if="errors.commercialFirstName" class="mt-1 text-sm text-red-600">{{ errors.commercialFirstName }}</p>
                       </div>
 
@@ -424,8 +441,8 @@
                         </label>
                         <PhoneInput v-model="formData.commercialPhone" 
                           :class="{ 'border-red-500': errors.commercialPhone }"
-                          :required="isCommercial" :disabled="isCommercial"
-                          :title="isCommercial ? 'Pré-rempli avec le téléphone du commercial connecté' : ''" />
+                          :required="isCommercial" :disabled="isCommercial || isCommercialInfoDisabled"
+                          :title="isCommercialInfoDisabled ? 'Non modifiable - Candidature liée à un utilisateur' : (isCommercial ? 'Pré-rempli avec le téléphone du commercial connecté' : '')" />
                         <p v-if="errors.commercialPhone" class="mt-1 text-sm text-red-600">{{ errors.commercialPhone }}</p>
                       </div>
                     </div>
@@ -587,6 +604,14 @@ export default {
     const applicationId = computed(() => route.params.id);
     const isLoadingApplication = ref(false);
     const loadingError = ref(null);
+    
+    // ID de l'utilisateur lié à la candidature (pour les candidatures créées par un commercial)
+    const applicationUserId = ref(null);
+    
+    // Détermine si les informations commerciales doivent être désactivées
+    const isCommercialInfoDisabled = computed(() => {
+      return isEditMode.value && applicationUserId.value !== null;
+    });
 
     // État de la mise en page
     const stage = ref(null);
@@ -705,6 +730,11 @@ export default {
           if (data.cfe_expiry_date) formData.value.cfeExpiryDate = data.cfe_expiry_date;
           if (data.has_nif !== undefined) formData.value.hasNIF = data.has_nif;
           if (data.nif_number) formData.value.nifNumber = data.nif_number;
+          
+          // Stocker l'ID utilisateur pour vérifier si les infos commerciales doivent être désactivées
+          if (data.user_id) {
+            applicationUserId.value = data.user_id;
+          }
           
           // Gérer les informations commerciales depuis l'objet 'commercial'
           if (data.commercial) {
@@ -881,6 +911,18 @@ export default {
         if (!formData.value.commercialLastName) errors.value.commercialLastName = 'Champ obligatoire'
         if (!formData.value.commercialFirstName) errors.value.commercialFirstName = 'Champ obligatoire'
         if (!formData.value.commercialPhone) errors.value.commercialPhone = 'Champ obligatoire'
+        
+        // Validation conditionnelle CFE
+        if (formData.value.hasCFE) {
+          if (!formData.value.cfeNumber) errors.value.cfeNumber = 'Numéro CFE obligatoire'
+          if (!formData.value.cfeExpiryDate) errors.value.cfeExpiryDate = 'Date d\'expiration CFE obligatoire'
+          else if (!validateIdExpiryDate(formData.value.cfeExpiryDate)) errors.value.cfeExpiryDate = 'Date d\'expiration CFE invalide'
+        }
+        
+        // Validation conditionnelle NIF
+        if (formData.value.hasNIF) {
+          if (!formData.value.nifNumber) errors.value.nifNumber = 'Numéro NIF obligatoire'
+        }
       }
 
       return Object.keys(errors.value).length === 0
@@ -988,11 +1030,21 @@ export default {
 
       isSubmitting.value = true
       try {
-        await merchantStore.submitApplication(formData.value)
-        notificationStore.success(
-          'Candidature envoyée !',
-          'Votre demande a été soumise avec succès'
-        )
+        if (isEditMode.value) {
+          // Mode édition : utiliser updateApplication
+          await merchantStore.updateApplication(applicationId.value, formData.value)
+          notificationStore.success(
+            'Candidature modifiée !',
+            'Votre demande a été mise à jour avec succès'
+          )
+        } else {
+          // Mode création : utiliser submitApplication
+          await merchantStore.submitApplication(formData.value)
+          notificationStore.success(
+            'Candidature envoyée !',
+            'Votre demande a été soumise avec succès'
+          )
+        }
         router.push('/success')
       } catch (error) {
         console.error('Erreur lors de l\'envoi:', error)
@@ -1152,7 +1204,9 @@ export default {
       isEditMode,
       applicationId,
       isLoadingApplication,
-      loadingError
+      loadingError,
+      applicationUserId,
+      isCommercialInfoDisabled
     }
   }
 }

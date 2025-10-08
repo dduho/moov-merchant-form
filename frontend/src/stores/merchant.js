@@ -82,6 +82,7 @@ export const useMerchantStore = defineStore('merchant', () => {
         idExpiryDate: data.idExpiryDate,
         hasAnidCard: data.hasAnidCard,
         anidNumber: data.anidNumber,
+        anidExpiryDate: data.anidExpiryDate,
         isForeigner: data.isForeigner,
         
         // Informations commercial
@@ -98,6 +99,7 @@ export const useMerchantStore = defineStore('merchant', () => {
         usageType: data.usageType, // TRADER, MERC, TRADERWNIF, CORP
         hasCFE: data.hasCFE,
         cfeNumber: data.cfeNumber,
+        cfeExpiryDate: data.cfeExpiryDate,
         hasNIF: data.hasNIF,
         nifNumber: data.nifNumber,
         
