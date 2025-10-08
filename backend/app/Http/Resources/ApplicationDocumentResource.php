@@ -22,6 +22,9 @@ class ApplicationDocumentResource extends JsonResource
             'verified' => $this->is_verified,
             'is_verified' => $this->is_verified,
             'verified_at' => $this->verified_at?->toISOString(),
+            'verified_by' => $this->verifier?->name ?? null,
+            'verification_notes' => $this->verification_notes,
+            'created_at' => $this->created_at?->toISOString(),
             'uploaded_at' => $this->created_at?->toISOString(),
         ];
     }

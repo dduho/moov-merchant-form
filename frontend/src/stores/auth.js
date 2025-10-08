@@ -34,6 +34,10 @@ export const useAuthStore = defineStore('auth', {
     canDeleteApplications: (state) => {
       const roles = state.user?.roles || []
       return roles.includes('admin')
+    },
+    canVerifyDocuments: (state) => {
+      const roles = state.user?.roles || []
+      return roles.includes('admin')
     }
   },
 

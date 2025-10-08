@@ -376,6 +376,19 @@
                       </svg>
                       {{ doc.verified ? 'Vérifié' : 'En attente' }}
                     </span>
+                    
+                    <!-- Bouton Vérifier (visible seulement si document non vérifié et user est admin) -->
+                    <button 
+                      v-if="!doc.verified && canVerifyDocuments"
+                      @click="verifyDocument(doc.id)"
+                      :disabled="loading"
+                      class="inline-flex items-center px-3 py-2 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-sm font-medium rounded-xl text-green-700 hover:from-green-100 hover:to-emerald-100 hover:border-green-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                      <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Vérifier
+                    </button>
+
                     <a :href="getDocumentUrl(doc.id)"
                        target="_blank"
                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 text-sm font-medium rounded-xl text-orange-700 hover:from-orange-100 hover:to-amber-100 hover:border-orange-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200 shadow-sm hover:shadow-md">
@@ -450,6 +463,7 @@
                             'h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white',
                             event.type === 'submitted' && 'bg-blue-500',
                             event.type === 'document_added' && 'bg-green-500',
+                            event.type === 'document_verified' && 'bg-emerald-500',
                             event.type === 'note_added' && 'bg-yellow-500',
                             event.type === 'reviewed' && 'bg-purple-500'
                           ]">
@@ -464,6 +478,11 @@
                                     stroke-linejoin="round" 
                                     stroke-width="2" 
                                     d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                              <path v-else-if="event.type === 'document_verified'"
+                                    stroke-linecap="round" 
+                                    stroke-linejoin="round" 
+                                    stroke-width="2" 
+                                    d="M9 12l2 2 4-4m5.5-3.5l-8 8-3.5-3.5" />
                               <path v-else-if="event.type === 'note_added'"
                                     stroke-linecap="round" 
                                     stroke-linejoin="round" 
@@ -771,6 +790,7 @@ export default {
     const canValidate = computed(() => authStore.canValidateApplications)
     const canReject = computed(() => authStore.canRejectApplications)
     const canDelete = computed(() => authStore.canDeleteApplications)
+    const canVerifyDocuments = computed(() => authStore.canVerifyDocuments)
 
     // Timeline calculée à partir des données disponibles
     const timelineEvents = computed(() => {
@@ -806,6 +826,7 @@ export default {
       // Événements des documents
       if (application.value.documents && application.value.documents.length > 0) {
         application.value.documents.forEach((doc, index) => {
+          // Événement d'ajout de document
           events.push({
             id: `document-${doc.id}`,
             type: 'document_added',
@@ -813,6 +834,17 @@ export default {
             description: `${doc.original_name} (${doc.size || 'Taille inconnue'})`,
             date: doc.created_at
           })
+          
+          // Événement de vérification de document (si vérifié)
+          if (doc.verified && doc.verified_at) {
+            events.push({
+              id: `document-verified-${doc.id}`,
+              type: 'document_verified',
+              title: `Document vérifié : ${doc.type_label}`,
+              description: doc.verified_by ? `Vérifié par ${doc.verified_by}` : 'Document marqué comme vérifié',
+              date: doc.verified_at
+            })
+          }
         })
       }
       
@@ -1033,6 +1065,29 @@ export default {
       return ApiService.getDocumentUrl(documentId)
     }
 
+    const verifyDocument = async (documentId) => {
+      try {
+        loading.value = true
+        await ApiService.verifyDocument(documentId)
+        
+        notificationStore.success(
+          'Document vérifié',
+          'Le document a été marqué comme vérifié avec succès.'
+        )
+        
+        // Recharger les données pour mettre à jour l'affichage et la timeline
+        await loadApplication()
+      } catch (error) {
+        console.error('Erreur vérification document:', error)
+        notificationStore.error(
+          'Erreur',
+          error.response?.data?.message || 'Impossible de vérifier le document.'
+        )
+      } finally {
+        loading.value = false
+      }
+    }
+
     const formatBoolean = (value) => {
       return value ? 'Oui' : 'Non'
     }
@@ -1119,6 +1174,7 @@ export default {
       formatDate,
       formatFileSize,
       getDocumentUrl,
+      verifyDocument,
       formatMoney,
       getIdTypeLabel,
       getUsageTypeLabel,
@@ -1139,7 +1195,8 @@ export default {
       canEdit,
       canValidate,
       canReject,
-      canDelete
+      canDelete,
+      canVerifyDocuments
     }
   }
 }
