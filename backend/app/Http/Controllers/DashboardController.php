@@ -102,9 +102,9 @@ class DashboardController extends Controller
                       ->orWhere('first_name', 'LIKE', "%{$search}%")
                       ->orWhere('last_name', 'LIKE', "%{$search}%")
                       ->orWhere('business_name', 'LIKE', "%{$search}%")
-                      ->orWhere('personal_phone', 'LIKE', "%{$search}%")
+                      ->orWhere('phone', 'LIKE', "%{$search}%")
                       ->orWhere('merchant_phone', 'LIKE', "%{$search}%")
-                      ->orWhere('personal_email', 'LIKE', "%{$search}%");
+                      ->orWhere('email', 'LIKE', "%{$search}%");
                 });
             }
             
