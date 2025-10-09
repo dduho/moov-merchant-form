@@ -79,6 +79,10 @@ class MerchantApplication extends Model
         'rejected_at',
         'rejected_by',
         'rejected_reason',
+        
+        // Identifiants techniques
+        'uuid',
+        'reference_number',
     ];
 
     protected function casts(): array
