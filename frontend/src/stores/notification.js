@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { NotificationService } from '../services/NotificationService'
 
-export const useNotificationStore = defineStore('notifications', {
+export const useSystemNotificationStore = defineStore('systemNotifications', {
   state: () => ({
     notifications: [],
     unreadCount: 0,

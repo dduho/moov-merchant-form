@@ -189,10 +189,10 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useNotificationStore } from '../stores/notification'
+import { useSystemNotificationStore } from '../stores/notification'
 import NotificationItem from '../components/NotificationItem.vue'
 
-const notificationStore = useNotificationStore()
+const notificationStore = useSystemNotificationStore()
 
 // État local
 const statusFilter = ref('all')

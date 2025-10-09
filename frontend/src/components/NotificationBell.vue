@@ -36,7 +36,7 @@
     >
       <div
         v-if="isOpen"
-        class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50"
+        class="absolute right-0 mt-2 w-[30rem] bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50"
       >
         <!-- En-tête -->
         <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
@@ -119,10 +119,10 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useNotificationStore } from '../stores/notification'
+import { useSystemNotificationStore } from '../stores/notification'
 import NotificationItem from './NotificationItem.vue'
 
-const notificationStore = useNotificationStore()
+const notificationStore = useSystemNotificationStore()
 const isOpen = ref(false)
 const isMarkingAllAsRead = ref(false)
 
