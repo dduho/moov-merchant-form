@@ -672,6 +672,20 @@ class MerchantService {
       throw error
     }
   }
+
+  // Marquer les candidatures comme exportées pour création dans SP
+  async markApplicationsAsExported(applicationIds) {
+    try {
+      const response = await this.client.post('/merchant-applications/mark-as-exported', {
+        application_ids: applicationIds
+      })
+      
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors du marquage des candidatures comme exportées:', error)
+      throw error
+    }
+  }
 }
 
 export default new MerchantService()

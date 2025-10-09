@@ -160,6 +160,7 @@ class MerchantApplication extends Model
                 'rejected' => 'Rejetée',
                 'needs_info' => 'Informations manquantes',
                 'archived' => 'Archivée',
+                'exported_for_creation' => 'Exporté pour création',
                 default => 'Inconnu'
             }
         );
@@ -213,6 +214,11 @@ class MerchantApplication extends Model
     public function scopeApproved($query)
     {
         return $query->where('status', 'approved');
+    }
+
+    public function scopeExportedForCreation($query)
+    {
+        return $query->where('status', 'exported_for_creation');
     }
 
     public function scopeSearch($query, string $term)

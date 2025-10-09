@@ -1,9 +1,9 @@
 <template>
-  <div class="bg-gray-100 min-h-screen p-6">
+  <div class="bg-gray-100 min-h-screen p-4 sm:p-6">
     <!-- Content Container -->
-    <div class="max-w-7xl mx-auto space-y-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
       <!-- Header avec navigation -->
-      <div class="bg-white rounded-2xl shadow-sm p-6">
+      <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
         <template v-if="loading">
           <!-- Skeleton pour le header -->
           <div class="flex items-center justify-between">
@@ -26,89 +26,124 @@
         </template>
 
         <template v-else>
+          <!-- Header avec menu burger -->
           <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-4">
+            <!-- Section gauche: Navigation et titre -->
+            <div class="flex items-center space-x-3 flex-1 min-w-0">
               <router-link 
                 to="/dashboard" 
-                class="flex items-center text-gray-600 hover:text-orange-600 transition-colors">
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                class="flex items-center text-gray-500 hover:text-orange-600 transition-colors group flex-shrink-0">
+                <svg class="w-4 h-4 group-hover:translate-x-[-2px] transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                <span class="ml-2">Retour au dashboard</span>
+                <span class="ml-2 text-sm hidden sm:inline">Retour</span>
               </router-link>
-              <div class="h-6 w-px bg-gray-300"></div>
-              <h1 class="text-2xl font-bold text-gray-800">
+              <div class="h-4 w-px bg-gray-300 flex-shrink-0"></div>
+              <h1 class="text-lg sm:text-xl font-semibold text-gray-900 truncate">
                 Candidature #{{ application?.reference_number }}
               </h1>
             </div>
-            <div class="flex items-center space-x-4">
-              <!-- Badge de statut amélioré -->
-              <div class="flex items-center">
-                <span :class="[
-                  'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium shadow-sm border whitespace-nowrap',
-                  application?.status === 'pending' && 'bg-gradient-to-r from-yellow-50 to-amber-50 text-yellow-800 border-yellow-200',
-                  application?.status === 'approved' && 'bg-gradient-to-r from-green-50 to-emerald-50 text-green-800 border-green-200',
-                  application?.status === 'rejected' && 'bg-gradient-to-r from-red-50 to-rose-50 text-red-800 border-red-200'
-                ]">
-                  <!-- Icône de statut -->
-                  <svg v-if="application?.status === 'pending'" class="w-3 h-3 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <svg v-else-if="application?.status === 'approved'" class="w-3 h-3 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <svg v-else-if="application?.status === 'rejected'" class="w-3 h-3 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {{ getStatusLabel(application?.status) }}
-                </span>
-              </div>
+            
+            <!-- Section milieu: Badge de statut -->
+            <div class="hidden sm:flex items-center mx-4">
+              <span :class="[
+                'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium',
+                application?.status === 'pending' && 'bg-yellow-100 text-yellow-800',
+                application?.status === 'approved' && 'bg-green-100 text-green-800',
+                application?.status === 'rejected' && 'bg-red-100 text-red-800'
+              ]">
+                <div :class="[
+                  'w-2 h-2 rounded-full mr-2',
+                  application?.status === 'pending' && 'bg-yellow-500',
+                  application?.status === 'approved' && 'bg-green-500',
+                  application?.status === 'rejected' && 'bg-red-500'
+                ]"></div>
+                {{ getStatusLabel(application?.status) }}
+              </span>
+            </div>
+            
+            <!-- Section droite: Menu burger (si actions disponibles) -->
+            <div v-if="canEdit || (canValidate && application?.status === 'pending')" class="relative flex-shrink-0">
+              <button 
+                @click="showActionsMenu = !showActionsMenu"
+                class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+                :class="{ 'bg-gray-200': showActionsMenu }">
+                <svg class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
+              </button>
               
-              <!-- Actions selon les permissions -->
-              <div class="flex items-center space-x-3">
-                <!-- Bouton Modifier (Admin et Commercial) -->
-                <button 
-                  v-if="canEdit"
-                  @click="editApplication"
-                  class="inline-flex items-center px-4 py-2.5 border border-orange-300 text-orange-700 bg-orange-50 rounded-xl hover:bg-orange-100 hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-200 font-medium shadow-sm">
-                  <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  Modifier
-                </button>
+              <!-- Menu déroulant -->
+              <transition
+                enter-active-class="transition ease-out duration-200"
+                enter-from-class="transform opacity-0 scale-95"
+                enter-to-class="transform opacity-100 scale-100"
+                leave-active-class="transition ease-in duration-75"
+                leave-from-class="transform opacity-100 scale-100"
+                leave-to-class="transform opacity-0 scale-95">
+                <div 
+                  v-if="showActionsMenu" 
+                  class="absolute right-0 top-12 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50"
+                  @click.stop>
+                  
+                  <!-- Badge mobile (visible seulement sur mobile) -->
+                  <div class="sm:hidden px-4 py-2 border-b border-gray-100">
+                    <span :class="[
+                      'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium',
+                      application?.status === 'pending' && 'bg-yellow-100 text-yellow-800',
+                      application?.status === 'approved' && 'bg-green-100 text-green-800',
+                      application?.status === 'rejected' && 'bg-red-100 text-red-800'
+                    ]">
+                      <div :class="[
+                        'w-2 h-2 rounded-full mr-2',
+                        application?.status === 'pending' && 'bg-yellow-500',
+                        application?.status === 'approved' && 'bg-green-500',
+                        application?.status === 'rejected' && 'bg-red-500'
+                      ]"></div>
+                      {{ getStatusLabel(application?.status) }}
+                    </span>
+                  </div>
+                  
+                  <!-- Actions -->
+                  <div class="py-1">
+                    <!-- Bouton Modifier -->
+                    <button 
+                      v-if="canEdit"
+                      @click="editApplication; showActionsMenu = false"
+                      class="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                      <svg class="w-4 h-4 mr-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Modifier la candidature
+                    </button>
 
-                <!-- Bouton Supprimer (Admin seulement) -->
-                <!-- <button 
-                  v-if="canDelete"
-                  @click="confirmDelete"
-                  class="inline-flex items-center px-4 py-2.5 border border-red-300 text-red-700 bg-red-50 rounded-xl hover:bg-red-100 hover:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 font-medium shadow-sm">
-                  <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Supprimer
-                </button> -->
+                    <!-- Séparateur si validation disponible -->
+                    <div v-if="canEdit && canValidate && application?.status === 'pending'" class="border-t border-gray-100 my-1"></div>
 
-                <!-- Boutons Validation (Admin seulement) -->
-                <template v-if="canValidate && application?.status === 'pending'">
-                  <button 
-                    v-if="canReject"
-                    @click="updateStatus('rejected')"
-                    class="inline-flex items-center px-4 py-2.5 border border-red-300 text-red-700 bg-red-50 rounded-xl hover:bg-red-100 hover:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 font-medium shadow-sm">
-                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    Rejeter
-                  </button>
-                  <button 
-                    @click="updateStatus('approved')"
-                    class="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    Approuver
-                  </button>
-                </template>
-              </div>
+                    <!-- Boutons Validation -->
+                    <template v-if="canValidate && application?.status === 'pending'">
+                      <button 
+                        @click="updateStatus('approved'); showActionsMenu = false"
+                        class="flex items-center w-full px-4 py-3 text-sm text-green-700 hover:bg-green-50 transition-colors">
+                        <svg class="w-4 h-4 mr-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Approuver la candidature
+                      </button>
+                      
+                      <button 
+                        v-if="canReject"
+                        @click="updateStatus('rejected'); showActionsMenu = false"
+                        class="flex items-center w-full px-4 py-3 text-sm text-red-700 hover:bg-red-50 transition-colors">
+                        <svg class="w-4 h-4 mr-3 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Rejeter la candidature
+                      </button>
+                    </template>
+                  </div>
+                </div>
+              </transition>
             </div>
           </div>
         </template>
@@ -303,12 +338,12 @@
                   <h3 class="text-xl font-semibold text-orange-600 mb-6">Informations supplémentaires</h3>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label class="block text-sm font-medium" style="color: #005BA4">Chiffre d'affaires mensuel estimé</label>
-                      <div class="mt-1 text-gray-900">{{ formatMoney(application?.estimatedTurnover) }}</div>
+                      <label class="block text-sm font-medium" style="color: #005BA4">Région</label>
+                      <div class="mt-1 text-gray-900">{{ application.region ? application.region : "Néant" }}</div>
                     </div>
                     <div>
-                      <label class="block text-sm font-medium" style="color: #005BA4">Volume de transactions mensuel estimé</label>
-                      <div class="mt-1 text-gray-900">{{ formatMoney(application?.estimatedTransactionVolume) }}</div>
+                      <label class="block text-sm font-medium" style="color: #005BA4">Ville</label>
+                      <div class="mt-1 text-gray-900">{{ application.city ? application.city : "Néant" }}</div>
                     </div>
                     <div>
                       <label class="block text-sm font-medium" style="color: #005BA4">Date de soumission</label>
@@ -654,7 +689,7 @@
               <div class="flex space-x-4">
                 <div class="flex-1">
                   <label class="block text-sm font-medium mb-2" style="color: #005BA4">Latitude</label>
-                  <div class="bg-gray-50 rounded-lg p-3">
+                  <div class="bg-gray-50 rounded-lg px-3">
                     <span class="text-sm font-mono text-gray-700">
                       {{ application?.latitude || 'Non renseignée' }}
                     </span>
@@ -662,7 +697,7 @@
                 </div>
                 <div class="flex-1">
                   <label class="block text-sm font-medium mb-2" style="color: #005BA4">Longitude</label>
-                  <div class="bg-gray-50 rounded-lg p-3">
+                  <div class="bg-gray-50 rounded-lg px-3">
                     <span class="text-sm font-mono text-gray-700">
                       {{ application?.longitude || 'Non renseignée' }}
                     </span>
@@ -673,7 +708,7 @@
               <!-- Adresse du commerce -->
               <div>
                 <label class="block text-sm font-medium mb-2" style="color: #005BA4">Adresse du commerce</label>
-                <div class="bg-gray-50 rounded-lg p-3">
+                <div class="bg-gray-50 rounded-lg px-3">
                   <p class="text-sm text-gray-700">
                     {{ application?.shop_address || 'Non renseignée' }}
                   </p>
@@ -683,7 +718,7 @@
               <!-- Description de la localisation -->
               <div v-if="application?.location_description">
                 <label class="block text-sm font-medium mb-2" style="color: #005BA4">Description de la localisation</label>
-                <div class="bg-gray-50 rounded-lg p-3">
+                <div class="bg-gray-50 rounded-lg px-3">
                   <p class="text-sm text-gray-700 whitespace-pre-wrap">
                     {{ application.location_description }}
                   </p>
@@ -753,7 +788,7 @@
 </template>
 
 <script>
-import { ref, onMounted, computed, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notifications'
@@ -784,9 +819,25 @@ export default {
     const editedNote = ref('')
     const mapContainer = ref(null)
     const map = ref(null)
+    const showActionsMenu = ref(false)
 
     // Permissions calculées
-    const canEdit = computed(() => authStore.canEditApplications)
+    const canEdit = computed(() => {
+      // Vérifier d'abord les permissions générales
+      if (!authStore.canEditApplications) return false
+      
+      // Si c'est un admin, il peut toujours modifier
+      if (authStore.isAdmin) return true
+      
+      // Si c'est un commercial et que la candidature est approuvée ou exportée, interdire la modification
+      if (!authStore.isAdmin && application.value && 
+          (application.value.status === 'approved' || application.value.status === 'exported_for_creation')) {
+        return false
+      }
+      
+      // Dans tous les autres cas, autoriser si les permissions générales le permettent
+      return true
+    })
     const canValidate = computed(() => authStore.canValidateApplications)
     const canReject = computed(() => authStore.canRejectApplications)
     const canDelete = computed(() => authStore.canDeleteApplications)
@@ -917,6 +968,12 @@ export default {
     }
 
     const editApplication = () => {
+      // Vérifier les permissions avant de naviguer
+      if (!canEdit.value) {
+        notificationStore.warning('Accès refusé', 'Vous n\'avez pas les permissions pour modifier cette candidature.')
+        return
+      }
+      
       // Navigation vers le formulaire d'édition
       router.push(`/applications/${application.value.id}/edit`)
     }
@@ -958,6 +1015,12 @@ export default {
     }
     
     const startEditing = () => {
+      // Vérifier les permissions avant d'entrer en mode édition
+      if (!canEdit.value) {
+        notificationStore.warning('Accès refusé', 'Vous n\'avez pas les permissions pour modifier les notes de cette candidature.')
+        return
+      }
+      
       editedNote.value = application.value.admin_notes || ''
       isEditing.value = true
     }
@@ -1157,11 +1220,25 @@ export default {
       }
     }
     
+    // Fermer le menu si on clique en dehors
+    const handleClickOutside = (event) => {
+      if (showActionsMenu.value && !event.target.closest('.relative')) {
+        showActionsMenu.value = false
+      }
+    }
+    
     onMounted(async () => {
       await loadApplication()
       // Initialiser la carte après le chargement de l'application
       await nextTick()
       initializeMap()
+      
+      // Écouter les clics pour fermer le menu burger
+      document.addEventListener('click', handleClickOutside)
+    })
+    
+    onUnmounted(() => {
+      document.removeEventListener('click', handleClickOutside)
     })
     
     return {
@@ -1196,7 +1273,9 @@ export default {
       canValidate,
       canReject,
       canDelete,
-      canVerifyDocuments
+      canVerifyDocuments,
+      // Menu burger
+      showActionsMenu
     }
   }
 }

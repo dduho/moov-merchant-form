@@ -1,38 +1,40 @@
 <template>
-  <div class="bg-gray-100 min-h-screen p-6">
+  <div class="bg-gray-100 min-h-screen p-4 sm:p-6">
     <!-- Content Container -->
     <div class="space-y-8">
       <!-- Header -->
-      <div class="max-w-7xl mx-auto">
-        <div class="bg-white rounded-2xl shadow-sm p-6 flex items-center justify-between">
-          <div>
-            <h1 class="text-2xl font-bold text-gray-800">Tableau de bord</h1>
-            <p class="text-gray-500 mt-1">Vue d'ensemble de l'activité</p>
-          </div>
-          <div class="flex items-center space-x-4">
-            <button @click="refreshData" 
-                    class="flex items-center px-4 py-2 bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-100 transition-colors">
-              <svg class="w-5 h-5 mr-2" :class="{ 'animate-spin': loading }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Actualiser
-            </button>
-            <select v-model="selectedPeriod" 
-                    @change="loadData" 
-                    class="px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500">
-              <option value="today">Aujourd'hui</option>
-              <option value="week">Cette semaine</option>
-              <option value="month">Ce mois</option>
-              <option value="quarter">Ce trimestre</option>
-              <option value="year">Cette année</option>
-              <option value="all">Tout</option>
-            </select>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
+          <div class="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+            <div>
+              <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Tableau de bord</h1>
+              <p class="text-gray-500 mt-1 text-sm sm:text-base">Vue d'ensemble de l'activité</p>
+            </div>
+            <div class="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
+              <button @click="refreshData" 
+                      class="flex items-center justify-center px-4 py-2 bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-100 transition-colors text-sm">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2" :class="{ 'animate-spin': loading }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Actualiser
+              </button>
+              <select v-model="selectedPeriod" 
+                      @change="loadData" 
+                      class="px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                <option value="today">Aujourd'hui</option>
+                <option value="week">Cette semaine</option>
+                <option value="month">Ce mois</option>
+                <option value="quarter">Ce trimestre</option>
+                <option value="year">Cette année</option>
+                <option value="all">Tout</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- KPIs -->
-      <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <template v-if="loading">
           <div v-for="i in 4" :key="'kpi-skeleton-'+i" class="bg-white rounded-2xl shadow-sm p-6">
             <div class="flex items-center justify-between mb-4">
@@ -172,8 +174,8 @@
       </div>
 
       <!-- Graphiques -->
-      <div class="max-w-7xl mx-auto">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           <template v-if="loading">
             <div v-for="i in 3" :key="'chart-skeleton-'+i" class="chart-card">
               <h3 class="text-xl font-semibold text-gray-800">Chargement...</h3>
@@ -207,12 +209,12 @@
       </div>
 
       <!-- Statistiques par utilisateur (Admin uniquement) -->
-      <div v-if="authStore.isAdmin" class="max-w-7xl mx-auto">
-        <div class="bg-white rounded-2xl shadow-sm p-6">
-          <div class="flex items-center justify-between mb-6">
+      <div v-if="authStore.isAdmin" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
+          <div class="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 mb-6">
             <div>
-              <h3 class="text-xl font-semibold text-gray-800">Performance des utilisateurs</h3>
-              <p class="text-sm text-gray-500 mt-1">Candidatures soumises, validées et taux de conversion par utilisateur {{ getPeriodText() }}</p>
+              <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Performance des utilisateurs</h3>
+              <p class="text-xs sm:text-sm text-gray-500 mt-1">Candidatures soumises, validées et taux de conversion par utilisateur {{ getPeriodText() }}</p>
             </div>
             <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
               <svg class="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -318,19 +320,19 @@
             <div class="space-y-3">
               <div v-for="user in userStats" :key="user.user_id" 
                    class="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
-                <div class="flex items-center justify-between">
+                <div class="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
                   <!-- Informations utilisateur -->
-                  <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                  <div class="flex items-center space-x-3 min-w-0 flex-1">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
                       {{ user.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() }}
                     </div>
-                    <div>
-                      <h4 class="font-semibold text-gray-800">{{ user.full_name }}</h4>
-                      <div class="flex items-center space-x-2 text-sm text-gray-500">
-                        <span>{{ user.username }}</span>
-                        <span v-if="user.email" class="text-gray-400">•</span>
-                        <span v-if="user.email" class="truncate max-w-40">{{ user.email }}</span>
-                        <span v-if="user.roles.length > 0" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                    <div class="min-w-0 flex-1">
+                      <h4 class="font-semibold text-gray-800 truncate">{{ user.full_name }}</h4>
+                      <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-2 text-sm text-gray-500">
+                        <span class="truncate">{{ user.username }}</span>
+                        <span v-if="user.email" class="hidden sm:inline text-gray-400">•</span>
+                        <span v-if="user.email" class="truncate">{{ user.email }}</span>
+                        <span v-if="user.roles.length > 0" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 w-fit mt-1 sm:mt-0">
                           {{ user.roles.join(', ') }}
                         </span>
                       </div>
@@ -338,34 +340,34 @@
                   </div>
                   
                   <!-- Statistiques -->
-                  <div class="flex items-center space-x-8">
+                  <div class="grid grid-cols-2 gap-3 sm:grid-cols-5 sm:gap-4 lg:flex lg:items-center lg:space-x-6">
                     <!-- Total soumis -->
                     <div class="text-center">
-                      <div class="text-lg font-bold text-gray-800">{{ user.stats.total_submitted }}</div>
+                      <div class="text-base sm:text-lg font-bold text-gray-800">{{ user.stats.total_submitted }}</div>
                       <div class="text-xs text-gray-500">Soumises</div>
                     </div>
                     
                     <!-- Validées -->
                     <div class="text-center">
-                      <div class="text-lg font-bold text-green-600">{{ user.stats.total_approved }}</div>
+                      <div class="text-base sm:text-lg font-bold text-green-600">{{ user.stats.total_approved }}</div>
                       <div class="text-xs text-gray-500">Validées</div>
                     </div>
                     
                     <!-- Rejetées -->
                     <div class="text-center">
-                      <div class="text-lg font-bold text-red-600">{{ user.stats.total_rejected }}</div>
+                      <div class="text-base sm:text-lg font-bold text-red-600">{{ user.stats.total_rejected }}</div>
                       <div class="text-xs text-gray-500">Rejetées</div>
                     </div>
                     
                     <!-- En attente -->
                     <div class="text-center">
-                      <div class="text-lg font-bold text-yellow-600">{{ user.stats.total_pending }}</div>
+                      <div class="text-base sm:text-lg font-bold text-yellow-600">{{ user.stats.total_pending }}</div>
                       <div class="text-xs text-gray-500">En attente</div>
                     </div>
                     
                     <!-- Taux de conversion -->
                     <div class="text-center">
-                      <div class="text-lg font-bold" :class="user.stats.conversion_rate >= 70 ? 'text-green-600' : user.stats.conversion_rate >= 40 ? 'text-yellow-600' : 'text-red-600'">
+                      <div class="text-base sm:text-lg font-bold" :class="user.stats.conversion_rate >= 70 ? 'text-green-600' : user.stats.conversion_rate >= 40 ? 'text-yellow-600' : 'text-red-600'">
                         {{ user.stats.conversion_rate }}%
                       </div>
                       <div class="text-xs text-gray-500">Conversion</div>
@@ -376,34 +378,35 @@
             </div>
 
             <!-- Pagination -->
-            <div v-if="userPagination && userPagination.total_pages > 1" class="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+            <div v-if="userPagination && userPagination.total_pages > 1" class="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 mt-6 pt-4 border-t border-gray-200">
               <div class="text-sm text-gray-500">
                 Affichage {{ ((userPagination.current_page - 1) * userPagination.per_page) + 1 }} à 
                 {{ Math.min(userPagination.current_page * userPagination.per_page, userPagination.total) }} 
                 de {{ userPagination.total }} utilisateurs
               </div>
               
-              <div class="flex items-center space-x-2">
+              <div class="flex items-center justify-center sm:justify-start space-x-2">
                 <!-- Bouton précédent -->
                 <button
                   @click="loadUserStatsPage(userPagination.current_page - 1)"
                   :disabled="!userPagination.has_prev"
-                  class="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="inline-flex items-center px-2 sm:px-3 py-1 border border-gray-300 rounded-md text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg class="h-3 w-3 sm:h-4 sm:w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                   </svg>
-                  Précédent
+                  <span class="hidden sm:inline">Précédent</span>
+                  <span class="sm:hidden">Préc</span>
                 </button>
                 
                 <!-- Numéros de page -->
-                <div class="flex items-center space-x-1">
+                <div class="flex items-center space-x-1 overflow-x-auto max-w-xs sm:max-w-none">
                   <button
                     v-for="page in getPaginationPages(userPagination.current_page, userPagination.total_pages)"
                     :key="page"
                     @click="page !== '...' && loadUserStatsPage(page)"
                     :class="[
-                      'px-3 py-1 text-sm font-medium rounded-md',
+                      'px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium rounded-md flex-shrink-0',
                       page === userPagination.current_page
                         ? 'bg-blue-600 text-white'
                         : page === '...'
@@ -420,10 +423,11 @@
                 <button
                   @click="loadUserStatsPage(userPagination.current_page + 1)"
                   :disabled="!userPagination.has_next"
-                  class="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="inline-flex items-center px-2 sm:px-3 py-1 border border-gray-300 rounded-md text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Suivant
-                  <svg class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <span class="hidden sm:inline">Suivant</span>
+                  <span class="sm:hidden">Suiv</span>
+                  <svg class="h-3 w-3 sm:h-4 sm:w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
@@ -434,16 +438,18 @@
       </div>
 
       <!-- Dernières candidatures -->
-      <div class="max-w-7xl mx-auto">
-        <div class="bg-white rounded-2xl shadow-sm p-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
           <!-- En-tête avec titre et icône -->
-          <div class="flex items-center justify-between mb-6">
+          <div class="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 mb-6">
             <div>
-              <h3 class="text-xl font-semibold text-gray-800">Dernières candidatures</h3>
-              <p class="text-sm text-gray-500 mt-1">Toutes les candidatures avec filtres et recherche</p>
+              <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Dernières candidatures</h3>
+              <p class="text-xs sm:text-sm text-gray-500 mt-1">Toutes les candidatures avec filtres et recherche</p>
             </div>
-            <div class="flex items-center space-x-3">
-              <button @click="exportToSP" 
+            <div class="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
+              <!-- Bouton Export SP - Visible seulement pour les administrateurs -->
+              <button v-if="authStore.isAdmin"
+                      @click="exportToSP" 
                       :disabled="exportLoading"
                       class="flex items-center px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg v-if="!exportLoading" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -497,6 +503,7 @@
                 <option value="pending">En attente</option>
                 <option value="approved">Approuvée</option>
                 <option value="rejected">Rejetée</option>
+                <option value="exported_for_creation">Exporté pour création</option>
               </select>
             </div>
 
@@ -513,7 +520,8 @@
           </div>
           
           <div class="border rounded-xl overflow-hidden">
-            <div class="min-w-full divide-y divide-gray-200">
+            <div class="overflow-x-auto">
+              <div class="min-w-full divide-y divide-gray-200">
               <template v-if="applicationsLoading">
                 <div v-for="i in 6" :key="'app-skeleton-'+i"
                      class="flex items-center justify-between px-6 py-4">
@@ -533,32 +541,33 @@
 
               <template v-else-if="recentApplications.length > 0">
                 <div v-for="app in recentApplications" :key="app.id" 
-                     class="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors">
-                  <div class="flex items-center space-x-4">
+                     class="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors">
+                  <div class="flex items-center space-x-3 sm:space-x-4 min-w-0">
                     <div class="flex-shrink-0">
-                      <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                        <span class="text-lg font-medium text-gray-600">
+                      <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                        <span class="text-sm sm:text-lg font-medium text-gray-600">
                           {{ app.full_name?.[0]?.toUpperCase() || '?' }}
                         </span>
                       </div>
                     </div>
-                    <div>
-                      <h4 class="text-sm font-medium text-gray-900">{{ app.full_name }}</h4>
-                      <div class="flex items-center space-x-2 mt-1">
-                        <span class="text-sm text-gray-500">{{ app.business_name }}</span>
-                        <span class="text-gray-300">•</span>
+                    <div class="min-w-0 flex-1">
+                      <h4 class="text-sm font-medium text-gray-900 truncate">{{ app.full_name }}</h4>
+                      <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-2 mt-1">
+                        <span class="text-xs sm:text-sm text-gray-500 truncate">{{ app.business_name }}</span>
+                        <span class="hidden sm:inline text-gray-300">•</span>
                         <span class="text-xs text-gray-400">{{ app.reference_number }}</span>
                       </div>
                     </div>
                   </div>
                   
-                  <div class="flex items-center space-x-4">
-                    <div class="flex flex-col items-end">
+                  <div class="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
+                    <div class="flex flex-col sm:items-end">
                       <span :class="[
                         'px-2.5 py-1 text-xs font-medium rounded-full whitespace-nowrap',
                         app.status === 'pending' && 'bg-gradient-to-r from-yellow-50 to-amber-50 text-yellow-800 border border-yellow-200',
                         app.status === 'approved' && 'bg-gradient-to-r from-green-50 to-emerald-50 text-green-800 border border-green-200',
-                        app.status === 'rejected' && 'bg-gradient-to-r from-red-50 to-rose-50 text-red-800 border border-red-200'
+                        app.status === 'rejected' && 'bg-gradient-to-r from-red-50 to-rose-50 text-red-800 border border-red-200',
+                        app.status === 'exported_for_creation' && 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 border border-blue-200'
                       ]">
                         {{ app.status_label }}
                       </span>
@@ -566,12 +575,13 @@
                     </div>
                     
                     <router-link :to="`/applications/${app.id}`"
-                               class="inline-flex items-center px-3 py-1.5 border border-orange-600 text-sm font-medium rounded-lg text-orange-600 bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors">
-                      <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                               class="inline-flex items-center px-3 py-1.5 border border-orange-600 text-xs sm:text-sm font-medium rounded-lg text-orange-600 bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors">
+                      <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
-                      Détails
+                      <span class="hidden sm:inline">Détails</span>
+                      <span class="sm:hidden">Voir</span>
                     </router-link>
                   </div>
                 </div>
@@ -588,22 +598,27 @@
                 </div>
               </template>
             </div>
+            </div>
           </div>
 
           <!-- Pagination -->
-          <PaginationControls
-            v-if="!applicationsLoading && pagination.total > 0"
-            :current-page="pagination.current_page"
-            :total-pages="pagination.total_pages"
-            :total="pagination.total"
-            :per-page="pagination.per_page"
-            :has-next="pagination.has_next"
-            :has-prev="pagination.has_prev"
-            @page-change="handlePageChange"
-          />
+          <div v-if="!applicationsLoading && pagination.total > 0" class="mt-6 pt-4 border-t border-gray-200">
+            <PaginationControls
+              :current-page="pagination.current_page"
+              :total-pages="pagination.total_pages"
+              :total="pagination.total"
+              :per-page="pagination.per_page"
+              :has-next="pagination.has_next"
+              :has-prev="pagination.has_prev"
+              @page-change="handlePageChange"
+            />
+          </div>
         </div>
       </div>
     </div>
+    
+    <!-- Espacement en bas pour éviter l'overlap -->
+    <div class="h-8"></div>
   </div>
 </template>
 
@@ -614,6 +629,7 @@ import MerchantService from '../services/MerchantService'
 import Chart from 'chart.js/auto'
 import PaginationControls from '../components/PaginationControls.vue'
 import { useAuthStore } from '../stores/auth'
+import { useNotificationStore } from '../stores/notifications'
 
 export default {
   name: 'Dashboard',
@@ -622,6 +638,7 @@ export default {
   },
   setup() {
     const authStore = useAuthStore()
+    const notificationStore = useNotificationStore()
     const loading = ref(true)
     const applicationsLoading = ref(false)
     const exportLoading = ref(false)
@@ -797,18 +814,31 @@ export default {
           // Graphique circulaire
           if (pieChart.value && charts.value.pie_chart) {
             const ctx = pieChart.value.getContext('2d')
+            
+            // Mapping des couleurs selon les statuts
+            const getStatusColor = (status) => {
+              switch (status) {
+                case 'approved': return '#22c55e'        // Vert pour approuvé
+                case 'rejected': return '#ef4444'        // Rouge pour rejeté
+                case 'pending': return '#eab308'         // Jaune pour pending
+                case 'exported_for_creation': return '#3b82f6'  // Bleu pour exported_for_creation
+                case 'under_review': return '#f97316'    // Orange pour en examen
+                case 'needs_info': return '#8b5cf6'      // Violet pour informations manquantes
+                case 'archived': return '#6b7280'       // Gris pour archivé
+                default: return '#9ca3af'               // Gris par défaut
+              }
+            }
+            
+            // Générer les couleurs basées sur les labels (statuts)
+            const backgroundColors = charts.value.pie_chart.labels.map(label => getStatusColor(label))
+            
             pieChartInstance = new Chart(ctx, {
               type: 'pie',
               data: {
                 labels: charts.value.pie_chart.labels,
                 datasets: charts.value.pie_chart.datasets.map(dataset => ({
                   ...dataset,
-                  backgroundColor: [
-                    '#FDE68A', // En attente
-                    '#93C5FD', // En examen
-                    '#86EFAC', // Approuvé
-                    '#FCA5A5'  // Rejeté
-                  ]
+                  backgroundColor: backgroundColors
                 }))
               },
               options: {
@@ -875,7 +905,7 @@ export default {
         const approvedApplications = await MerchantService.getApprovedApplicationsForExport()
         
         if (!approvedApplications || approvedApplications.length === 0) {
-          alert('Aucune candidature approuvée à exporter.')
+          notificationStore.warning('Export impossible', 'Aucune candidature approuvée à exporter.')
           return
         }
         
@@ -889,11 +919,18 @@ export default {
         downloadFile(`CREATE-ORG-${currentDate}.xml`, createOrgXml)
         downloadFile(`CREATE-ORG-OPERATOR-${currentDate}.xml`, createOperatorXml)
         
-        alert(`Export réussi ! ${approvedApplications.length} candidature(s) exportée(s).`)
+        // Marquer les candidatures comme exportées
+        const applicationIds = approvedApplications.map(app => app.id)
+        await MerchantService.markApplicationsAsExported(applicationIds)
+        
+        notificationStore.success('Export réussi !', `${approvedApplications.length} candidature(s) exportée(s) vers SP et marquée(s) comme "Exporté pour création".`)
+        
+        // Recharger les données pour mettre à jour l'affichage
+        refreshData()
         
       } catch (error) {
         console.error('Erreur lors de l\'export:', error)
-        alert('Erreur lors de l\'export. Veuillez réessayer.')
+        notificationStore.error('Erreur d\'export', 'Une erreur s\'est produite lors de l\'export. Veuillez réessayer.')
       } finally {
         exportLoading.value = false
       }

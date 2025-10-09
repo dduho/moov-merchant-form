@@ -43,102 +43,175 @@ const handleLogout = async () => {
 </script>
 
 <template>
-  <div id="app" class="min-h-screen">
-    <!-- Header avec logo et progression -->
-    <header class="bg-white shadow-sm border-b border-gray-100">
-      <div class="max-w-4xl mx-auto px-4 py-4">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-3">
-            <router-link to="/" class="w-12 h-12 rounded-xl flex items-center justify-center hover:opacity-80 transition-opacity">
-              <img src="/logo.png" alt="Moov Money Logo" class="w-12 h-12 object-contain">
+  <div id="app" class="min-h-screen flex flex-col">
+    <!-- Header moderne et responsive -->
+    <header class="bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-100 sticky top-0 z-40 flex-shrink-0">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <!-- Logo et branding -->
+          <div class="flex items-center space-x-3 flex-shrink-0">
+            <router-link to="/" class="group flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-200 group-hover:scale-105">
+                <img src="/logo.png" alt="Moov Money Logo" class="w-12 h-12 object-contain">
+              </div>
+              <div class="hidden sm:block">
+                <h1 class="text-lg font-bold text-gray-900 group-hover:text-orange-600 transition-colors">Moov Money</h1>
+                <p class="text-xs text-gray-500 font-medium">Recrutement Marchand</p>
+              </div>
             </router-link>
-            <div>
-              <h1 class="text-xl font-bold text-gray-800">Moov Money</h1>
-              <p class="text-sm text-gray-500">Recrutement Marchand</p>
-            </div>
           </div>
           
-          <!-- Boutons de droite -->
-          <div class="flex items-center space-x-4">
-            <!-- Indicateur de connexion -->
-            <div class="flex items-center space-x-1">
+          <!-- Actions de droite -->
+          <div class="flex items-center space-x-2 sm:space-x-4">
+            <!-- Indicateur de connexion - visible sur tous les écrans -->
+            <div class="flex items-center space-x-1.5 px-2 py-1 rounded-full bg-gray-50">
               <div :class="isOnline ? 'bg-green-500' : 'bg-red-500'"
-                   class="w-2 h-2 rounded-full"></div>
-              <span class="text-xs text-gray-500">
+                   class="w-1.5 h-1.5 rounded-full animate-pulse"></div>
+              <span class="text-xs text-gray-600 font-medium hidden sm:inline">
                 {{ isOnline ? 'En ligne' : 'Hors ligne' }}
+              </span>
+              <!-- Version mobile - juste l'icône -->
+              <span class="sm:hidden" :title="isOnline ? 'En ligne' : 'Hors ligne'">
+                <svg v-if="isOnline" class="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <svg v-else class="w-3 h-3 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
               </span>
             </div>
 
             <!-- Notifications (seulement si authentifié) -->
             <NotificationBell v-if="authStore.isAuthenticated" />
 
-            <!-- Menu utilisateur -->
+            <!-- Menu utilisateur moderne -->
             <div class="relative user-menu">
               <button
                 @click.stop="userMenuOpen = !userMenuOpen"
-                class="h-10 px-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors"
+                class="h-10 px-3 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 text-gray-700 font-medium flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow"
+                :class="{ 'bg-gray-100 border-gray-300': userMenuOpen }"
               >
-                <i class="fas fa-user-circle text-lg mr-2"></i>
-                <span v-if="authStore.user">{{ authStore.userFullName }}</span>
-                <i class="fas fa-chevron-down text-xs ml-2"></i>
+                <div class="flex items-center space-x-2">
+                  <div class="w-6 h-6 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                    <i class="fas fa-user text-white text-xs"></i>
+                  </div>
+                  <span v-if="authStore.user" class="hidden sm:inline text-sm font-medium">{{ authStore.userFullName }}</span>
+                </div>
+                <svg class="w-4 h-4 ml-1 transition-transform duration-200" :class="{ 'rotate-180': userMenuOpen }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
               </button>
 
-              <!-- Menu déroulant -->
-              <div v-if="userMenuOpen" 
-                   class="absolute right-0 mt-2 w-48 rounded-xl overflow-hidden bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                <div v-if="authStore.isAuthenticated">
-                  <!-- Dashboard -->
-                  <router-link
-                    to="/dashboard"
-                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    @click="userMenuOpen = false"
-                  >
-                    <i class="fas fa-tachometer-alt mr-2"></i>
-                    Tableau de bord
-                  </router-link>
-                  
-                  <!-- Notifications -->
-                  <router-link
-                    to="/notifications"
-                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    @click="userMenuOpen = false"
-                  >
-                    <i class="fas fa-bell mr-2"></i>
-                    Notifications
-                  </router-link>
-                  
-                  <!-- Créer utilisateur (admin seulement) -->
-                  <router-link
-                    v-if="authStore.isAdmin"
-                    to="/register"
-                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    @click="userMenuOpen = false"
-                  >
-                    <i class="fas fa-user-plus mr-2"></i>
-                    Créer un utilisateur
-                  </router-link>
+              <!-- Menu déroulant moderne avec animations -->
+              <transition
+                enter-active-class="transition ease-out duration-200"
+                enter-from-class="transform opacity-0 scale-95"
+                enter-to-class="transform opacity-100 scale-100"
+                leave-active-class="transition ease-in duration-75"
+                leave-from-class="transform opacity-100 scale-100"
+                leave-to-class="transform opacity-0 scale-95">
+                <div v-if="userMenuOpen" 
+                     class="absolute right-0 mt-3 w-56 rounded-2xl bg-white py-2 shadow-xl border border-gray-200 focus:outline-none z-50 backdrop-blur-sm">
+                  <div v-if="authStore.isAuthenticated">
+                    <!-- Info utilisateur -->
+                    <div class="px-4 py-3 border-b border-gray-100">
+                      <p class="text-sm font-medium text-gray-900">{{ authStore.userFullName }}</p>
+                      <p class="text-xs text-gray-500">{{ authStore.user?.email }}</p>
+                    </div>
 
-                  <!-- Déconnexion -->
-                  <button
-                    @click="handleLogout"
-                    class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                  >
-                    <i class="fas fa-sign-out-alt mr-2"></i>
-                    Déconnexion
-                  </button>
+                    <div class="py-1">
+                      <!-- Dashboard -->
+                      <router-link
+                        to="/dashboard"
+                        class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors group"
+                        @click="userMenuOpen = false"
+                      >
+                        <div class="w-8 h-8 rounded-lg bg-gray-100 group-hover:bg-orange-100 flex items-center justify-center mr-3 transition-colors">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="font-medium">Tableau de bord</p>
+                          <p class="text-xs text-gray-500 group-hover:text-orange-600">Vue d'ensemble des candidatures</p>
+                        </div>
+                      </router-link>
+                      
+                      <!-- Notifications -->
+                      <router-link
+                        to="/notifications"
+                        class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors group"
+                        @click="userMenuOpen = false"
+                      >
+                        <div class="w-8 h-8 rounded-lg bg-gray-100 group-hover:bg-orange-100 flex items-center justify-center mr-3 transition-colors">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM11 17H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V11" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="font-medium">Notifications</p>
+                          <p class="text-xs text-gray-500 group-hover:text-orange-600">Messages et alertes</p>
+                        </div>
+                      </router-link>
+                      
+                      <!-- Créer utilisateur (admin seulement) -->
+                      <router-link
+                        v-if="authStore.isAdmin"
+                        to="/register"
+                        class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors group"
+                        @click="userMenuOpen = false"
+                      >
+                        <div class="w-8 h-8 rounded-lg bg-gray-100 group-hover:bg-orange-100 flex items-center justify-center mr-3 transition-colors">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="font-medium">Créer un utilisateur</p>
+                          <p class="text-xs text-gray-500 group-hover:text-orange-600">Administration</p>
+                        </div>
+                      </router-link>
+                    </div>
+
+                    <!-- Séparateur -->
+                    <div class="border-t border-gray-100 my-1"></div>
+
+                    <!-- Déconnexion -->
+                    <button
+                      @click="handleLogout"
+                      class="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors group"
+                    >
+                      <div class="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center mr-3">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p class="font-medium">Déconnexion</p>
+                        <p class="text-xs text-red-500">Fermer la session</p>
+                      </div>
+                    </button>
+                  </div>
+                  <div v-else>
+                    <!-- Connexion -->
+                    <router-link
+                      to="/login"
+                      class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors group"
+                      @click="userMenuOpen = false"
+                    >
+                      <div class="w-8 h-8 rounded-lg bg-gray-100 group-hover:bg-orange-100 flex items-center justify-center mr-3 transition-colors">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p class="font-medium">Connexion</p>
+                        <p class="text-xs text-gray-500 group-hover:text-orange-600">Accéder à votre compte</p>
+                      </div>
+                    </router-link>
+                  </div>
                 </div>
-                <div v-else>
-                  <!-- Connexion -->
-                  <router-link
-                    to="/login"
-                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    @click="userMenuOpen = false"
-                  >
-                    <i class="fas fa-sign-in-alt mr-2"></i>
-                    Connexion
-                  </router-link>
-                </div>
-              </div>
+              </transition>
             </div>
           </div>
         </div>
@@ -146,15 +219,36 @@ const handleLogout = async () => {
     </header>
 
     <!-- Contenu principal -->
-    <main>
+    <main class="flex-1 flex flex-col">
       <router-view />
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-100">
-      <div class="max-w-4xl mx-auto px-4 py-6">
-        <div class="text-center text-sm text-gray-500">
-          <p>&copy; {{ currentYear }} Moov Money. Tous droits réservés. | Crafted with ❤️ by David D.</p>
+    <!-- Footer moderne -->
+    <footer class="bg-gray-50 border-t border-gray-200 mt-auto">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="py-8">
+          <div class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
+            <!-- Logo et info -->
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                <img src="/logo.png" alt="Moov Money Logo" class="w-4 h-4 object-contain filter brightness-0 invert">
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-900">Moov Money</h3>
+                <p class="text-xs text-gray-500">Recrutement Marchand</p>
+              </div>
+            </div>
+            
+            <!-- Copyright et crédit -->
+            <div class="text-center md:text-right">
+              <p class="text-sm text-gray-600">
+                &copy; {{ currentYear }} Moov Money. Tous droits réservés.
+              </p>
+              <p class="text-xs text-gray-500 mt-1">
+                Crafted with <span class="text-red-500">❤️</span> by David D.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </footer>

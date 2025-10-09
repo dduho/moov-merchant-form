@@ -278,6 +278,18 @@ class MerchantApplicationController extends Controller
      */
     public function update(Request $request, MerchantApplication $merchantApplication): JsonResponse
     {
+        // Vérifier les permissions pour les commerciaux avec candidatures approuvées
+        $user = $request->user();
+        if ($user && $user->roles->contains('slug', 'commercial') && 
+            !$user->roles->contains('slug', 'admin') &&
+            in_array($merchantApplication->status, ['approved', 'exported_for_creation'])) {
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Vous ne pouvez pas modifier les notes d\'une candidature approuvée ou exportée'
+            ], 403);
+        }
+
         $validated = $request->validate([
             'admin_notes' => 'sometimes|string|max:1000|nullable',
         ]);
@@ -354,6 +366,24 @@ class MerchantApplicationController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Vous ne pouvez modifier que vos propres candidatures'
+                ], 403);
+            }
+
+            // Les commerciaux ne peuvent pas modifier les candidatures approuvées ou exportées
+            if ($user->roles->contains('slug', 'commercial') && 
+                !$user->roles->contains('slug', 'admin') &&
+                in_array($merchantApplication->status, ['approved', 'exported_for_creation'])) {
+                
+                Log::warning('Tentative de modification de candidature approuvée par un commercial', [
+                    'application_id' => $merchantApplication->id,
+                    'application_status' => $merchantApplication->status,
+                    'user_id' => $user->id,
+                    'user_roles' => $user->roles->pluck('slug')->toArray()
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous ne pouvez pas modifier une candidature approuvée ou exportée'
                 ], 403);
             }
 
@@ -902,5 +932,86 @@ class MerchantApplicationController extends Controller
             'success' => true,
             'data' => MerchantApplication::getCities()
         ]);
+    }
+
+    /**
+     * Marque les candidatures approuvées comme exportées pour création dans SP
+     */
+    public function markAsExported(Request $request): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'application_ids' => 'required|array',
+                'application_ids.*' => 'required|integer|exists:merchant_applications,id',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Données de validation invalides',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Vérifier que toutes les candidatures sont approuvées
+            $applications = MerchantApplication::whereIn('id', $request->application_ids)
+                ->where('status', 'approved')
+                ->get();
+
+            if ($applications->count() !== count($request->application_ids)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Certaines candidatures ne sont pas approuvées ou n\'existent pas'
+                ], 400);
+            }
+
+            $updatedCount = 0;
+            $user = $request->user();
+
+            DB::beginTransaction();
+
+            foreach ($applications as $application) {
+                $success = $application->updateStatus(
+                    'exported_for_creation',
+                    'Candidature exportée vers SP le ' . now()->format('d/m/Y à H:i'),
+                    $user?->id
+                );
+
+                if ($success) {
+                    $updatedCount++;
+                    
+                    // Log de l'action
+                    Log::info('Candidature marquée comme exportée', [
+                        'application_id' => $application->id,
+                        'reference' => $application->reference_number,
+                        'user_id' => $user?->id,
+                        'timestamp' => now()
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "$updatedCount candidature(s) marquée(s) comme exportée(s)",
+                'data' => [
+                    'updated_count' => $updatedCount,
+                    'application_ids' => $request->application_ids
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Erreur lors du marquage des candidatures comme exportées', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors du marquage des candidatures comme exportées'
+            ], 500);
+        }
     }
 }

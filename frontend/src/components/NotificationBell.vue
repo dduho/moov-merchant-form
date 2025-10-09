@@ -25,6 +25,22 @@
       </span>
     </button>
 
+    <!-- Overlay mobile (pour fermer en cliquant dehors) -->
+    <Transition
+      enter-active-class="transition-opacity ease-linear duration-300"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity ease-linear duration-300"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="isOpen"
+        @click="closeDropdown"
+        class="fixed inset-0 bg-black bg-opacity-25 sm:hidden z-40"
+      ></div>
+    </Transition>
+
     <!-- Dropdown des notifications -->
     <Transition
       enter-active-class="transition ease-out duration-200"
@@ -34,9 +50,10 @@
       leave-from-class="transform opacity-100 scale-100"
       leave-to-class="transform opacity-0 scale-95"
     >
+      <!-- Version mobile: menu plein écran -->
       <div
         v-if="isOpen"
-        class="absolute right-0 mt-2 w-[30rem] bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50"
+        class="fixed inset-x-0 top-16 mx-0 sm:absolute sm:right-0 sm:left-auto sm:top-auto sm:mt-2 sm:inset-x-auto sm:w-[30rem] bg-white rounded-none sm:rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50"
       >
         <!-- En-tête -->
         <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
