@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-gray-100 min-h-screen p-4 sm:p-6">
+  <div class="min-h-screen p-4 sm:p-6">
     <!-- Content Container -->
     <div class="space-y-8">
       <!-- Header -->
@@ -185,22 +185,22 @@
           
           <template v-else>
             <div class="chart-card">
-              <h3 class="text-xl font-semibold text-gray-800">Tendance des candidatures</h3>
-              <div class="relative flex-1">
+              <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Tendance des candidatures</h3>
+              <div class="relative flex-1 min-h-0">
                 <canvas ref="lineChart"></canvas>
               </div>
             </div>
 
             <div class="chart-card">
-              <h3 class="text-xl font-semibold text-gray-800">Répartition par statut</h3>
-              <div class="relative flex-1">
+              <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Répartition par statut</h3>
+              <div class="relative flex-1 min-h-0">
                 <canvas ref="pieChart"></canvas>
               </div>
             </div>
 
             <div class="chart-card">
-              <h3 class="text-xl font-semibold text-gray-800">Par type de commerce</h3>
-              <div class="relative flex-1">
+              <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Par type de commerce</h3>
+              <div class="relative flex-1 min-h-0">
                 <canvas ref="barChart"></canvas>
               </div>
             </div>
@@ -544,7 +544,7 @@
                      class="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors">
                   <div class="flex items-center space-x-3 sm:space-x-4 min-w-0">
                     <div class="flex-shrink-0">
-                      <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                      <div class="w-10 h-10 sm:w-12 sm:h-12 bg-primary-100 rounded-full flex items-center justify-center">
                         <span class="text-sm sm:text-lg font-medium text-gray-600">
                           {{ app.full_name?.[0]?.toUpperCase() || '?' }}
                         </span>
@@ -1382,20 +1382,40 @@ export default {
 .chart-card {
   background: white;
   border-radius: 16px;
-  padding: 24px;
+  padding: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   position: relative;
-  height: 400px;
+  height: 300px;
   display: flex;
   flex-direction: column;
 }
 
+@media (min-width: 640px) {
+  .chart-card {
+    padding: 24px;
+    height: 400px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .chart-card {
+    height: 380px;
+  }
+}
+
 .chart-card h3 {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   color: #374151;
   flex: none;
+}
+
+@media (min-width: 640px) {
+  .chart-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
 }
 
 .chart-card canvas {

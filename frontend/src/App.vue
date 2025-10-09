@@ -7,10 +7,12 @@ import NotificationBell from './components/NotificationBell.vue'
 const authStore = useAuthStore()
 const userMenuOpen = ref(false)
 const isOnline = ref(navigator.onLine)
+const currentYear = new Date().getFullYear()
 
-// Gestionnaire de connexion
-window.addEventListener('online', () => isOnline.value = true)
-window.addEventListener('offline', () => isOnline.value = false)
+// Gestionnaires de connexion
+const updateOnlineStatus = () => {
+  isOnline.value = navigator.onLine
+}
 
 // Fermer le menu au clic en dehors
 const closeUserMenu = (e) => {
@@ -24,10 +26,14 @@ onMounted(() => {
   setTimeout(() => {
     document.addEventListener('click', closeUserMenu)
   }, 0)
+  window.addEventListener('online', updateOnlineStatus)
+  window.addEventListener('offline', updateOnlineStatus)
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', closeUserMenu)
+  window.removeEventListener('online', updateOnlineStatus)
+  window.removeEventListener('offline', updateOnlineStatus)
 })
 
 // Méthode de déconnexion
@@ -66,7 +72,7 @@ const handleLogout = async () => {
             <!-- Indicateur de connexion - visible sur tous les écrans -->
             <div class="flex items-center space-x-1.5 px-2 py-1 rounded-full bg-gray-50">
               <div :class="isOnline ? 'bg-green-500' : 'bg-red-500'"
-                   class="w-1.5 h-1.5 rounded-full animate-pulse"></div>
+                   class="w-3 h-3 rounded-full animate-pulse"></div>
               <span class="text-xs text-gray-600 font-medium hidden sm:inline">
                 {{ isOnline ? 'En ligne' : 'Hors ligne' }}
               </span>
@@ -231,7 +237,7 @@ const handleLogout = async () => {
             <!-- Logo et info -->
             <div class="flex items-center space-x-3">
               <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-                <img src="/logo.png" alt="Moov Money Logo" class="w-4 h-4 object-contain filter brightness-0 invert">
+                <img src="/logo.png" alt="Moov Money Logo" class="w-12 h-12 object-contain">
               </div>
               <div>
                 <h3 class="text-sm font-semibold text-gray-900">Moov Money</h3>
@@ -242,7 +248,7 @@ const handleLogout = async () => {
             <!-- Copyright et crédit -->
             <div class="text-center md:text-right">
               <p class="text-sm text-gray-600">
-                &copy; {{ currentYear }} Moov Money. Tous droits réservés.
+                &copy; {{ currentYear }} Moov Money Togo. Tous droits réservés.
               </p>
               <p class="text-xs text-gray-500 mt-1">
                 Crafted with <span class="text-red-500">❤️</span> by David D.
@@ -258,36 +264,3 @@ const handleLogout = async () => {
   </div>
 </template>
 
-<script>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from './stores/auth'
-import NotificationContainer from './components/NotificationContainer.vue'
-
-export default {
-  name: 'App',
-  components: {
-    NotificationContainer
-  },
-  setup() {
-    const isOnline = ref(navigator.onLine)
-    const currentYear = new Date().getFullYear()
-
-    const updateOnlineStatus = () => {
-      isOnline.value = navigator.onLine
-    }
-
-    onMounted(() => {
-      window.addEventListener('online', updateOnlineStatus)
-      window.addEventListener('offline', updateOnlineStatus)
-    })
-
-    onBeforeUnmount(() => {
-      window.removeEventListener('online', updateOnlineStatus)
-      window.removeEventListener('offline', updateOnlineStatus)
-    })
-
-    return { isOnline, currentYear }
-  }
-}
-</script>

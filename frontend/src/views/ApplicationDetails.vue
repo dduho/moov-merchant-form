@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-gray-100 min-h-screen p-4 sm:p-6">
+  <div class="min-h-screen p-4 sm:p-6">
     <!-- Content Container -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
       <!-- Header avec navigation -->
