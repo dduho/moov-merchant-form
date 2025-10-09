@@ -248,6 +248,35 @@ class ApiService {
     }
     
     // ============================================================
+    // NOTIFICATIONS
+    // ============================================================
+    
+    async getNotifications(params = {}) {
+        return this.client.get('/notifications', { params })
+    }
+    
+    async getUnreadNotificationsCount() {
+        return this.client.get('/notifications/unread-count')
+    }
+    
+    async markNotificationAsRead(notificationId) {
+        return this.client.patch(`/notifications/${notificationId}/read`)
+    }
+    
+    async markAllNotificationsAsRead() {
+        return this.client.patch('/notifications/mark-all-read')
+    }
+    
+    async deleteNotification(notificationId) {
+        return this.client.delete(`/notifications/${notificationId}`)
+    }
+
+    // Temporary test method without authentication
+    async getNotificationsTest() {
+        return this.client.get('/test-notifications-api')
+    }
+
+    // ============================================================
     // HEALTH CHECK
     // ============================================================
     

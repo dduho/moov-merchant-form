@@ -74,6 +74,11 @@ class MerchantApplication extends Model
         'submitted_at',
         'reviewed_at',
         'reviewed_by',
+        'approved_at',
+        'approved_by',
+        'rejected_at',
+        'rejected_by',
+        'rejected_reason',
     ];
 
     protected function casts(): array

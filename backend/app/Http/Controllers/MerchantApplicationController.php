@@ -734,7 +734,7 @@ class MerchantApplicationController extends Controller
             ]);
 
             // Envoyer notification
-            $this->notificationService->sendApprovalNotification($merchantApplication);
+            $this->notificationService->notifyApplicationApproved($merchantApplication);
 
             DB::commit();
 
@@ -799,7 +799,7 @@ class MerchantApplicationController extends Controller
             ]);
 
             // Envoyer notification
-            $this->notificationService->sendRejectionNotification($merchantApplication, $request->reason);
+            $this->notificationService->notifyApplicationRejected($merchantApplication, $request->reason);
 
             DB::commit();
 

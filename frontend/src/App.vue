@@ -2,6 +2,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useAuthStore } from './stores/auth'
 import NotificationContainer from './components/NotificationContainer.vue'
+import NotificationBell from './components/NotificationBell.vue'
 
 const authStore = useAuthStore()
 const userMenuOpen = ref(false)
@@ -68,6 +69,9 @@ const handleLogout = async () => {
               </span>
             </div>
 
+            <!-- Notifications (seulement si authentifié) -->
+            <NotificationBell v-if="authStore.isAuthenticated" />
+
             <!-- Menu utilisateur -->
             <div class="relative user-menu">
               <button
@@ -91,6 +95,16 @@ const handleLogout = async () => {
                   >
                     <i class="fas fa-tachometer-alt mr-2"></i>
                     Tableau de bord
+                  </router-link>
+                  
+                  <!-- Notifications -->
+                  <router-link
+                    to="/notifications"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    @click="userMenuOpen = false"
+                  >
+                    <i class="fas fa-bell mr-2"></i>
+                    Notifications
                   </router-link>
                   
                   <!-- Créer utilisateur (admin seulement) -->

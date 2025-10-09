@@ -47,3 +47,42 @@ Route::get('/test-filter', function() {
         })
     ]);
 });
+
+Route::get('/test-list-users', function() {
+    $users = User::with('roles')->get();
+    
+    return response()->json([
+        'users' => $users->map(function($user) {
+            return [
+                'id' => $user->id,
+                'username' => $user->username,
+                'email' => $user->email,
+                'roles' => $user->roles->pluck('name')
+            ];
+        })
+    ]);
+});
+
+Route::get('/test-notify-admins/{id}', function($id) {
+    try {
+        $application = MerchantApplication::findOrFail($id);
+        
+        $notificationService = new \App\Services\NotificationService();
+        $notificationService->notifyNewApplication($application);
+        
+        return response()->json([
+            'message' => 'Notification admin envoyée avec succès',
+            'application' => [
+                'id' => $application->id,
+                'reference' => $application->reference_number,
+                'name' => $application->full_name
+            ]
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Erreur lors de l\'envoi de la notification admin',
+            'details' => $e->getMessage()
+        ], 500);
+    }
+});

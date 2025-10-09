@@ -6,8 +6,8 @@ import FormSuccess from '../views/FormSuccess.vue'
 import Dashboard from '../views/Dashboard.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
-
 import ApplicationDetails from '../views/ApplicationDetails.vue'
+import NotificationPage from '../views/NotificationPage.vue'
 
 const routes = [
   {
@@ -71,6 +71,15 @@ const routes = [
     component: MerchantForm,
     meta: {
       title: 'Modifier la candidature',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/notifications',
+    name: 'notifications',
+    component: NotificationPage,
+    meta: {
+      title: 'Notifications',
       requiresAuth: true
     }
   }

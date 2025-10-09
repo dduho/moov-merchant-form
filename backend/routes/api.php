@@ -6,7 +6,8 @@ use App\Http\Controllers\{
     MerchantApplicationController,
     DocumentController,
     DashboardController,
-    AuthController
+    AuthController,
+    NotificationController
 };
 
 // Routes d'authentification
@@ -98,6 +99,17 @@ Route::middleware(['throttle:api'])->group(function () {
         Route::get('/debug-user', [DashboardController::class, 'debugUser'])->name('debug-user');
     });
     
+    // ============================================================
+    // ROUTES NOTIFICATIONS (NotificationController) - Authentification requise
+    // ============================================================
+    Route::middleware(['web', 'auth:sanctum'])->prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
+        Route::patch('/{notification}/read', [NotificationController::class, 'markAsRead'])->name('mark-as-read');
+        Route::patch('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-as-read');
+        Route::delete('/{notification}', [NotificationController::class, 'destroy'])->name('destroy');
+    });
+    
     // Route de test pour vérifier FormData
     Route::post('/test-form', function (Request $request) {
         $documentFields = ['id_card', 'anid_card', 'residence_card', 'residence_proof', 'business_document', 'cfe_document', 'nif_document'];
@@ -180,4 +192,183 @@ Route::post('/ultra-verify/{id}', function ($id) {
     if (!$document) return response()->json(['error' => 'Document non trouv�'], 404);
     $document->update(['is_verified' => true, 'verified_at' => now(), 'verified_by' => 1]);
     return response()->json(['success' => true, 'document_id' => $document->id, 'verified' => $document->is_verified]);
+});
+
+// Route de test pour les notifications
+Route::get('/test-notifications', function () {
+    $user = \App\Models\User::first();
+    if (!$user) {
+        return response()->json(['error' => 'Aucun utilisateur trouv�']);
+    }
+    
+    $notification = \App\Models\Notification::create([
+        'user_id' => $user->id,
+        'type' => 'test',
+        'title' => 'Test de notification',
+        'message' => 'Ceci est un test de notification',
+        'data' => json_encode(['test' => true]),
+        'priority' => 'normal'
+    ]);
+    
+    return response()->json(['success' => true, 'notification' => $notification, 'user' => $user]);
+});
+
+// Route de test pour approuver une candidature
+Route::post('/test-approve/{id}', function ($id) {
+    $application = \App\Models\MerchantApplication::findOrFail($id);
+    $application->status = 'approved';
+    $application->approved_at = now();
+    $application->save();
+    
+    $notificationService = app(\App\Services\NotificationService::class);
+    $notificationService->notifyApplicationApproved($application);
+    
+    return response()->json(['success' => true, 'message' => 'Application approved and notification sent']);
+});
+
+// Route de test simple pour notifications
+Route::get('/test-simple-notification', function () {
+    try {
+        $user = \App\Models\User::first();
+        $notification = \App\Models\Notification::create([
+            'user_id' => $user->id,
+            'type' => 'test',
+            'title' => 'Test notification',
+            'message' => 'Ceci est une notification de test',
+            'data' => json_encode(['test' => true])
+        ]);
+        return response()->json(['success' => true, 'notification' => $notification]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()]);
+    }
+});
+
+// Route de test pour lister les notifications
+Route::get('/test-list-notifications', function () {
+    $notifications = \App\Models\Notification::with('user')->latest()->limit(10)->get();
+    return response()->json(['notifications' => $notifications]);
+});
+
+// Route pour nettoyer les notifications de test
+Route::delete('/clean-test-notifications', function () {
+    $deleted = \App\Models\Notification::where('type', 'test')->delete();
+    return response()->json(['message' => "Supprimé $deleted notifications de test"]);
+});
+
+// Test simple d'approbation sans notification
+Route::post('/test-simple-approve/{id}', function ($id) {
+    try {
+        $application = \App\Models\MerchantApplication::findOrFail($id);
+        
+        $application->update([
+            'status' => 'approved',
+            'approved_at' => now(),
+            'approved_by' => 1
+        ]);
+        
+        return response()->json(['message' => 'Application approuvée (sans notification)', 'status' => $application->status]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+});
+
+// Route de test pour rejet avec notification
+Route::post('/test-reject-with-notification/{id}', function ($id) {
+    try {
+        $application = \App\Models\MerchantApplication::findOrFail($id);
+        
+        if ($application->status === 'rejected') {
+            return response()->json(['message' => 'Application déjà rejetée']);
+        }
+        
+        $reason = 'Documents incomplets - test de notification';
+        
+        // Mettre à jour le statut
+        $application->update([
+            'status' => 'rejected',
+            'rejected_at' => now(),
+            'rejected_by' => 1,
+            'rejected_reason' => $reason
+        ]);
+        
+        // Recharger l'application
+        $application->refresh();
+        
+        // Envoyer la notification
+        $notificationService = app(\App\Services\NotificationService::class);
+        $notificationService->notifyApplicationRejected($application, $reason);
+        
+        return response()->json([
+            'message' => 'Application rejetée et notification envoyée',
+            'application' => $application->load('user')
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
+
+// Route de test pour approbation avec notification
+Route::post('/test-approve-with-notification/{id}', function ($id) {
+    try {
+        $application = \App\Models\MerchantApplication::findOrFail($id);
+        
+        // S'assurer qu'elle n'est pas déjà approuvée
+        if ($application->status === 'approved') {
+            return response()->json(['message' => 'Application déjà approuvée']);
+        }
+        
+        // Mettre à jour le statut d'abord
+        $application->update([
+            'status' => 'approved',
+            'approved_at' => now(),
+            'approved_by' => 1 // Simuler admin user ID 1
+        ]);
+        
+        // Recharger l'application pour avoir les nouvelles données
+        $application->refresh();
+        
+        // Envoyer la notification
+        $notificationService = app(\App\Services\NotificationService::class);
+        $notificationService->notifyApplicationApproved($application);
+        
+        return response()->json([
+            'message' => 'Application approuvée et notification envoyée',
+            'application' => $application->load('user')
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
+
+// Route de test pour simuler l'API notifications sans auth
+Route::get('/test-notifications-api', function () {
+    try {
+        $user = \App\Models\User::first(); // Simulate user 1
+        if (!$user) {
+            return response()->json(['error' => 'No users found']);
+        }
+        
+        $notifications = $user->notifications()
+            ->latest()
+            ->limit(10)
+            ->get();
+            
+        return response()->json([
+            'data' => $notifications,
+            'meta' => [
+                'total' => $notifications->count(),
+                'unread_count' => $user->notifications()->whereNull('read_at')->count()
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+    }
 });

@@ -1,6 +1,28 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 
+// Map notification types to toast types
+const mapNotificationType = (type) => {
+  const typeMapping = {
+    // Notification system types
+    'test': 'info',
+    'application_approved': 'success', 
+    'application_rejected': 'error',
+    'application_pending': 'warning',
+    'document_uploaded': 'info',
+    'document_verified': 'success',
+    'document_rejected': 'error',
+    'system_notification': 'info',
+    
+    // Standard toast types (pass through)
+    'info': 'info',
+    'success': 'success',
+    'error': 'error',
+    'warning': 'warning'
+  }
+  return typeMapping[type] || 'info'
+}
+
 const props = defineProps({
   show: {
     type: Boolean,
@@ -8,8 +30,8 @@ const props = defineProps({
   },
   type: {
     type: String,
-    default: 'success', // success, error, warning, info
-    validator: value => ['success', 'error', 'warning', 'info'].includes(value)
+    default: 'success'
+    // Remove validator to accept any type, we'll map it internally
   },
   title: {
     type: String,
@@ -69,7 +91,11 @@ const typeConfig = {
   }
 }
 
-const config = computed(() => typeConfig[props.type])
+// Use mapped type for configuration
+const config = computed(() => {
+  const mappedType = mapNotificationType(props.type)
+  return typeConfig[mappedType]
+})
 
 const close = () => {
   visible.value = false

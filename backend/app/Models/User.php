@@ -49,4 +49,23 @@ class User extends Authenticatable
     {
         return "{$this->first_name} {$this->last_name}";
     }
+
+    /**
+     * Relation avec les notifications
+     */
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    /**
+     * Obtenir le nombre de notifications non lues
+     */
+    public function unreadNotificationsCount()
+    {
+        return $this->notifications()
+            ->unread()
+            ->notExpired()
+            ->count();
+    }
 }
