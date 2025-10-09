@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Export SP - Sans valeurs vides</title>
+</head>
+<body>
+    <h1>Test Export SP - XML sans valeurs vides</h1>
+    <button id="testExport">Tester l'export XML</button>
+    <pre id="output"></pre>
+
+    <script>
+        // Données de test avec des valeurs vides
+        const testApplications = [
+            {
+                id: 1,
+                merchant_phone: "857721923",
+                business_phone: "857721923",
+                business_name: "Test Company",
+                email: "", // Vide
+                region: "", // Vide 
+                city: "", // Vide
+                first_name: "John",
+                last_name: "Doe",
+                nationality: "Togolaise",
+                birth_date: "1987-10-26",
+                birth_place: "", // Vide
+                gender: "M",
+                id_type: "national_id",
+                id_number: "1234567890",
+                id_expiry_date: "2031-11-19",
+                usage_type: "TRADER"
+            }
+        ];
+
+        // Fonctions helper identiques à celles du Dashboard.vue
+        const formatDateForXml = (dateString) => {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}${month}${day}`;
+        }
+
+        const mapIdType = (idType) => {
+            const mapping = {
+                'national_id': '01',
+                'passport': '02', 
+                'voter_id': '03',
+                'birth_certificate': '04',
+                'driving_license': '05',
+                'foreign_id': '07'
+            }
+            return mapping[idType] || '01'
+        }
+
+        const generateUsername = (firstName, lastName) => {
+            if (!firstName || !lastName) return '';
+            const cleanFirst = firstName.toLowerCase().replace(/[^a-z]/g, '');
+            const cleanLast = lastName.toLowerCase().replace(/[^a-z]/g, '');
+            return `${cleanFirst.charAt(0)}${cleanLast}`;
+        }
+
+        // Fonction de génération XML mise à jour
+        const generateCreateOrgXml = (applications) => {
+            let xml = '<?xml version="1.0" encoding="UTF-8"?>\\n<BulkCreateTopOrganizationRequest>\\n'
+            
+            applications.forEach(app => {
+                const businessPhone = (app.merchant_phone || app.business_phone || '').replace(/^\\+228/, '')
+                const shortCode = `228${businessPhone}`
+                const organizationName = app.business_name || ''
+                const email = app.email || ''
+                const region = app.region || ''
+                const phone = `228${businessPhone}`
+                const firstName = app.first_name || ''
+                const lastName = app.last_name || ''
+                const nationality = app.nationality || ''
+                const birthDate = formatDateForXml(app.birth_date)
+                const idType = mapIdType(app.id_type)
+                const idNumber = app.id_number || ''
+                const idExpiryDate = formatDateForXml(app.id_expiry_date)
+                const usageType = app.usage_type || ''
+
+                // Helper function to add KYC tag only if value is not empty
+                const addKycTag = (fieldType, fieldValue) => {
+                    if (fieldValue && fieldValue.trim() !== '') {
+                        return `\\t\\t\\t<KYC FieldType="${fieldType}" FieldValue="${fieldValue}" />\\n`
+                    }
+                    return ''
+                }
+
+                xml += `\\t<Organization>
+\\t\\t<ShortCode Value="${shortCode}" />
+\\t\\t<OrganizationName Value="${organizationName}" />
+\\t\\t<SimpleKYC>
+`
+                xml += addKycTag("[Contact Information][Company]", organizationName)
+                xml += addKycTag("[Contact Information][Country]", "TGO")
+                xml += addKycTag("[Contact Information][Email Address]", email)
+                xml += addKycTag("[Contact Information][Region-field]", region)
+                xml += addKycTag("[Contact Information][Alternate Number]", phone)
+                xml += '\\n'
+                xml += addKycTag("[Owner Information][First Name]", firstName)
+                xml += addKycTag("[Owner Information][Last Name]", lastName)
+                xml += addKycTag("[Owner Information][Nationality]", nationality)
+                xml += addKycTag("[Owner Information][Date of Birth]", birthDate)
+                xml += addKycTag("[Owner Information][Owner ID Type]", idType)
+                xml += addKycTag("[Owner Information][Owner ID Number]", idNumber)
+                xml += addKycTag("[Owner Information][Owner ID Expiry Date]", idExpiryDate)
+                xml += '\\n'
+                xml += addKycTag("[Organization Type][Organization Type]", usageType)
+                xml += addKycTag("[Contact Details][Preferred Notification Language]", "fr")
+                xml += '\\n'
+                xml += `\\t\\t\\t<KYC FieldType="[Contact Details][Preferred Notification Channel]"
+\\t\\t\\t\\tFieldValue="1001">
+\\t\\t\\t</KYC>
+`
+                if (phone && phone.trim() !== '') {
+                    xml += `\\t\\t\\t<KYC FieldType="[Contact Details][Notification Receiving MSISDN]"
+\\t\\t\\t\\tFieldValue="${phone}">
+\\t\\t\\t</KYC>
+`
+                }
+                if (email && email.trim() !== '') {
+                    xml += `\\t\\t\\t<KYC FieldType="[Contact Details][Notification Receiving E-mail]"
+\\t\\t\\t\\tFieldValue="${email}">
+\\t\\t\\t</KYC>
+`
+                }
+                xml += `\\t\\t</SimpleKYC>
+\\t</Organization>
+`
+            })
+            
+            xml += '</BulkCreateTopOrganizationRequest>'
+            return xml
+        }
+
+        // Fonction pour télécharger le fichier
+        const downloadFile = (filename, content) => {
+            const blob = new Blob([content], { type: 'application/xml' })
+            const url = window.URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = filename
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            window.URL.revokeObjectURL(url)
+        }
+
+        document.getElementById('testExport').addEventListener('click', () => {
+            const xml = generateCreateOrgXml(testApplications);
+            
+            // Afficher le XML dans la page
+            document.getElementById('output').textContent = xml;
+            
+            // Vérifier qu'il n'y a pas de FieldValue vides
+            const emptyFieldValues = xml.match(/FieldValue=""/g);
+            if (emptyFieldValues) {
+                alert(`ERREUR: ${emptyFieldValues.length} FieldValue vides trouvés!`);
+            } else {
+                alert('SUCCESS: Aucun FieldValue vide trouvé. Le XML va être téléchargé.');
+                
+                // Télécharger le fichier
+                const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+                downloadFile(`CREATE-ORG-${today}.xml`, xml);
+            }
+        });
+    </script>
+</body>
+</html>

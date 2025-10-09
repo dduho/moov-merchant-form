@@ -40,6 +40,8 @@ Route::middleware(['throttle:api'])->group(function () {
     Route::prefix('merchant-applications')->name('merchant-applications.')->group(function () {
         // Routes publiques (consultation)
         Route::get('/', [MerchantApplicationController::class, 'index'])->name('index');
+        Route::get('/regions', [MerchantApplicationController::class, 'getRegions'])->name('regions');
+        Route::get('/cities', [MerchantApplicationController::class, 'getCities'])->name('cities');
         Route::get('/reference/{reference}', [MerchantApplicationController::class, 'showByReference'])->name('show-by-reference');
         Route::get('/statistics/all', [MerchantApplicationController::class, 'statistics'])->name('statistics');
         

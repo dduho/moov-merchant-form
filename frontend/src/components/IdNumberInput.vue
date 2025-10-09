@@ -28,7 +28,7 @@ export default {
     idType: {
       type: String,
       required: true,
-      validator: value => ['cni', 'passport', 'elector', 'residence'].includes(value)
+      validator: value => ['cni', 'passport', 'elector', 'residence', 'driving_license', 'foreign_id'].includes(value)
     }
   },
   emits: ['update:modelValue'],
@@ -87,6 +87,29 @@ export default {
           return value.replace(/[^A-Z0-9]/g, '').toUpperCase().slice(0, 10)  // Enforce max length here
         },
         clean: value => value.replace(/[^A-Z0-9]/g, '').toUpperCase()
+      },
+      driving_license: {
+        pattern: /^[A-Z0-9]{3} [A-Z0-9]{3} [A-Z0-9]{3}$/,
+        display: 'XXX XXX XXX',
+        maxLength: 9,
+        format: value => {
+          const chars = value.replace(/[^A-Z0-9]/g, '').toUpperCase().slice(0, 9)
+          const parts = []
+          if (chars.length > 0) parts.push(chars.slice(0, 3))
+          if (chars.length > 3) parts.push(chars.slice(3, 6))
+          if (chars.length > 6) parts.push(chars.slice(6, 9))
+          return parts.join(' ')
+        },
+        clean: value => value.replace(/[^A-Z0-9]/g, '').toUpperCase()
+      },
+      foreign_id: {
+        pattern: /^.+$/, // Pas de format spécifique
+        display: 'Numéro de la carte',
+        maxLength: 20,
+        format: value => {
+          return value.slice(0, 20)  // Juste limiter la longueur
+        },
+        clean: value => value
       }
     }
     

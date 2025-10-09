@@ -881,4 +881,26 @@ class MerchantApplicationController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Récupère la liste des régions disponibles
+     */
+    public function getRegions(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => MerchantApplication::getRegions()
+        ]);
+    }
+
+    /**
+     * Récupère la liste des villes/villages disponibles
+     */
+    public function getCities(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => MerchantApplication::getCities()
+        ]);
+    }
 }

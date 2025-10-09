@@ -25,9 +25,10 @@ class StoreMerchantApplicationRequest extends FormRequest
             'merchant_phone' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
             'address' => 'required|string',
+            'region' => 'required|in:Maritime,Plateaux,Centrale,Kara,Savanes',
             
             // Documents d'identité
-            'id_type' => 'required|in:cni,passport,residence,elector',
+            'id_type' => 'required|in:cni,passport,residence,elector,driving_license,foreign_id',
             'id_number' => 'required|string|max:50',
             'id_expiry_date' => 'required|date|after:today',
             'has_anid_card' => 'nullable|boolean',
@@ -42,6 +43,7 @@ class StoreMerchantApplicationRequest extends FormRequest
             'business_phones.*' => 'nullable|string|max:20',
             'business_email' => 'nullable|email|max:255',
             'business_address' => 'required|string',
+            'city' => 'required|string|max:255',
             'usage_type' => 'required|in:TRADER,MERC,TRADERWNIF,CORP',
             'has_cfe' => 'nullable|boolean',
             'cfe_number' => 'required_if:has_cfe,true|nullable|string|max:50',
@@ -101,6 +103,9 @@ class StoreMerchantApplicationRequest extends FormRequest
             'business_type.in' => 'Type d\'activité invalide',
 
             'business_address.required' => 'L\'adresse du commerce est obligatoire',
+            'city.required' => 'La ville/village est obligatoire',
+            'region.required' => 'La région est obligatoire',
+            'region.in' => 'Veuillez sélectionner une région valide (Maritime, Plateaux, Centrale, Kara, Savanes)',
             'usage_type.required' => 'Le type d\'utilisation est obligatoire',
             'usage_type.in' => 'Type d\'utilisation invalide (TRADER, MERC, TRADERWNIF, CORP)',
             'signature.required' => 'La signature est obligatoire',
@@ -166,7 +171,7 @@ class StoreMerchantApplicationRequest extends FormRequest
             'address' => 'required|string',
             
             // Documents d'identité
-            'id_type' => 'required|in:cni,passport,elector',
+            'id_type' => 'required|in:cni,passport,elector,driving_license,foreign_id',
             'id_number' => 'required|string|max:50',
             'id_expiry_date' => 'required|date|after:today',
             'has_anid_card' => 'nullable|boolean',

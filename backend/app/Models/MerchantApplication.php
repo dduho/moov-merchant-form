@@ -33,6 +33,7 @@ class MerchantApplication extends Model
         'merchant_phone',
         'email',
         'address',
+        'region',
         
         // Documents d'identité
         'id_type',
@@ -49,6 +50,7 @@ class MerchantApplication extends Model
         'business_phones',
         'business_email',
         'business_address',
+        'city',
         'usage_type',
         'has_cfe',
         'cfe_number',
@@ -236,6 +238,33 @@ class MerchantApplication extends Model
         } while (static::where('reference_number', $reference)->exists());
 
         return $reference;
+    }
+
+    public static function getRegions(): array
+    {
+        return [
+            'Maritime' => 'Maritime',
+            'Plateaux' => 'Plateaux', 
+            'Centrale' => 'Centrale',
+            'Kara' => 'Kara',
+            'Savanes' => 'Savanes'
+        ];
+    }
+
+    public static function getCities(): array
+    {
+        return [
+            // Région Maritime
+            'Lomé', 'Aného', 'Vogan', 'Tsévié', 'Kpalimé', 'Tabligbo',
+            // Région Plateaux  
+            'Atakpamé', 'Kpalimé', 'Badou badou', 'Danyi', 'Agou', 'Kloto',
+            // Région Centrale
+            'Sokodé', 'Tchamba', 'Blitta', 'Sotouboua', 'Tchaoudjo',
+            // Région Kara
+            'Kara', 'Bassar', 'Niamtougou', 'Pagouda', 'Bafilo', 'Ketao',
+            // Région Savanes
+            'Dapaong', 'Mango', 'Gando', 'Kantè', 'Tandjoaré', 'Cinkassé'
+        ];
     }
 
     public function hasRequiredDocuments(): bool

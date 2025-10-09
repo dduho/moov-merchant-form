@@ -442,10 +442,23 @@
               <h3 class="text-xl font-semibold text-gray-800">Dernières candidatures</h3>
               <p class="text-sm text-gray-500 mt-1">Toutes les candidatures avec filtres et recherche</p>
             </div>
-            <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-              <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
+            <div class="flex items-center space-x-3">
+              <button @click="exportToSP" 
+                      :disabled="exportLoading"
+                      class="flex items-center px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg v-if="!exportLoading" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <svg v-else class="w-5 h-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {{ exportLoading ? 'Export...' : 'Exporter vers SP' }}
+              </button>
+              <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </div>
             </div>
           </div>
 
@@ -597,6 +610,7 @@
 <script>
 import { ref, onMounted, watch } from 'vue'
 import ApiService from '../services/ApiService'
+import MerchantService from '../services/MerchantService'
 import Chart from 'chart.js/auto'
 import PaginationControls from '../components/PaginationControls.vue'
 import { useAuthStore } from '../stores/auth'
@@ -610,6 +624,7 @@ export default {
     const authStore = useAuthStore()
     const loading = ref(true)
     const applicationsLoading = ref(false)
+    const exportLoading = ref(false)
     const selectedPeriod = ref('month')
     const stats = ref({})
     const kpis = ref({})
@@ -850,7 +865,240 @@ export default {
     const refreshData = () => {
       loadData()
     }
-    
+
+    // Fonction pour exporter vers SP
+    const exportToSP = async () => {
+      try {
+        exportLoading.value = true
+        
+        // Récupérer toutes les candidatures approuvées
+        const approvedApplications = await MerchantService.getApprovedApplicationsForExport()
+        
+        if (!approvedApplications || approvedApplications.length === 0) {
+          alert('Aucune candidature approuvée à exporter.')
+          return
+        }
+        
+        const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+        
+        // Générer les fichiers XML
+        const createOrgXml = generateCreateOrgXml(approvedApplications)
+        const createOperatorXml = generateCreateOperatorXml(approvedApplications)
+        
+        // Télécharger les fichiers
+        downloadFile(`CREATE-ORG-${currentDate}.xml`, createOrgXml)
+        downloadFile(`CREATE-ORG-OPERATOR-${currentDate}.xml`, createOperatorXml)
+        
+        alert(`Export réussi ! ${approvedApplications.length} candidature(s) exportée(s).`)
+        
+      } catch (error) {
+        console.error('Erreur lors de l\'export:', error)
+        alert('Erreur lors de l\'export. Veuillez réessayer.')
+      } finally {
+        exportLoading.value = false
+      }
+    }
+
+    // Fonction pour mapper les types de cartes ID
+    const mapIdType = (idType) => {
+      const mapping = {
+        'cni': '01',           // Carte Nationale d'identité
+        'elector': '02',       // Carte d'électeur
+        'passport': '03',      // Passeport
+        'driving_license': '05', // Permis de conduire
+        'residence': '07',     // Carte de séjour
+        'foreign_id': '10'     // Carte d'identité étrangère
+      }
+      return mapping[idType] || '01'
+    }
+
+    // Fonction pour formater les dates au format yyyymmdd
+    const formatDateForXml = (dateString) => {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}${month}${day}`
+    }
+
+    // Fonction pour générer le nom d'utilisateur
+    const generateUsername = (firstName, lastName) => {
+      const firstChar = firstName ? firstName.charAt(0).toLowerCase() : ''
+      const lastNameLower = lastName ? lastName.toLowerCase() : ''
+      return firstChar + lastNameLower
+    }
+
+    // Fonction pour générer le XML CREATE-ORG
+    const generateCreateOrgXml = (applications) => {
+      let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<BulkCreateTopOrganizationRequest>\n'
+      
+      applications.forEach(app => {
+        const businessPhone = (app.merchant_phone || app.business_phone || '').replace(/^\+228/, '')
+        const shortCode = `228${businessPhone}`
+        const organizationName = app.business_name || ''
+        const email = app.email || ''
+        const region = app.region || ''
+        const phone = `228${businessPhone}`
+        const firstName = app.first_name || ''
+        const lastName = app.last_name || ''
+        const nationality = app.nationality || ''
+        const birthDate = formatDateForXml(app.birth_date)
+        const idType = mapIdType(app.id_type)
+        const idNumber = app.id_number || ''
+        const idExpiryDate = formatDateForXml(app.id_expiry_date)
+        const usageType = app.usage_type || ''
+
+        // Helper function to add KYC tag only if value is not empty
+        const addKycTag = (fieldType, fieldValue) => {
+          if (fieldValue && fieldValue.trim() !== '') {
+            return `\t\t\t<KYC FieldType="${fieldType}" FieldValue="${fieldValue}" />\n`
+          }
+          return ''
+        }
+
+        xml += `\t<Organization>
+\t\t<ShortCode Value="${shortCode}" />
+\t\t<OrganizationName Value="${organizationName}" />
+\t\t<SimpleKYC>
+`
+        xml += addKycTag("[Contact Information][Company]", organizationName)
+        xml += addKycTag("[Contact Information][Country]", "TGO")
+        xml += addKycTag("[Contact Information][Email Address]", email)
+        xml += addKycTag("[Contact Information][Region-field]", region)
+        xml += addKycTag("[Contact Information][Alternate Number]", phone)
+        xml += '\n'
+        xml += addKycTag("[Owner Information][First Name]", firstName)
+        xml += addKycTag("[Owner Information][Last Name]", lastName)
+        xml += addKycTag("[Owner Information][Nationality]", nationality)
+        xml += addKycTag("[Owner Information][Date of Birth]", birthDate)
+        xml += addKycTag("[Owner Information][Owner ID Type]", idType)
+        xml += addKycTag("[Owner Information][Owner ID Number]", idNumber)
+        xml += addKycTag("[Owner Information][Owner ID Expiry Date]", idExpiryDate)
+        xml += '\n'
+        xml += addKycTag("[Organization Type][Organization Type]", usageType)
+        xml += addKycTag("[Contact Details][Preferred Notification Language]", "fr")
+        xml += '\n'
+        xml += `\t\t\t<KYC FieldType="[Contact Details][Preferred Notification Channel]"
+\t\t\t\tFieldValue="1001">
+\t\t\t</KYC>
+`
+        if (phone && phone.trim() !== '') {
+          xml += `\t\t\t<KYC FieldType="[Contact Details][Notification Receiving MSISDN]"
+\t\t\t\tFieldValue="${phone}">
+\t\t\t</KYC>
+`
+        }
+        if (email && email.trim() !== '') {
+          xml += `\t\t\t<KYC FieldType="[Contact Details][Notification Receiving E-mail]"
+\t\t\t\tFieldValue="${email}">
+\t\t\t</KYC>
+`
+        }
+        xml += `\t\t</SimpleKYC>
+\t</Organization>
+`
+      })
+      
+      xml += '</BulkCreateTopOrganizationRequest>'
+      return xml
+    }
+
+    // Fonction pour générer le XML CREATE-ORG-OPERATOR
+    const generateCreateOperatorXml = (applications) => {
+      let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<BulkCreateOrganizationOperatorRequest>\n'
+      
+      applications.forEach(app => {
+        const businessPhone = (app.merchant_phone || app.business_phone || '').replace(/^\+228/, '')
+        const shortCode = `228${businessPhone}`
+        const username = generateUsername(app.first_name, app.last_name)
+        const operatorId = `228${businessPhone}`
+        const firstName = app.first_name || ''
+        const lastName = app.last_name || ''
+        const nationality = app.nationality || ''
+        const birthDate = formatDateForXml(app.birth_date)
+        const gender = app.gender || ''
+        const birthPlace = app.birth_place || ''
+        const usageType = app.usage_type || ''
+        const idType = mapIdType(app.id_type)
+        const idNumber = app.id_number || ''
+        const idExpiryDate = formatDateForXml(app.id_expiry_date)
+        const phone = `228${businessPhone}`
+
+        // Helper function to add KYC tag only if value is not empty
+        const addKycTag = (fieldType, fieldValue) => {
+          if (fieldValue && fieldValue.trim() !== '') {
+            return `\t\t\t<KYC FieldType="${fieldType}" FieldValue="${fieldValue}" />\n`
+          }
+          return ''
+        }
+
+        // Helper function to add MultipleKYC tag only if value is not empty
+        const addMultipleKycTag = (fieldType, fieldValue) => {
+          if (fieldValue && fieldValue.trim() !== '') {
+            return `\t\t\t<KYC FieldType="${fieldType}" FieldValue="${fieldValue}" />\n`
+          }
+          return ''
+        }
+
+        xml += `\t<OrganizationOperator>
+\t\t<Notification Language="FR" />
+\t\t<Organization ShortCode="${shortCode}" />
+\t\t<AuthenticationType Value="WEB" />
+\t\t<AuthenticationType Value="HANDSET" />
+\t\t<UserName Value="${username}" />		
+\t\t<OperatorID Value="${operatorId}" />	
+\t\t<SimpleKYC>
+`
+        xml += addKycTag("[Personal Details][First Name]", firstName)
+        xml += addKycTag("[Personal Details][Last Name]", lastName)
+        xml += addKycTag("[Personal Details][Nationality]", nationality)
+        xml += addKycTag("[Personal Details][Date of Birth]", birthDate)
+        xml += addKycTag("[Personal Details][Country]", "TGO")
+        xml += addKycTag("[Personal Details][Gender]", gender)
+        xml += addKycTag("[Personal Details][Place of Birth]", birthPlace)
+        xml += addKycTag("[Personal Details][PLAINALIAS]", usageType)
+        xml += `\t\t</SimpleKYC>
+`
+
+        // Only add MultipleKYC section if we have at least one non-empty value
+        const hasIdDetails = (idType && idType.trim() !== '') || 
+                            (idNumber && idNumber.trim() !== '') || 
+                            (idExpiryDate && idExpiryDate.trim() !== '')
+        
+        if (hasIdDetails) {
+          xml += `\t\t<MultipleKYC OperationType="Add">
+`
+          xml += addMultipleKycTag("[ID Details][ID Type]", idType)
+          xml += addMultipleKycTag("[ID Details][ID Number]", idNumber)
+          xml += addMultipleKycTag("[ID Details][ID Expiry Date]", idExpiryDate)
+          xml += `\t\t</MultipleKYC>
+`
+        }
+
+        xml += `\t\t<Role ID="500000000000013115" />
+\t\t<MSISDN Value="${phone}" />
+\t</OrganizationOperator>
+`
+      })
+      
+      xml += '</BulkCreateOrganizationOperatorRequest>'
+      return xml
+    }
+
+    // Fonction pour télécharger un fichier
+    const downloadFile = (filename, content) => {
+      const blob = new Blob([content], { type: 'application/xml' })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    }
+
     const formatDate = (dateString) => {
       if (!dateString) return '';
       const date = new Date(dateString);
@@ -1047,6 +1295,7 @@ export default {
       authStore,
       loading,
       applicationsLoading,
+      exportLoading,
       selectedPeriod,
       stats,
       kpis,
@@ -1071,6 +1320,7 @@ export default {
       debouncedSearch,
       resetFilters,
       refreshData,
+      exportToSP,
       formatDate,
       getPeriodText,
       // Fonctions pour les stats utilisateurs

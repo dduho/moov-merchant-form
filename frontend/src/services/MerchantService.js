@@ -655,6 +655,23 @@ class MerchantService {
       throw error;
     }
   }
+
+  // Récupérer toutes les candidatures approuvées pour l'export SP
+  async getApprovedApplicationsForExport() {
+    try {
+      const response = await this.client.get('/merchant-applications', {
+        params: {
+          status: 'approved',
+          per_page: 1000 // Récupérer toutes les candidatures approuvées
+        }
+      })
+      
+      return response.data.data || []
+    } catch (error) {
+      console.error('Erreur lors de la récupération des candidatures approuvées:', error)
+      throw error
+    }
+  }
 }
 
 export default new MerchantService()

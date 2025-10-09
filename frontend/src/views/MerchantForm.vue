@@ -141,9 +141,34 @@
 
                     <div class="form-group">
                       <label class="form-label">Nationalité *</label>
-                      <input v-model="formData.nationality" type="text" 
-                        class="form-input h-12" :class="{ 'border-red-500': errors.nationality }"
-                        placeholder="Ex: Togolaise" required>
+                      <div class="relative">
+                        <input 
+                          v-model="formData.nationality" 
+                          type="text" 
+                          class="form-input h-12" 
+                          :class="{ 'border-red-500': errors.nationality }"
+                          placeholder="Tapez ou sélectionnez votre nationalité"
+                          @input="filterNationalities"
+                          @focus="showNationalitySuggestions = true"
+                          @blur="hideNationalitySuggestions"
+                          autocomplete="off"
+                          required
+                        />
+                        <!-- Liste des suggestions -->
+                        <div 
+                          v-if="showNationalitySuggestions && filteredNationalities.length > 0"
+                          class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto"
+                        >
+                          <div 
+                            v-for="nationality in filteredNationalities" 
+                            :key="nationality"
+                            class="px-4 py-2 cursor-pointer hover:bg-gray-100 transition-colors"
+                            @mousedown="selectNationality(nationality)"
+                          >
+                            {{ nationality }}
+                          </div>
+                        </div>
+                      </div>
                       <p v-if="errors.nationality" class="mt-1 text-sm text-red-600">{{ errors.nationality }}</p>
                     </div>
 
@@ -170,6 +195,8 @@
                         placeholder="Adresse détaillée" autocomplete="street-address" required></textarea>
                       <p v-if="errors.address" class="mt-1 text-sm text-red-600">{{ errors.address }}</p>
                     </div>
+
+
                   </div>
                 </div>
               </template>
@@ -197,6 +224,8 @@
                         <option value="passport">Passeport</option>
                         <option value="residence">Carte de séjour</option>
                         <option value="elector">Carte d'électeur</option>
+                        <option value="driving_license">Permis de conduire</option>
+                        <option value="foreign_id">Carte d'identité étrangère</option>
                       </select>
                       <p v-if="errors.idType" class="mt-1 text-sm text-red-600">{{ errors.idType }}</p>
                     </div>
@@ -321,6 +350,53 @@
                         class="form-input min-h-[100px]" :class="{ 'border-red-500': errors.businessAddress }"
                         placeholder="Adresse où se situe votre commerce" required></textarea>
                       <p v-if="errors.businessAddress" class="mt-1 text-sm text-red-600">{{ errors.businessAddress }}</p>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">Région *</label>
+                      <select v-model="formData.region" 
+                        class="form-input h-12" :class="{ 'border-red-500': errors.region }" required>
+                        <option value="">Sélectionnez votre région</option>
+                        <option value="Maritime">Maritime</option>
+                        <option value="Plateaux">Plateaux</option>
+                        <option value="Centrale">Centrale</option>
+                        <option value="Kara">Kara</option>
+                        <option value="Savanes">Savanes</option>
+                      </select>
+                      <p v-if="errors.region" class="mt-1 text-sm text-red-600">{{ errors.region }}</p>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">Ville/Village *</label>
+                      <div class="relative">
+                        <input 
+                          v-model="formData.city" 
+                          type="text" 
+                          class="form-input h-12" 
+                          :class="{ 'border-red-500': errors.city }"
+                          placeholder="Tapez votre ville ou village"
+                          @input="filterCities"
+                          @focus="showCitySuggestions = true"
+                          @blur="hideCitySuggestions"
+                          autocomplete="off"
+                          required
+                        />
+                        <!-- Liste des suggestions -->
+                        <div 
+                          v-if="showCitySuggestions && filteredCities.length > 0"
+                          class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto"
+                        >
+                          <div 
+                            v-for="city in filteredCities" 
+                            :key="city"
+                            class="px-4 py-2 cursor-pointer hover:bg-gray-100 transition-colors"
+                            @mousedown="selectCity(city)"
+                          >
+                            {{ city }}
+                          </div>
+                        </div>
+                      </div>
+                      <p v-if="errors.city" class="mt-1 text-sm text-red-600">{{ errors.city }}</p>
                     </div>
 
                     <div class="form-group md:col-span-2">
@@ -629,6 +705,7 @@ export default {
       personalPhone: '',
       email: '',
       address: '',
+      region: '',
       // Documents d'identité
       idType: '',
       idNumber: '',
@@ -640,6 +717,7 @@ export default {
       businessName: '',
       businessType: '',
       businessAddress: '',
+      city: '',
       businessEmail: '',
       usageType: '',
       businessPhone: '',
@@ -712,6 +790,7 @@ export default {
           if (data.phone) formData.value.personalPhone = data.phone;
           if (data.email) formData.value.email = data.email;
           if (data.address) formData.value.address = data.address;
+          if (data.region) formData.value.region = data.region;
           if (data.id_type) formData.value.idType = data.id_type;
           if (data.id_number) formData.value.idNumber = data.id_number;
           if (data.id_expiry_date) formData.value.idExpiryDate = data.id_expiry_date;
@@ -721,6 +800,7 @@ export default {
           if (data.business_name) formData.value.businessName = data.business_name;
           if (data.business_type) formData.value.businessType = data.business_type;
           if (data.business_address) formData.value.businessAddress = data.business_address;
+          if (data.city) formData.value.city = data.city;
           if (data.business_email) formData.value.businessEmail = data.business_email;
           if (data.usage_type) formData.value.usageType = data.usage_type;
           // Le téléphone business peut être dans merchant_phone selon les données
@@ -815,6 +895,54 @@ export default {
     // Données du formulaire
     const formData = ref({ ...defaultFormData })
 
+    // Variables pour l'autocomplétion des villes
+    const cities = ref([
+      // Région Maritime
+      'Lomé', 'Aného', 'Vogan', 'Tsévié', 'Kpalimé', 'Tabligbo',
+      // Région Plateaux  
+      'Atakpamé', 'Kpalimé', 'Badou', 'Danyi', 'Agou', 'Kloto',
+      // Région Centrale
+      'Sokodé', 'Tchamba', 'Blitta', 'Sotouboua', 'Tchaoudjo',
+      // Région Kara
+      'Kara', 'Bassar', 'Niamtougou', 'Pagouda', 'Bafilo', 'Ketao',
+      // Région Savanes
+      'Dapaong', 'Mango', 'Gando', 'Kantè', 'Tandjoaré', 'Cinkassé'
+    ])
+    const filteredCities = ref([])
+    const showCitySuggestions = ref(false)
+
+    // Variables pour l'autocomplétion des nationalités
+    const nationalities = ref([
+      'Afghane', 'Albanaise', 'Algérienne', 'Allemande', 'Américaine', 'Andorrane', 'Angolaise', 'Antiguaise-et-Barbudienne',
+      'Argentine', 'Arménienne', 'Australienne', 'Autrichienne', 'Azerbaïdjanaise', 'Bahaméenne', 'Bahreïnienne', 'Bangladaise',
+      'Barbadienne', 'Belge', 'Bélizienne', 'Béninoise', 'Bhoutanaise', 'Biélorusse', 'Birmane', 'Bolivienne',
+      'Bosnienne', 'Botswanaise', 'Brésilienne', 'Britannique', 'Brunéienne', 'Bulgare', 'Burkinabè', 'Burundaise',
+      'Cambodgienne', 'Camerounaise', 'Canadienne', 'Cap-verdienne', 'Centrafricaine', 'Chilienne', 'Chinoise', 'Chypriote',
+      'Colombienne', 'Comorienne', 'Congolaise (RDC)', 'Congolaise (République du Congo)', 'Costaricienne', 'Croate', 'Cubaine',
+      'Danoise', 'Djiboutienne', 'Dominicaine', 'Dominiquaise', 'Égyptienne', 'Émirienne', 'Équatorienne', 'Érythréenne',
+      'Espagnole', 'Estonienne', 'Éthiopienne', 'Fidjienne', 'Finlandaise', 'Française', 'Gabonaise', 'Gambienne',
+      'Géorgienne', 'Ghanéenne', 'Grecque', 'Grenadienne', 'Guatémaltèque', 'Guinéenne', 'Bissau-guinéenne', 'Guyanienne',
+      'Haïtienne', 'Hondurienne', 'Hongroise', 'Indienne', 'Indonésienne', 'Irakienne', 'Iranienne', 'Irlandaise',
+      'Islandaise', 'Israélienne', 'Italienne', 'Ivoirienne', 'Jamaïcaine', 'Japonaise', 'Jordanienne', 'Kazakhe',
+      'Kényane', 'Kirghize', 'Kiribatienne', 'Kosovare', 'Koweïtienne', 'Laotienne', 'Lesothane', 'Lettone',
+      'Libanaise', 'Libérienne', 'Libyenne', 'Liechtensteinoise', 'Lituanienne', 'Luxembourgeoise', 'Macédonienne',
+      'Malgache', 'Malaisienne', 'Malawite', 'Maldivienne', 'Malienne', 'Maltaise', 'Marocaine', 'Marshallaise',
+      'Mauricienne', 'Mauritanienne', 'Mexicaine', 'Micronésienne', 'Moldave', 'Monégasque', 'Mongole', 'Monténégrine',
+      'Mozambicaine', 'Namibienne', 'Nauruane', 'Népalaise', 'Néerlandaise', 'Néo-zélandaise', 'Nicaraguayenne',
+      'Nigérienne', 'Nigériane', 'Nord-coréenne', 'Norvégienne', 'Omanaise', 'Ougandaise', 'Ouzbèke', 'Pakistanaise',
+      'Palaosienne', 'Palestinienne', 'Panaméenne', 'Papouane-néo-guinéenne', 'Paraguayenne', 'Péruvienne', 'Philippine',
+      'Polonaise', 'Portugaise', 'Qatarienne', 'Roumaine', 'Russe', 'Rwandaise', 'Saint-lucienne', 'Saint-marinaise',
+      'Saint-vincentaise-et-grenadine', 'Salomonaise', 'Salvadorienne', 'Samoane', 'São-toméenne', 'Saoudienne',
+      'Sénégalaise', 'Serbe', 'Seychelloise', 'Sierra-leonaise', 'Singapourienne', 'Slovaque', 'Slovène',
+      'Somalienne', 'Soudanaise', 'Sud-africaine', 'Sud-coréenne', 'Sud-soudanaise', 'Suédoise', 'Suisse',
+      'Surinamaise', 'Swazie', 'Syrienne', 'Tadjike', 'Tanzanienne', 'Tchadienne', 'Tchèque', 'Thaïlandaise',
+      'Timoraise', 'Togolaise', 'Tongienne', 'Trinidadienne', 'Tunisienne', 'Turque', 'Turkmène', 'Tuvaluane',
+      'Ukrainienne', 'Uruguayenne', 'Vanuatuane', 'Vaticane', 'Vénézuélienne', 'Vietnamienne', 'Yéménite',
+      'Zambienne', 'Zimbabwéenne'
+    ])
+    const filteredNationalities = ref([])
+    const showNationalitySuggestions = ref(false)
+
     // Progression calculée
     const progress = computed(() => (currentStep.value / totalSteps.value) * 100)
 
@@ -883,6 +1011,7 @@ export default {
         if (!formData.value.personalPhone) errors.value.personalPhone = 'Champ obligatoire'
         if (formData.value.email && !validateEmail(formData.value.email)) errors.value.email = 'Format email invalide'
         if (!formData.value.address) errors.value.address = 'Champ obligatoire'
+        if (!formData.value.region) errors.value.region = 'Champ obligatoire'
       }
       else if (step === 2) {
         // Validate ID documents
@@ -906,6 +1035,7 @@ export default {
         if (!formData.value.businessName) errors.value.businessName = 'Champ obligatoire'
         if (!formData.value.businessType) errors.value.businessType = 'Champ obligatoire'
         if (!formData.value.businessAddress) errors.value.businessAddress = 'Champ obligatoire'
+        if (!formData.value.city) errors.value.city = 'Champ obligatoire'
         if (!formData.value.usageType) errors.value.usageType = 'Champ obligatoire'
         // businessPhone is now optional, no validation needed
         if (!formData.value.commercialLastName) errors.value.commercialLastName = 'Champ obligatoire'
@@ -997,6 +1127,56 @@ export default {
     const handleSignatureSaved = (signature) => {
       formData.value.signature = signature
       autoSave()
+    }
+
+    // Gestion de l'autocomplétion des villes
+    const filterCities = () => {
+      const query = formData.value.city.toLowerCase().trim()
+      if (query.length === 0) {
+        filteredCities.value = cities.value.slice(0, 10) // Limite à 10 suggestions
+      } else {
+        filteredCities.value = cities.value
+          .filter(city => city.toLowerCase().includes(query))
+          .slice(0, 10) // Limite à 10 suggestions
+      }
+    }
+
+    const selectCity = (city) => {
+      formData.value.city = city
+      showCitySuggestions.value = false
+      autoSave()
+    }
+
+    const hideCitySuggestions = () => {
+      // Délai pour permettre le clic sur une suggestion
+      setTimeout(() => {
+        showCitySuggestions.value = false
+      }, 200)
+    }
+
+    // Gestion de l'autocomplétion des nationalités
+    const filterNationalities = () => {
+      const query = formData.value.nationality.toLowerCase().trim()
+      if (query.length === 0) {
+        filteredNationalities.value = nationalities.value.slice(0, 10) // Limite à 10 suggestions
+      } else {
+        filteredNationalities.value = nationalities.value
+          .filter(nationality => nationality.toLowerCase().includes(query))
+          .slice(0, 10) // Limite à 10 suggestions
+      }
+    }
+
+    const selectNationality = (nationality) => {
+      formData.value.nationality = nationality
+      showNationalitySuggestions.value = false
+      autoSave()
+    }
+
+    const hideNationalitySuggestions = () => {
+      // Délai pour permettre le clic sur une suggestion
+      setTimeout(() => {
+        showNationalitySuggestions.value = false
+      }, 200)
     }
 
     // Sauvegarde automatique
@@ -1191,6 +1371,18 @@ export default {
       handleFileUpload,
       handleLocationSelected,
       handleSignatureSaved,
+      filterCities,
+      selectCity,
+      hideCitySuggestions,
+      cities,
+      filteredCities,
+      showCitySuggestions,
+      filterNationalities,
+      selectNationality,
+      hideNationalitySuggestions,
+      nationalities,
+      filteredNationalities,
+      showNationalitySuggestions,
       submitForm,
       beforeEnter,
       enter,
