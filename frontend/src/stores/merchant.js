@@ -96,6 +96,8 @@ export const useMerchantStore = defineStore('merchant', () => {
         businessPhone: data.businessPhone, // Envoyer businessPhone directement
         businessEmail: data.businessEmail,
         businessAddress: data.businessAddress,
+        region: data.region,
+        city: data.city,
         usageType: data.usageType, // TRADER, MERC, TRADERWNIF, CORP
         hasCFE: data.hasCFE,
         cfeNumber: data.cfeNumber,
@@ -188,12 +190,19 @@ export const useMerchantStore = defineStore('merchant', () => {
     }
   }
   
+  // Effacement des données de formulaire
+  const clearFormData = async () => {
+    formData.value = {}
+    await StorageService.clearForm()
+  }
+  
   return {
     formData,
     submissions,
     isOnline,
     saveFormData,
     loadFormData,
+    clearFormData,
     submitApplication,
     syncPendingSubmissions,
     updateOnlineStatus,

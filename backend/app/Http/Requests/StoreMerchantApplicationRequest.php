@@ -169,9 +169,10 @@ class StoreMerchantApplicationRequest extends FormRequest
             'merchant_phone' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
             'address' => 'required|string',
+            'region' => 'required|in:Maritime,Plateaux,Centrale,Kara,Savanes',
             
             // Documents d'identité
-            'id_type' => 'required|in:cni,passport,elector,driving_license,foreign_id',
+            'id_type' => 'required|in:cni,passport,residence,elector,driving_license,foreign_id',
             'id_number' => 'required|string|max:50',
             'id_expiry_date' => 'required|date|after:today',
             'has_anid_card' => 'nullable|boolean',
@@ -186,6 +187,7 @@ class StoreMerchantApplicationRequest extends FormRequest
             'business_phones.*' => 'nullable|string|max:20',
             'business_email' => 'nullable|email|max:255',
             'business_address' => 'required|string',
+            'city' => 'required|string|max:255',
             'usage_type' => 'required|in:TRADER,MERC,TRADERWNIF,CORP',
             'has_cfe' => 'nullable|boolean',
             'cfe_number' => 'required_if:has_cfe,true|nullable|string|max:50',

@@ -102,6 +102,13 @@ class MerchantService {
     if (formData.businessType) {
       submitData.append('business_type', formData.businessType)
     }
+    // Région et ville - seulement si elles ont des valeurs
+    if (formData.region && formData.region.trim()) {
+      submitData.append('region', formData.region.trim())
+    }
+    if (formData.city && formData.city.trim()) {
+      submitData.append('city', formData.city.trim())
+    }
     
     // Téléphone du commerce (valeur unique)
     if (formData.businessPhone && formData.businessPhone.trim()) {
@@ -456,8 +463,10 @@ class MerchantService {
       business_type: formData.businessType || '',
       business_phone: formData.businessPhone || null,
       business_email: formData.businessEmail || null,
-      business_address: formData.businessAddress || '',
-      usage_type: formData.usageType || '',
+      business_address: formData.businessAddress || null,
+      region: formData.region || null,
+      city: formData.city || null,
+      usage_type: formData.usageType || null,
       has_cfe: formData.hasCfe ? 1 : 0,
       cfe_number: formData.cfeNumber || null,
       cfe_expiry_date: formData.cfeExpiryDate || null,
@@ -543,8 +552,18 @@ class MerchantService {
     if (formData.businessEmail && formData.businessEmail.trim()) {
       submitData.append('business_email', formData.businessEmail.trim())
     }
-    submitData.append('business_address', (formData.businessAddress && formData.businessAddress.trim()) || '')
-    submitData.append('usage_type', formData.usageType || '')
+    if (formData.businessAddress && formData.businessAddress.trim()) {
+      submitData.append('business_address', formData.businessAddress.trim())
+    }
+    if (formData.region && formData.region.trim()) {
+      submitData.append('region', formData.region.trim())
+    }
+    if (formData.city && formData.city.trim()) {
+      submitData.append('city', formData.city.trim())
+    }
+    if (formData.usageType) {
+      submitData.append('usage_type', formData.usageType)
+    }
     submitData.append('has_cfe', formData.hasCfe ? '1' : '0')
     if (formData.cfeNumber && formData.cfeNumber.trim()) {
       submitData.append('cfe_number', formData.cfeNumber.trim())

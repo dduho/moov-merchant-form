@@ -4,6 +4,7 @@
       type="text"
       :value="displayValue"
       @input="handleInput"
+      @keydown="handleKeydown"
       class="form-input h-12"
       :placeholder="placeholder"
       :class="{ 'border-red-500': !!error }"
@@ -80,11 +81,11 @@ export default {
         clean: value => value.replace(/\D/g, '')
       },
       residence: {
-        pattern: /^[A-Z0-9]{10}$/,
-        display: 'XXXXXXXXXX',
-        maxLength: 10,
+        pattern: /^[A-Z0-9]{1,20}$/,
+        display: 'Numéro de carte de séjour (max 20 caractères)',
+        maxLength: 20,
         format: value => {
-          return value.replace(/[^A-Z0-9]/g, '').toUpperCase().slice(0, 10)  // Enforce max length here
+          return value.replace(/[^A-Z0-9]/g, '').toUpperCase().slice(0, 20)  // Enforce max length here
         },
         clean: value => value.replace(/[^A-Z0-9]/g, '').toUpperCase()
       },
@@ -104,7 +105,7 @@ export default {
       },
       foreign_id: {
         pattern: /^.+$/, // Pas de format spécifique
-        display: 'Numéro de la carte',
+        display: 'Numéro carte d\'identité étrangère (max 20 caractères)',
         maxLength: 20,
         format: value => {
           return value.slice(0, 20)  // Juste limiter la longueur
@@ -119,7 +120,8 @@ export default {
     // Formatted display value
     const displayValue = computed(() => {
       if (!props.modelValue || !currentFormat.value) return ''
-      return currentFormat.value.format(props.modelValue)
+      // Since modelValue is now already formatted, return it as-is
+      return props.modelValue
     })
     
     // Placeholder based on ID type
@@ -130,36 +132,57 @@ export default {
       const input = event.target.value
       const cleaned = currentFormat.value.clean(input)
       
+      // Enforce maximum length in the cleaned value - prevent input beyond limit
+      const truncated = cleaned.slice(0, currentFormat.value.maxLength)
+      
+      // Format the truncated value
+      const formattedValue = currentFormat.value.format(truncated)
+      
       // Check if input exceeds maximum length
       if (cleaned.length > currentFormat.value.maxLength) {
+        // Truncate the input field value to prevent further typing
+        event.target.value = formattedValue
         error.value = `Le numéro est trop long. Maximum ${currentFormat.value.maxLength} caractères.`
-        return
       } else {
         error.value = ''
       }
       
-      // Enforce maximum length in the cleaned value
-      const truncated = cleaned.slice(0, currentFormat.value.maxLength)
-      
-      // Only emit if the value has changed
-      if (truncated !== props.modelValue) {
-        emit('update:modelValue', truncated)
+      // Only emit if the formatted value has changed
+      if (formattedValue !== props.modelValue) {
+        emit('update:modelValue', formattedValue)
       }
       
-      // Validate format
-      validateFormat(cleaned)
+      // Validate format using the formatted value
+      validateFormat(formattedValue)
+    }
+
+    // Handle keydown to prevent input when max length is reached
+    const handleKeydown = (event) => {
+      const currentValue = event.target.value
+      const cleaned = currentFormat.value.clean(currentValue)
+      
+      // Allow navigation keys, backspace, delete, etc.
+      const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab', 'Enter']
+      
+      // If max length is reached and the key is not a control key, prevent default
+      if (cleaned.length >= currentFormat.value.maxLength && !allowedKeys.includes(event.key) && !event.ctrlKey && !event.metaKey) {
+        event.preventDefault()
+      }
     }
     
     // Validate the format
-    const validateFormat = (value) => {
-      if (!value || !currentFormat.value) {
+    const validateFormat = (formattedValue) => {
+      if (!formattedValue || !currentFormat.value) {
         error.value = ''
         return
       }
       
-      if (value.length > currentFormat.value.maxLength) {
+      // Extract cleaned value to check length
+      const cleanedValue = currentFormat.value.clean(formattedValue)
+      
+      if (cleanedValue.length > currentFormat.value.maxLength) {
         error.value = `Le numéro est trop long. Maximum ${currentFormat.value.maxLength} caractères.`
-      } else if (!currentFormat.value.pattern.test(currentFormat.value.format(value))) {
+      } else if (!currentFormat.value.pattern.test(formattedValue)) {
         error.value = `Le format doit être ${currentFormat.value.display}`
       } else {
         error.value = ''
@@ -169,9 +192,12 @@ export default {
     // Watch for ID type changes to revalidate
     watch(() => props.idType, () => {
       if (props.modelValue) {
+        // Clean the current value and reformat it with the new type
         const cleaned = currentFormat.value.clean(props.modelValue)
-        emit('update:modelValue', cleaned)
-        validateFormat(cleaned)
+        const truncated = cleaned.slice(0, currentFormat.value.maxLength)
+        const formattedValue = currentFormat.value.format(truncated)
+        emit('update:modelValue', formattedValue)
+        validateFormat(formattedValue)
       }
     })
     
@@ -184,7 +210,8 @@ export default {
       displayValue,
       placeholder,
       error,
-      handleInput
+      handleInput,
+      handleKeydown
     }
   }
 }

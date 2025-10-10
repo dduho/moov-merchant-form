@@ -277,7 +277,7 @@
                   </div>
 
                   <!-- Carte ANID -->
-                  <div class="mb-4">
+                  <div class="mb-4" v-show="false">
                     <label class="flex items-center space-x-2">
                       <input v-model="formData.hasAnidCard" type="checkbox"
                         class="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500">
@@ -294,6 +294,9 @@
                           class="form-input h-12"
                           :class="{ 'border-red-500': errors.anidNumber }"
                           placeholder="Numéro ANID"
+                          :maxlength="maxLengths.anidNumber"
+                          @input="limitInput('anidNumber', $event)"
+                          @keydown="handleKeydown('anidNumber', $event)"
                           required>
                         <p v-if="errors.anidNumber" class="mt-1 text-sm text-red-600">{{ errors.anidNumber }}</p>
                       </div>
@@ -412,7 +415,7 @@
                   </div>
 
                   <!-- Numéro de téléphone du commerce -->
-                  <div class="mb-6">
+                  <div class="mb-6" v-show="false">
                     <label class="form-label">Numéro marchand (optionnel)</label>
                     <PhoneInput v-model="formData.businessPhone" 
                       :class="{ 'border-red-500': errors.businessPhone }"
@@ -443,7 +446,11 @@
                         <label class="form-label">Numéro CFE *</label>
                         <input v-model="formData.cfeNumber" type="text" 
                           class="form-input h-12" :class="{ 'border-red-500': errors.cfeNumber }"
-                          placeholder="Numéro CFE" required>
+                          placeholder="Numéro CFE" 
+                          :maxlength="maxLengths.cfeNumber"
+                          @input="limitInput('cfeNumber', $event)"
+                          @keydown="handleKeydown('cfeNumber', $event)"
+                          required>
                         <p v-if="errors.cfeNumber" class="mt-1 text-sm text-red-600">{{ errors.cfeNumber }}</p>
                       </div>
 
@@ -459,7 +466,11 @@
                         <label class="form-label">Numéro NIF *</label>
                         <input v-model="formData.nifNumber" type="text" 
                           class="form-input h-12" :class="{ 'border-red-500': errors.nifNumber }"
-                          placeholder="Numéro NIF" required>
+                          placeholder="Numéro NIF" 
+                          :maxlength="maxLengths.nifNumber"
+                          @input="limitInput('nifNumber', $event)"
+                          @keydown="handleKeydown('nifNumber', $event)"
+                          required>
                         <p v-if="errors.nifNumber" class="mt-1 text-sm text-red-600">{{ errors.nifNumber }}</p>
                       </div>
                     </div>
@@ -495,8 +506,8 @@
                         </label>
                         <input v-model="formData.commercialLastName" type="text" 
                           class="form-input h-12" :class="{ 'border-red-500': errors.commercialLastName }"
-                          placeholder="Nom" :required="isCommercial" :disabled="isCommercial || isCommercialInfoDisabled"
-                          :title="isCommercialInfoDisabled ? 'Non modifiable - Candidature liée à un utilisateur' : (isCommercial ? 'Pré-rempli avec le nom du commercial connecté' : '')">
+                          placeholder="Nom" :required="isCommercial" :disabled="isCommercialInfoDisabled"
+                          :title="isCommercialInfoDisabled ? 'Non modifiable - Candidature liée à un utilisateur' : ''">
                         <p v-if="errors.commercialLastName" class="mt-1 text-sm text-red-600">{{ errors.commercialLastName }}</p>
                       </div>
 
@@ -506,8 +517,8 @@
                         </label>
                         <input v-model="formData.commercialFirstName" type="text" 
                           class="form-input h-12" :class="{ 'border-red-500': errors.commercialFirstName }"
-                          placeholder="Prénoms" :required="isCommercial" :disabled="isCommercial || isCommercialInfoDisabled"
-                          :title="isCommercialInfoDisabled ? 'Non modifiable - Candidature liée à un utilisateur' : (isCommercial ? 'Pré-rempli avec le prénom du commercial connecté' : '')">
+                          placeholder="Prénoms" :required="isCommercial" :disabled="isCommercialInfoDisabled"
+                          :title="isCommercialInfoDisabled ? 'Non modifiable - Candidature liée à un utilisateur' : ''">
                         <p v-if="errors.commercialFirstName" class="mt-1 text-sm text-red-600">{{ errors.commercialFirstName }}</p>
                       </div>
 
@@ -517,8 +528,8 @@
                         </label>
                         <PhoneInput v-model="formData.commercialPhone" 
                           :class="{ 'border-red-500': errors.commercialPhone }"
-                          :required="isCommercial" :disabled="isCommercial || isCommercialInfoDisabled"
-                          :title="isCommercialInfoDisabled ? 'Non modifiable - Candidature liée à un utilisateur' : (isCommercial ? 'Pré-rempli avec le téléphone du commercial connecté' : '')" />
+                          :required="isCommercial" :disabled="isCommercialInfoDisabled"
+                          :title="isCommercialInfoDisabled ? 'Non modifiable - Candidature liée à un utilisateur' : ''" />
                         <p v-if="errors.commercialPhone" class="mt-1 text-sm text-red-600">{{ errors.commercialPhone }}</p>
                       </div>
                     </div>
@@ -604,6 +615,30 @@
         <div class="flex items-center space-x-2 text-sm">
           <i class="fas fa-save text-green-500"></i>
         </div>
+      </div>
+
+      <!-- Bouton pour vider le formulaire (flottant) -->
+      <div class="fixed left-4 bottom-32 sm:bottom-20 z-50">
+        <button @click="clearForm" type="button"
+          class="bg-red-600 hover:bg-red-700 text-white rounded-full hover:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 ease-in-out group flex items-center justify-center overflow-hidden min-w-[3.5rem] h-14 hover:pl-4 hover:pr-6"
+          title="Vider tous les champs du formulaire">
+          <i class="fas fa-trash text-lg group-hover:scale-110 transition-all duration-500 ease-in-out flex-shrink-0 group-hover:mr-3"></i>
+          <span class="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-500 ease-in-out text-sm font-medium max-w-0 group-hover:max-w-[8rem] overflow-hidden">
+            Vider tous les champs
+          </span>
+        </button>
+      </div>
+
+      <!-- Bouton flottant pour retourner aux détails (mode édition uniquement) -->
+      <div v-if="isEditMode" class="fixed left-4 bottom-20 sm:bottom-4 z-50">
+        <button @click="goToApplicationDetails" 
+          class="bg-blue-600 hover:bg-blue-700 text-white rounded-full hover:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 ease-in-out group flex items-center justify-center overflow-hidden min-w-[3.5rem] h-14 hover:pl-4 hover:pr-6"
+          title="Retourner aux détails de la candidature">
+          <i class="fas fa-eye text-lg group-hover:scale-110 transition-all duration-500 ease-in-out flex-shrink-0 group-hover:mr-3"></i>
+          <span class="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-500 ease-in-out text-sm font-medium max-w-0 group-hover:max-w-[8rem] overflow-hidden">
+            Retourner sur la fiche
+          </span>
+        </button>
       </div>
     </div>
 
@@ -705,7 +740,6 @@ export default {
       personalPhone: '',
       email: '',
       address: '',
-      region: '',
       // Documents d'identité
       idType: '',
       idNumber: '',
@@ -717,6 +751,7 @@ export default {
       businessName: '',
       businessType: '',
       businessAddress: '',
+      region: '',
       city: '',
       businessEmail: '',
       usageType: '',
@@ -741,6 +776,33 @@ export default {
         idCard: null,
         anidCard: null,
         cfeCard: null
+      }
+    };
+
+    // Fonctions de limitation de longueur pour les numéros
+    const maxLengths = {
+      anidNumber: 15,  // ANID peut avoir jusqu'à 15 caractères
+      cfeNumber: 20,   // CFE peut avoir jusqu'à 20 caractères 
+      nifNumber: 15    // NIF peut avoir jusqu'à 15 caractères
+    };
+
+    const limitInput = (fieldName, event) => {
+      const input = event.target;
+      const maxLength = maxLengths[fieldName];
+      if (input.value.length > maxLength) {
+        input.value = input.value.slice(0, maxLength);
+        formData.value[fieldName] = input.value;
+      }
+    };
+
+    const handleKeydown = (fieldName, event) => {
+      const input = event.target;
+      const maxLength = maxLengths[fieldName];
+      const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab', 'Enter'];
+      
+      // If max length is reached and the key is not a control key, prevent default
+      if (input.value.length >= maxLength && !allowedKeys.includes(event.key) && !event.ctrlKey && !event.metaKey) {
+        event.preventDefault();
       }
     };
 
@@ -993,12 +1055,6 @@ export default {
     const validateStep = (step) => {
       errors.value = {}
       
-      // Validate commercial info if user is commercial
-      if (step === 1 && isCommercial.value) {
-        const commercialErrors = validateCommercialInfo()
-        Object.assign(errors.value, commercialErrors)
-      }
-      
       if (step === 1) {
         // Validate personal information
         if (!formData.value.lastName) errors.value.lastName = 'Champ obligatoire'
@@ -1011,7 +1067,6 @@ export default {
         if (!formData.value.personalPhone) errors.value.personalPhone = 'Champ obligatoire'
         if (formData.value.email && !validateEmail(formData.value.email)) errors.value.email = 'Format email invalide'
         if (!formData.value.address) errors.value.address = 'Champ obligatoire'
-        if (!formData.value.region) errors.value.region = 'Champ obligatoire'
       }
       else if (step === 2) {
         // Validate ID documents
@@ -1031,16 +1086,25 @@ export default {
         }
       }
       else if (step === 3) {
+        // Debug: Log values during validation
+        console.log('=== VALIDATION ÉTAPE 3 ===')
+        console.log('formData.value.region:', formData.value.region)
+        console.log('formData.value.city:', formData.value.city)
+        
         // Validate business information
         if (!formData.value.businessName) errors.value.businessName = 'Champ obligatoire'
         if (!formData.value.businessType) errors.value.businessType = 'Champ obligatoire'
         if (!formData.value.businessAddress) errors.value.businessAddress = 'Champ obligatoire'
+        if (!formData.value.region) errors.value.region = 'Champ obligatoire'
         if (!formData.value.city) errors.value.city = 'Champ obligatoire'
         if (!formData.value.usageType) errors.value.usageType = 'Champ obligatoire'
         // businessPhone is now optional, no validation needed
-        if (!formData.value.commercialLastName) errors.value.commercialLastName = 'Champ obligatoire'
-        if (!formData.value.commercialFirstName) errors.value.commercialFirstName = 'Champ obligatoire'
-        if (!formData.value.commercialPhone) errors.value.commercialPhone = 'Champ obligatoire'
+        
+        // Validate commercial info if user is commercial
+        if (isCommercial.value) {
+          const commercialErrors = validateCommercialInfo()
+          Object.assign(errors.value, commercialErrors)
+        }
         
         // Validation conditionnelle CFE
         if (formData.value.hasCFE) {
@@ -1199,14 +1263,28 @@ export default {
 
     // Soumission du formulaire
     const submitForm = async () => {
+      console.log('=== DÉBUT SUBMITFORM ===')
+      console.log('currentStep.value:', currentStep.value)
+      
       // Validate final step before submission
-      if (!validateStep(currentStep.value)) {
+      const isValid = validateStep(currentStep.value)
+      console.log('Validation du step final:', isValid)
+      console.log('Erreurs après validation:', errors.value)
+      
+      if (!isValid) {
+        console.log('Validation échouée, arrêt de la soumission')
         notificationStore.error(
           'Erreur de validation',
           'Veuillez corriger les erreurs avant de continuer'
         )
         return
       }
+
+      // Debug: Log form data before submission
+      console.log('=== FORM DATA AVANT SOUMISSION ===')
+      console.log('formData.region:', formData.value.region)
+      console.log('formData.city:', formData.value.city)
+      console.log('Contenu complet de formData:', JSON.stringify(formData.value, null, 2))
 
       isSubmitting.value = true
       try {
@@ -1296,8 +1374,57 @@ export default {
       nextTick(() => setStageHeightToCurrent())
     }, { deep: true })
 
+    // Fonction pour vider le formulaire
+    const clearForm = () => {
+      // Confirmer avant de vider
+      if (confirm('Êtes-vous sûr de vouloir vider tous les champs du formulaire ? Cette action est irréversible.')) {
+        // Réinitialiser avec les données par défaut
+        formData.value = { ...defaultFormData };
+        
+        // Réinitialiser les erreurs
+        errors.value = {};
+        
+        // Retourner à la première étape
+        currentStep.value = 1;
+        
+        // Vider le localStorage
+        merchantStore.clearFormData();
+        
+        // Afficher une notification
+        notificationStore.info(
+          'Formulaire vidé',
+          'Tous les champs ont été réinitialisés'
+        );
+        
+        // Recalculer la hauteur
+        nextTick(() => setStageHeightToCurrent());
+      }
+    };
+
+    // Fonction pour naviguer vers les détails de la candidature
+    const goToApplicationDetails = () => {
+      if (applicationId.value) {
+        router.push(`/applications/${applicationId.value}`);
+      }
+    };
+
     // Sauvegarde automatique lors des changements
     watch(formData, autoSave, { deep: true })
+
+    // Watcher pour vider les champs quand le type de pièce change
+    watch(() => formData.value.idType, (newIdType, oldIdType) => {
+      // Vider les champs seulement si le type a vraiment changé et qu'il y avait une valeur précédente
+      if (oldIdType && newIdType !== oldIdType) {
+        formData.value.idNumber = '';
+        formData.value.idExpiryDate = '';
+        // Vider aussi les erreurs liées à ces champs
+        if (errors.value.idNumber) delete errors.value.idNumber;
+        if (errors.value.idExpiryDate) delete errors.value.idExpiryDate;
+        
+        // Recalculer la hauteur au cas où les erreurs auraient été supprimées
+        nextTick(() => setStageHeightToCurrent());
+      }
+    })
 
     // Initialisation du formulaire
     onMounted(async () => {
@@ -1314,33 +1441,31 @@ export default {
           // Initialiser avec les données par défaut
           formData.value = { ...defaultFormData };
         
-        // Remplir le formulaire pour un commercial connecté
-        if (isCommercial.value && userInfo.value) {
-          const commercialData = {
-            commercialLastName: userInfo.value.last_name || '',
-            commercialFirstName: userInfo.value.first_name || '',
-            commercialPhone: userInfo.value.phone || '',
-            businessName: userInfo.value.business_name || '',
-            businessType: userInfo.value.business_type || '',
-            businessPhone: (userInfo.value.business_phones && userInfo.value.business_phones[0]) || '',
-            businessEmail: userInfo.value.email || '',
-            businessAddress: userInfo.value.business_address || ''
-          };
-          
-          // Fusionner dans l'ordre : défaut -> commercial -> sauvegardé
-          formData.value = {
-            ...formData.value,
-            ...commercialData,
-            ...(savedData || {})
-          };
-            // Valider après le remplissage des données
-            nextTick(() => {
-            validateCommercialInfo();
-            });
-          } 
-          // Si données sauvegardées mais pas de commercial
-          else if (savedData) {
+          // Appliquer les données sauvegardées d'abord
+          if (savedData) {
             formData.value = { ...formData.value, ...savedData };
+          }
+          
+          // Remplir les champs commerciaux seulement s'ils sont vides et que c'est un commercial
+          if (isCommercial.value && userInfo.value && !isEditMode.value) {
+            console.log('Remplissage automatique - Commercial connecté:', userInfo.value);
+            
+            // Pré-remplir seulement les champs vides
+            if (!formData.value.commercialLastName) {
+              formData.value.commercialLastName = userInfo.value.last_name || '';
+            }
+            if (!formData.value.commercialFirstName) {
+              formData.value.commercialFirstName = userInfo.value.first_name || '';
+            }
+            if (!formData.value.commercialPhone) {
+              formData.value.commercialPhone = userInfo.value.phone || '';
+            }
+            
+            console.log('Champs commerciaux après pré-remplissage:', {
+              commercialLastName: formData.value.commercialLastName,
+              commercialFirstName: formData.value.commercialFirstName,
+              commercialPhone: formData.value.commercialPhone
+            });
           }
         }
           
@@ -1398,7 +1523,14 @@ export default {
       isLoadingApplication,
       loadingError,
       applicationUserId,
-      isCommercialInfoDisabled
+      isCommercialInfoDisabled,
+      // Add clear form and navigation functions
+      clearForm,
+      goToApplicationDetails,
+      // Add input limitation functions
+      maxLengths,
+      limitInput,
+      handleKeydown
     }
   }
 }

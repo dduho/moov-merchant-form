@@ -126,6 +126,23 @@ const handleLogout = async () => {
                     </div>
 
                     <div class="py-1">
+                      <!-- Formulaire de candidature -->
+                      <router-link
+                        to="/formulaire"
+                        class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors group"
+                        @click="userMenuOpen = false"
+                      >
+                        <div class="w-8 h-8 rounded-lg bg-gray-100 group-hover:bg-orange-100 flex items-center justify-center mr-3 transition-colors">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="font-medium">Nouvelle candidature</p>
+                          <p class="text-xs text-gray-500 group-hover:text-orange-600">Créer une demande</p>
+                        </div>
+                      </router-link>
+
                       <!-- Dashboard -->
                       <router-link
                         to="/dashboard"
