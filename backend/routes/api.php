@@ -7,7 +7,9 @@ use App\Http\Controllers\{
     DocumentController,
     DashboardController,
     AuthController,
-    NotificationController
+    NotificationController,
+    UserManagementController,
+    ObjectiveController
 };
 
 // Routes d'authentification
@@ -20,6 +22,7 @@ Route::prefix('auth')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
         Route::put('/profile', [AuthController::class, 'updateProfile']);
+        Route::post('/change-password', [UserManagementController::class, 'changePassword']);
     });
 });
 
@@ -30,6 +33,19 @@ Route::get('/health', fn() => response()->json([
     'version' => '1.0.0',
     'timestamp' => now()->toISOString(),
 ]));
+
+// Route de test temporaire pour diagnostiquer les problèmes d'auth
+Route::middleware(['web', 'auth:sanctum'])->get('/debug-auth', function (Request $request) {
+    $user = $request->user();
+    return response()->json([
+        'authenticated' => !!$user,
+        'user_id' => $user ? $user->id : null,
+        'user_email' => $user ? $user->email : null,
+        'user_roles' => $user ? $user->roles->pluck('name') : [],
+        'has_admin_role' => $user ? $user->hasRole('admin') : false,
+        'middleware_stack' => 'web,auth:sanctum'
+    ]);
+});
 
 // Groupe API avec rate limiting
 Route::middleware(['throttle:api'])->group(function () {
@@ -46,7 +62,7 @@ Route::middleware(['throttle:api'])->group(function () {
         Route::get('/statistics/all', [MerchantApplicationController::class, 'statistics'])->name('statistics');
         
         // Routes nécessitant une authentification
-        Route::middleware(['web', 'auth:sanctum'])->group(function () {
+        Route::middleware(['web', 'auth:sanctum', 'force.password.change'])->group(function () {
             Route::post('/', [MerchantApplicationController::class, 'store'])->name('store');
             Route::put('/{merchantApplication}', [MerchantApplicationController::class, 'update'])->name('update');
             Route::put('/{merchantApplication}/full', [MerchantApplicationController::class, 'fullUpdate'])->name('full-update');
@@ -77,7 +93,7 @@ Route::middleware(['throttle:api'])->group(function () {
         Route::get('/{document}/metadata', [DocumentController::class, 'metadata'])->name('metadata');
         
         // Routes nécessitant une authentification
-        Route::middleware(['web', 'auth:sanctum'])->group(function () {
+        Route::middleware(['web', 'auth:sanctum', 'force.password.change'])->group(function () {
             Route::post('/upload', [DocumentController::class, 'upload'])->name('upload');
             Route::delete('/{document}', [DocumentController::class, 'destroy'])->name('destroy');
             Route::post('/{document}/verify', [DocumentController::class, 'verify'])->name('verify');
@@ -88,7 +104,7 @@ Route::middleware(['throttle:api'])->group(function () {
     // ============================================================
     // ROUTES DASHBOARD (DashboardController) - Authentification requise
     // ============================================================
-    Route::middleware(['web', 'auth:sanctum'])->prefix('dashboard')->name('dashboard.')->group(function () {
+    Route::middleware(['web', 'auth:sanctum', 'force.password.change'])->prefix('dashboard')->name('dashboard.')->group(function () {
         Route::get('/stats', [DashboardController::class, 'stats'])->name('stats');
         Route::get('/recent', [DashboardController::class, 'recent'])->name('recent');
         Route::get('/trends', [DashboardController::class, 'trends'])->name('trends');
@@ -105,12 +121,38 @@ Route::middleware(['throttle:api'])->group(function () {
     // ============================================================
     // ROUTES NOTIFICATIONS (NotificationController) - Authentification requise
     // ============================================================
-    Route::middleware(['web', 'auth:sanctum'])->prefix('notifications')->name('notifications.')->group(function () {
+    Route::middleware(['web', 'auth:sanctum', 'force.password.change'])->prefix('notifications')->name('notifications.')->group(function () {
         Route::get('/', [NotificationController::class, 'index'])->name('index');
         Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
         Route::patch('/{notification}/read', [NotificationController::class, 'markAsRead'])->name('mark-as-read');
         Route::patch('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-as-read');
         Route::delete('/{notification}', [NotificationController::class, 'destroy'])->name('destroy');
+    });
+    
+    // ============================================================
+    // ROUTES GESTION DES UTILISATEURS (UserManagementController) - Admin uniquement
+    // ============================================================
+    Route::middleware(['web', 'auth:sanctum', 'force.password.change'])->prefix('users')->name('users.')->group(function () {
+        Route::get('/', [UserManagementController::class, 'index'])->name('index');
+        Route::get('/commercials', [UserManagementController::class, 'getCommercials'])->name('commercials');
+        Route::post('/{user}/reset-password', [UserManagementController::class, 'resetPassword'])->name('reset-password');
+        Route::post('/{user}/toggle-block', [UserManagementController::class, 'toggleBlock'])->name('toggle-block');
+        Route::post('/{user}/toggle-active', [UserManagementController::class, 'toggleActive'])->name('toggle-active');
+        Route::get('/{user}/stats', [UserManagementController::class, 'userStats'])->name('stats');
+    });
+    
+    // ============================================================
+    // ROUTES GESTION DES OBJECTIFS (ObjectiveController) - Admin uniquement
+    // ============================================================
+    Route::middleware(['web', 'auth:sanctum', 'force.password.change'])->prefix('objectives')->name('objectives.')->group(function () {
+        Route::get('/', [ObjectiveController::class, 'index'])->name('index');
+        Route::post('/', [ObjectiveController::class, 'store'])->name('store');
+        Route::get('/current', [ObjectiveController::class, 'getCurrentUserObjective'])->name('current');
+        Route::get('/progress-stats', [ObjectiveController::class, 'progressStats'])->name('progress-stats');
+        Route::post('/bulk-set', [ObjectiveController::class, 'setBulkObjectives'])->name('bulk-set');
+        Route::get('/{objective}', [ObjectiveController::class, 'show'])->name('show');
+        Route::put('/{objective}', [ObjectiveController::class, 'update'])->name('update');
+        Route::delete('/{objective}', [ObjectiveController::class, 'destroy'])->name('destroy');
     });
     
     // Route de test pour vérifier FormData

@@ -40,7 +40,8 @@ export default defineConfig({
   ],
   server: {
     port: 3000,
-    host: '0.0.0.0', // Permet l'accès depuis d'autres machines du réseau
-    cors: true
+    host: '0.0.0.0',
+    cors: true,
+    hmr: false // Désactiver HMR temporairement pour éviter les erreurs WebSocket
   }
 })

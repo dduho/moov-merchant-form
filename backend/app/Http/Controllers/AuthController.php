@@ -29,14 +29,28 @@ class AuthController extends Controller
             ]);
         }
 
+        $user = Auth::user();
+
+        // Vérifier si l'utilisateur peut se connecter
+        if (!$user->canLogin()) {
+            Auth::logout();
+            throw ValidationException::withMessages([
+                'username' => ['Votre compte est bloqué. Contactez l\'administrateur.'],
+            ]);
+        }
+
+        // Enregistrer la dernière connexion
+        $user->last_login_at = now();
+        $user->save();
+
         $request->session()->regenerate();
 
-        $user = Auth::user();
         $userData = $user->toArray();
         $userData['roles'] = $user->roles->pluck('slug');
 
         return response()->json([
-            'user' => $userData
+            'user' => $userData,
+            'must_change_password' => $user->must_change_password
         ]);
     }
 

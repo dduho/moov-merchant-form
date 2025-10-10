@@ -8,6 +8,8 @@ import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import ApplicationDetails from '../views/ApplicationDetails.vue'
 import NotificationPage from '../views/NotificationPage.vue'
+import UserManagement from '../views/UserManagement.vue'
+import ObjectiveManagement from '../views/ObjectiveManagement.vue'
 
 const routes = [
   {
@@ -81,6 +83,26 @@ const routes = [
     meta: {
       title: 'Notifications',
       requiresAuth: true
+    }
+  },
+  {
+    path: '/admin/users',
+    name: 'UserManagement',
+    component: UserManagement,
+    meta: {
+      title: 'Gestion des utilisateurs',
+      requiresAuth: true,
+      requiresAdmin: true
+    }
+  },
+  {
+    path: '/admin/objectives',
+    name: 'ObjectiveManagement',
+    component: ObjectiveManagement,
+    meta: {
+      title: 'Gestion des objectifs',
+      requiresAuth: true,
+      requiresAdmin: true
     }
   }
 ]

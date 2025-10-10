@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Test - Moov Merchant</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; }
+        .success { color: green; }
+        .error { color: red; }
+        .btn-primary { background: #007bff; color: white; border: none; }
+        .btn-danger { background: #dc3545; color: white; border: none; }
+        .user-list, .objective-list { margin-top: 10px; }
+        .user-item, .objective-item { padding: 10px; margin: 5px 0; background: #f8f9fa; border-radius: 3px; }
+        input, select { margin: 5px; padding: 8px; }
+        .form-group { margin: 10px 0; }
+        label { display: block; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Administration Moov Merchant - Interface de Test</h1>
+        
+        <!-- Section Authentification -->
+        <div class="section">
+            <h2>🔐 Authentification</h2>
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="email" placeholder="admin@example.com">
+            </div>
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" id="password" placeholder="password">
+            </div>
+            <button class="btn-primary" onclick="login()">Se connecter</button>
+            <button onclick="getMe()">Qui suis-je?</button>
+            <button class="btn-danger" onclick="logout()">Se déconnecter</button>
+            <div id="auth-result"></div>
+        </div>
+
+        <!-- Section Gestion des Utilisateurs -->
+        <div class="section">
+            <h2>👥 Gestion des Utilisateurs</h2>
+            <button class="btn-primary" onclick="loadUsers()">Charger les utilisateurs</button>
+            <button onclick="loadCommercials()">Charger les commerciaux</button>
+            <div id="users-result"></div>
+            <div class="user-list" id="user-list"></div>
+        </div>
+
+        <!-- Section Gestion des Objectifs -->
+        <div class="section">
+            <h2>🎯 Gestion des Objectifs</h2>
+            <button class="btn-primary" onclick="loadObjectives()">Charger les objectifs</button>
+            <button onclick="loadProgressStats()">Stats de progression</button>
+            
+            <div class="form-group">
+                <h3>Créer un nouvel objectif:</h3>
+                <label>Utilisateur:</label>
+                <select id="objective-user"></select>
+                <label>Montant cible:</label>
+                <input type="number" id="target-amount" placeholder="100000">
+                <label>Période:</label>
+                <select id="objective-period">
+                    <option value="monthly">Mensuel</option>
+                    <option value="quarterly">Trimestriel</option>
+                    <option value="yearly">Annuel</option>
+                </select>
+                <button class="btn-primary" onclick="createObjective()">Créer l'objectif</button>
+            </div>
+            
+            <div id="objectives-result"></div>
+            <div class="objective-list" id="objective-list"></div>
+        </div>
+
+        <!-- Section Dashboard Stats -->
+        <div class="section">
+            <h2>📊 Dashboard Stats</h2>
+            <button class="btn-primary" onclick="loadDashboardStats()">Charger les stats</button>
+            <button onclick="loadUserStats()">Stats utilisateur</button>
+            <div id="stats-result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration axios
+        axios.defaults.baseURL = 'http://127.0.0.1:8000';
+        axios.defaults.withCredentials = true;
+
+        let csrfToken = null;
+
+        // Fonction pour obtenir le token CSRF
+        async function getCsrfToken() {
+            try {
+                await axios.get('/sanctum/csrf-cookie');
+                return true;
+            } catch (error) {
+                console.error('Erreur CSRF:', error);
+                return false;
+            }
+        }
+
+        // Authentification
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showResult('auth-result', 'Veuillez renseigner email et mot de passe', 'error');
+                return;
+            }
+
+            try {
+                // Obtenir le token CSRF d'abord
+                await getCsrfToken();
+                
+                const response = await axios.post('/api/auth/login', {
+                    email: email,
+                    password: password
+                });
+                
+                showResult('auth-result', `Connexion réussie! Bienvenue ${response.data.user.name}`, 'success');
+                
+                // Charger les utilisateurs pour les objectifs
+                loadUsersForObjectives();
+                
+            } catch (error) {
+                showResult('auth-result', `Erreur de connexion: ${error.response?.data?.message || error.message}`, 'error');
+            }
+        }
+
+        async function getMe() {
+            try {
+                const response = await axios.get('/api/auth/me');
+                showResult('auth-result', `Utilisateur connecté: ${response.data.user.name} (${response.data.user.roles.join(', ')})`, 'success');
+            } catch (error) {
+                showResult('auth-result', `Non connecté: ${error.response?.data?.message || error.message}`, 'error');
+            }
+        }
+
+        async function logout() {
+            try {
+                await axios.post('/api/auth/logout');
+                showResult('auth-result', 'Déconnexion réussie', 'success');
+            } catch (error) {
+                showResult('auth-result', `Erreur de déconnexion: ${error.message}`, 'error');
+            }
+        }
+
+        // Gestion des utilisateurs
+        async function loadUsers() {
+            try {
+                const response = await axios.get('/api/users');
+                showResult('users-result', `${response.data.data.length} utilisateurs chargés`, 'success');
+                
+                let html = '';
+                response.data.data.forEach(user => {
+                    html += `
+                        <div class="user-item">
+                            <strong>${user.name}</strong> (${user.email})<br>
+                            Rôles: ${user.roles.join(', ')}<br>
+                            Actif: ${user.is_active ? 'Oui' : 'Non'}<br>
+                            <button onclick="resetUserPassword(${user.id})">Reset Password</button>
+                            <button onclick="toggleUserBlock(${user.id})">${user.is_blocked ? 'Débloquer' : 'Bloquer'}</button>
+                            <button onclick="toggleUserActive(${user.id})">${user.is_active ? 'Désactiver' : 'Activer'}</button>
+                        </div>
+                    `;
+                });
+                document.getElementById('user-list').innerHTML = html;
+                
+            } catch (error) {
+                showResult('users-result', `Erreur: ${error.response?.data?.message || error.message}`, 'error');
+            }
+        }
+
+        async function loadCommercials() {
+            try {
+                const response = await axios.get('/api/users/commercials');
+                showResult('users-result', `${response.data.data.length} commerciaux trouvés`, 'success');
+                
+                let html = '';
+                response.data.data.forEach(user => {
+                    html += `
+                        <div class="user-item">
+                            <strong>${user.name}</strong> (${user.email})<br>
+                            Commercial ID: ${user.id}
+                        </div>
+                    `;
+                });
+                document.getElementById('user-list').innerHTML = html;
+                
+            } catch (error) {
+                showResult('users-result', `Erreur commerciaux: ${error.response?.data?.message || error.message}`, 'error');
+            }
+        }
+
+        // Charger les utilisateurs pour les objectifs
+        async function loadUsersForObjectives() {
+            try {
+                const response = await axios.get('/api/users');
+                const select = document.getElementById('objective-user');
+                select.innerHTML = '<option value="">Sélectionner un utilisateur</option>';
+                
+                response.data.data.forEach(user => {
+                    select.innerHTML += `<option value="${user.id}">${user.name} (${user.email})</option>`;
+                });
+            } catch (error) {
+                console.error('Erreur chargement utilisateurs:', error);
+            }
+        }
+
+        // Actions utilisateur
+        async function resetUserPassword(userId) {
+            try {
+                const response = await axios.post(`/api/users/${userId}/reset-password`);
+                showResult('users-result', `Mot de passe réinitialisé pour l'utilisateur ${userId}`, 'success');
+                loadUsers();
+            } catch (error) {
+                showResult('users-result', `Erreur reset password: ${error.response?.data?.message || error.message}`, 'error');
+            }
+        }
+
+        async function toggleUserBlock(userId) {
+            try {
+                const response = await axios.post(`/api/users/${userId}/toggle-block`);
+                showResult('users-result', `Statut de blocage modifié pour l'utilisateur ${userId}`, 'success');
+                loadUsers();
+            } catch (error) {
+                showResult('users-result', `Erreur toggle block: ${error.response?.data?.message || error.message}`, 'error');
+            }
+        }
+
+        async function toggleUserActive(userId) {
+            try {
+                const response = await axios.post(`/api/users/${userId}/toggle-active`);
+                showResult('users-result', `Statut d'activation modifié pour l'utilisateur ${userId}`, 'success');
+                loadUsers();
+            } catch (error) {
+                showResult('users-result', `Erreur toggle active: ${error.response?.data?.message || error.message}`, 'error');
+            }
+        }
+
+        // Gestion des objectifs
+        async function loadObjectives() {
+            try {
+                const response = await axios.get('/api/objectives');
+                showResult('objectives-result', `${response.data.data.length} objectifs chargés`, 'success');
+                
+                let html = '';
+                response.data.data.forEach(objective => {
+                    html += `
+                        <div class="objective-item">
+                            <strong>Objectif ${objective.id}</strong><br>
+                            Utilisateur: ${objective.user.name}<br>
+                            Montant cible: ${objective.target_amount.toLocaleString()} FCFA<br>
+                            Période: ${objective.period}<br>
+                            Progression: ${objective.current_amount.toLocaleString()} / ${objective.target_amount.toLocaleString()} FCFA 
+                            (${((objective.current_amount / objective.target_amount) * 100).toFixed(1)}%)<br>
+                            <button class="btn-danger" onclick="deleteObjective(${objective.id})">Supprimer</button>
+                        </div>
+                    `;
+                });
+                document.getElementById('objective-list').innerHTML = html;
+                
+            } catch (error) {
+                showResult('objectives-result', `Erreur: ${error.response?.data?.message || error.message}`, 'error');
+            }
+        }
+
+        async function createObjective() {
+            const userId = document.getElementById('objective-user').value;
+            const targetAmount = document.getElementById('target-amount').value;
+            const period = document.getElementById('objective-period').value;
+            
+            if (!userId || !targetAmount) {
+                showResult('objectives-result', 'Veuillez renseigner tous les champs', 'error');
+                return;
+            }
+
+            try {
+                const response = await axios.post('/api/objectives', {
+                    user_id: userId,
+                    target_amount: parseFloat(targetAmount),
+                    period: period,
+                    start_date: new Date().toISOString().split('T')[0],
+                    end_date: period === 'monthly' ? 
+                        new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0] :
+                        period === 'quarterly' ?
+                        new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString().split('T')[0] :
+                        new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
+                });
+                
+                showResult('objectives-result', 'Objectif créé avec succès!', 'success');
+                
+                // Réinitialiser le formulaire
+                document.getElementById('target-amount').value = '';
+                document.getElementById('objective-user').value = '';
+                
+                // Recharger les objectifs
+                loadObjectives();
+                
+            } catch (error) {
+                showResult('objectives-result', `Erreur création objectif: ${error.response?.data?.message || error.message}`, 'error');
+            }
+        }
+
+        async function deleteObjective(objectiveId) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer cet objectif?')) return;
+            
+            try {
+                await axios.delete(`/api/objectives/${objectiveId}`);
+                showResult('objectives-result', 'Objectif supprimé avec succès!', 'success');
+                loadObjectives();
+            } catch (error) {
+                showResult('objectives-result', `Erreur suppression: ${error.response?.data?.message || error.message}`, 'error');
+            }
+        }
+
+        async function loadProgressStats() {
+            try {
+                const response = await axios.get('/api/objectives/progress-stats');
+                showResult('objectives-result', `Stats de progression chargées: ${JSON.stringify(response.data)}`, 'success');
+            } catch (error) {
+                showResult('objectives-result', `Erreur stats: ${error.response?.data?.message || error.message}`, 'error');
+            }
+        }
+
+        // Dashboard stats
+        async function loadDashboardStats() {
+            try {
+                const response = await axios.get('/api/dashboard/stats?period=month');
+                showResult('stats-result', `Stats dashboard: ${JSON.stringify(response.data, null, 2)}`, 'success');
+            } catch (error) {
+                showResult('stats-result', `Erreur dashboard: ${error.response?.data?.message || error.message}`, 'error');
+            }
+        }
+
+        async function loadUserStats() {
+            try {
+                const response = await axios.get('/api/dashboard/user-stats?period=month&page=1&per_page=10');
+                showResult('stats-result', `Stats utilisateur: ${JSON.stringify(response.data, null, 2)}`, 'success');
+            } catch (error) {
+                showResult('stats-result', `Erreur user stats: ${error.response?.data?.message || error.message}`, 'error');
+            }
+        }
+
+        // Utilitaire pour afficher les résultats
+        function showResult(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="${type}">${message}</div>`;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Interface admin prête!');
+            // Obtenir le token CSRF au chargement
+            getCsrfToken();
+        });
+    </script>
+</body>
+</html>

@@ -33,6 +33,40 @@
         </div>
       </div>
 
+      <!-- Menu Admin (visible uniquement pour les admins) -->
+      <div v-if="authStore.isAdmin" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Administration</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <router-link :to="{ name: 'UserManagement' }" 
+                         class="flex items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors group">
+              <div class="flex-shrink-0">
+                <svg class="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                </svg>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-sm font-medium text-gray-900 group-hover:text-blue-700">Gestion des Utilisateurs</h3>
+                <p class="text-xs text-gray-500">Créer, modifier, bloquer des utilisateurs</p>
+              </div>
+            </router-link>
+            
+            <router-link :to="{ name: 'ObjectiveManagement' }" 
+                         class="flex items-center p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-colors group">
+              <div class="flex-shrink-0">
+                <svg class="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-sm font-medium text-gray-900 group-hover:text-green-700">Gestion des Objectifs</h3>
+                <p class="text-xs text-gray-500">Définir et suivre les objectifs des commerciaux</p>
+              </div>
+            </router-link>
+          </div>
+        </div>
+      </div>
+
       <!-- KPIs -->
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <template v-if="loading">
@@ -171,6 +205,11 @@
             </div>
           </div>
         </template>
+      </div>
+
+      <!-- Objectifs Widget (pour les commerciaux) -->
+      <div v-if="authStore.isCommercial" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <ObjectiveWidget />
       </div>
 
       <!-- Graphiques -->
@@ -628,13 +667,15 @@ import ApiService from '../services/ApiService'
 import MerchantService from '../services/MerchantService'
 import Chart from 'chart.js/auto'
 import PaginationControls from '../components/PaginationControls.vue'
+import ObjectiveWidget from '../components/ObjectiveWidget.vue'
 import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notifications'
 
 export default {
   name: 'Dashboard',
   components: {
-    PaginationControls
+    PaginationControls,
+    ObjectiveWidget
   },
   setup() {
     const authStore = useAuthStore()

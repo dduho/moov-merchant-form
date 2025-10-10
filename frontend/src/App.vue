@@ -51,7 +51,7 @@ const handleLogout = async () => {
 <template>
   <div id="app" class="min-h-screen flex flex-col">
     <!-- Header moderne et responsive -->
-    <header class="bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-100 sticky top-0 z-40 flex-shrink-0">
+    <header class="bg-white/95 backdrop-blur-sm shadow-sm border-b py-2 border-gray-100 sticky top-0 z-40 flex-shrink-0">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
           <!-- Logo et branding -->
