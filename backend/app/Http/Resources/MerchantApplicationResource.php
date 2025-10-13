@@ -43,6 +43,7 @@ class MerchantApplicationResource extends JsonResource
             'business_name' => $this->business_name,
             'business_type' => $this->business_type,
             'business_type_label' => $this->business_type_label,
+            'business_phone' => $this->business_phone,
             // 'business_phones' => $this->business_phones ?? null, // Temporarily disabled due to column issue
             'business_email' => $this->business_email,
             'business_address' => $this->business_address,

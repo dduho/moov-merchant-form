@@ -7,7 +7,7 @@
           <div class="flex-1 min-w-0">
             <div class="flex items-center mb-2">
               <button
-                @click="$router.push('/admin')"
+                @click="$router.push('/dashboard')"
                 class="mr-3 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors duration-200 flex items-center"
               >
                 <i class="fas fa-arrow-left mr-2"></i>
@@ -292,8 +292,9 @@
         </div>
 
         <!-- Pagination -->
-        <div v-if="pagination.total > pagination.per_page" class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+        <div v-if="pagination && pagination.total > 0" class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
           <div class="flex items-center justify-between">
+            <!-- Mobile Pagination -->
             <div class="flex-1 flex justify-between sm:hidden">
               <button
                 @click="loadUsers(pagination.current_page - 1)"
@@ -302,6 +303,9 @@
               >
                 Précédent
               </button>
+              <div class="text-sm text-gray-700 flex items-center">
+                Page {{ pagination.current_page }} / {{ pagination.last_page }}
+              </div>
               <button
                 @click="loadUsers(pagination.current_page + 1)"
                 :disabled="pagination.current_page >= pagination.last_page"
@@ -310,6 +314,8 @@
                 Suivant
               </button>
             </div>
+
+            <!-- Desktop Pagination -->
             <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
                 <p class="text-sm text-gray-700">
@@ -324,19 +330,46 @@
               </div>
               <div>
                 <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  <!-- Previous Button -->
                   <button
                     @click="loadUsers(pagination.current_page - 1)"
                     :disabled="pagination.current_page <= 1"
-                    class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <i class="fas fa-chevron-left"></i>
+                    <i class="fas fa-chevron-left mr-1"></i>
+                    Précédent
                   </button>
+
+                  <!-- Page Numbers -->
+                  <template v-for="page in getPageNumbers()" :key="page">
+                    <button
+                      v-if="page !== '...'"
+                      @click="loadUsers(page)"
+                      :class="[
+                        'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
+                        page === pagination.current_page
+                          ? 'z-10 bg-orange-50 border-orange-500 text-orange-600'
+                          : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                      ]"
+                    >
+                      {{ page }}
+                    </button>
+                    <span
+                      v-else
+                      class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
+                    >
+                      ...
+                    </span>
+                  </template>
+
+                  <!-- Next Button -->
                   <button
                     @click="loadUsers(pagination.current_page + 1)"
                     :disabled="pagination.current_page >= pagination.last_page"
-                    class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="relative inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <i class="fas fa-chevron-right"></i>
+                    Suivant
+                    <i class="fas fa-chevron-right ml-1"></i>
                   </button>
                 </nav>
               </div>
@@ -468,6 +501,43 @@ export default {
       return Math.min(100, (stats.applications_this_month / stats.objective.monthly_target) * 100)
     }
 
+    const getPageNumbers = () => {
+      const pages = []
+      const current = pagination.value.current_page
+      const last = pagination.value.last_page
+
+      if (last <= 7) {
+        // Si 7 pages ou moins, afficher toutes les pages
+        for (let i = 1; i <= last; i++) {
+          pages.push(i)
+        }
+      } else {
+        // Toujours afficher la première page
+        pages.push(1)
+
+        if (current > 3) {
+          pages.push('...')
+        }
+
+        // Pages autour de la page courante
+        const start = Math.max(2, current - 1)
+        const end = Math.min(last - 1, current + 1)
+
+        for (let i = start; i <= end; i++) {
+          pages.push(i)
+        }
+
+        if (current < last - 2) {
+          pages.push('...')
+        }
+
+        // Toujours afficher la dernière page
+        pages.push(last)
+      }
+
+      return pages
+    }
+
     const viewUserStats = (user) => {
       selectedUser.value = user
       showStatsModal.value = true
@@ -547,6 +617,7 @@ export default {
       isCommercial,
       formatLastLogin,
       getProgressPercentage,
+      getPageNumbers,
       viewUserStats,
       resetPassword,
       handlePasswordReset,

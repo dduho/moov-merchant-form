@@ -105,7 +105,7 @@ class User extends Authenticatable
      */
     public function merchantApplications()
     {
-        return $this->hasMany(MerchantApplication::class, 'submitted_by');
+        return $this->hasMany(MerchantApplication::class, 'user_id');
     }
 
     /**

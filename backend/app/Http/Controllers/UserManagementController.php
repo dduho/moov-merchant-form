@@ -73,7 +73,7 @@ class UserManagementController extends Controller
             });
         }
 
-        $users = $query->paginate($request->get('per_page', 15));
+        $users = $query->paginate($request->get('per_page', 10));
 
         // Ajouter les statistiques pour chaque commercial
         $users->getCollection()->transform(function ($user) {
@@ -273,6 +273,20 @@ class UserManagementController extends Controller
                 ? min(100, round(($totalApplications / $yearlyObjective->yearly_target) * 100, 2))
                 : 0
         ];
+
+        // Applications récentes (10 dernières)
+        $stats['recent_applications'] = $user->merchantApplications()
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get(['id', 'business_name', 'status', 'created_at'])
+            ->map(function($app) {
+                return [
+                    'id' => $app->id,
+                    'business_name' => $app->business_name,
+                    'status' => $app->status,
+                    'created_at' => $app->created_at->toISOString()
+                ];
+            });
 
         return response()->json([
             'user' => $user->load('roles'),

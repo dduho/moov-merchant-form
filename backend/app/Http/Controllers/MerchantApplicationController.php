@@ -292,6 +292,7 @@ class MerchantApplicationController extends Controller
 
         $validated = $request->validate([
             'admin_notes' => 'sometimes|string|max:1000|nullable',
+            'business_phone' => 'sometimes|string|max:20|nullable',
         ]);
         
         $merchantApplication->update($validated);

@@ -42,6 +42,10 @@ export default defineConfig({
     port: 3000,
     host: '0.0.0.0',
     cors: true,
-    hmr: false // Désactiver HMR temporairement pour éviter les erreurs WebSocket
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+      port: 3000
+    }
   }
 })

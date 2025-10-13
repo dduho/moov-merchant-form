@@ -65,8 +65,8 @@
                     candidatures
                   </p>
                 </div>
-                <div class="bg-blue-400 bg-opacity-30 rounded-full p-3">
-                  <i class="fas fa-calendar-month text-2xl"></i>
+                <div class="bg-blue-400 bg-opacity-30 rounded-full w-16 h-16 flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-calendar-day text-2xl"></i>
                 </div>
               </div>
             </div>
@@ -85,8 +85,8 @@
                     candidatures
                   </p>
                 </div>
-                <div class="bg-green-400 bg-opacity-30 rounded-full p-3">
-                  <i class="fas fa-calendar-year text-2xl"></i>
+                <div class="bg-green-400 bg-opacity-30 rounded-full w-16 h-16 flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-calendar-alt text-2xl"></i>
                 </div>
               </div>
             </div>
@@ -105,7 +105,7 @@
                     candidatures
                   </p>
                 </div>
-                <div class="bg-purple-400 bg-opacity-30 rounded-full p-3">
+                <div class="bg-purple-400 bg-opacity-30 rounded-full w-16 h-16 flex items-center justify-center flex-shrink-0">
                   <i class="fas fa-infinity text-2xl"></i>
                 </div>
               </div>
@@ -187,32 +187,60 @@
               Activité récente
             </h4>
 
-            <div v-if="stats.recent_applications && stats.recent_applications.length > 0" class="space-y-3">
-              <div
-                v-for="application in stats.recent_applications"
-                :key="application.id"
-                class="flex items-center justify-between p-3 bg-gray-50 rounded-md"
-              >
-                <div class="flex items-center">
-                  <div class="flex-shrink-0 h-8 w-8 bg-orange-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-file-alt text-orange-600 text-sm"></i>
+            <div v-if="stats.recent_applications && stats.recent_applications.length > 0">
+              <div class="space-y-3">
+                <div
+                  v-for="application in paginatedRecentApplications"
+                  :key="application.id"
+                  class="flex items-center justify-between p-3 bg-gray-50 rounded-md"
+                >
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-8 w-8 bg-orange-100 rounded-full flex items-center justify-center">
+                      <i class="fas fa-file-alt text-orange-600 text-sm"></i>
+                    </div>
+                    <div class="ml-3">
+                      <p class="text-sm font-medium text-gray-900">
+                        {{ application.business_name || 'Candidature' }}
+                      </p>
+                      <p class="text-xs text-gray-500">
+                        {{ formatDate(application.created_at) }}
+                      </p>
+                    </div>
                   </div>
-                  <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-900">
-                      {{ application.business_name || 'Candidature' }}
-                    </p>
-                    <p class="text-xs text-gray-500">
-                      {{ formatDate(application.created_at) }}
-                    </p>
+                  <div>
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                      :class="getApplicationStatusClass(application.status)"
+                    >
+                      {{ getApplicationStatusText(application.status) }}
+                    </span>
                   </div>
                 </div>
-                <div>
-                  <span
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                    :class="getApplicationStatusClass(application.status)"
+              </div>
+
+              <!-- Pagination -->
+              <div v-if="stats.recent_applications.length > activityPerPage" class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+                <div class="text-sm text-gray-500">
+                  Affichage de {{ activityStartIndex + 1 }} à {{ Math.min(activityEndIndex, stats.recent_applications.length) }} sur {{ stats.recent_applications.length }}
+                </div>
+                <div class="flex space-x-2">
+                  <button
+                    @click="activityCurrentPage--"
+                    :disabled="activityCurrentPage === 1"
+                    class="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                   >
-                    {{ getApplicationStatusText(application.status) }}
+                    <i class="fas fa-chevron-left"></i>
+                  </button>
+                  <span class="px-3 py-1 text-sm text-gray-700">
+                    Page {{ activityCurrentPage }} / {{ activityTotalPages }}
                   </span>
+                  <button
+                    @click="activityCurrentPage++"
+                    :disabled="activityCurrentPage === activityTotalPages"
+                    class="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    <i class="fas fa-chevron-right"></i>
+                  </button>
                 </div>
               </div>
             </div>
@@ -262,9 +290,51 @@ export default {
     const isLoading = ref(false)
     const error = ref(null)
     const stats = ref(null)
+    const activityCurrentPage = ref(1)
+    const activityPerPage = 5
 
     // Computed
     const hasStats = computed(() => stats.value !== null && stats.value !== undefined)
+    
+    // Adapter les données de l'API au format attendu par le template
+    const currentMonth = computed(() => {
+      if (!stats.value?.months) return null
+      const now = new Date()
+      const currentMonthIndex = now.getMonth() // 0-11
+      return stats.value.months[currentMonthIndex]
+    })
+    
+    const adaptedStats = computed(() => {
+      if (!stats.value) return null
+      
+      return {
+        applications_this_month: currentMonth.value?.applications || 0,
+        applications_this_year: stats.value.yearly?.applications || 0,
+        applications_total: stats.value.yearly?.applications || 0, // Pour l'instant, égal au yearly
+        objective: currentMonth.value?.objective > 0 ? {
+          monthly_target: currentMonth.value.objective,
+          target_applications: stats.value.yearly.objective || 0,
+          current_progress: stats.value.yearly.applications || 0,
+          period_start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString(),
+          period_end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString()
+        } : null,
+        recent_applications: stats.value.recent_applications || []
+      }
+    })
+
+    // Pagination pour l'activité récente
+    const activityTotalPages = computed(() => {
+      if (!adaptedStats.value?.recent_applications) return 1
+      return Math.ceil(adaptedStats.value.recent_applications.length / activityPerPage)
+    })
+
+    const activityStartIndex = computed(() => (activityCurrentPage.value - 1) * activityPerPage)
+    const activityEndIndex = computed(() => activityCurrentPage.value * activityPerPage)
+
+    const paginatedRecentApplications = computed(() => {
+      if (!adaptedStats.value?.recent_applications) return []
+      return adaptedStats.value.recent_applications.slice(activityStartIndex.value, activityEndIndex.value)
+    })
 
     // Methods
     const closeModal = () => {
@@ -280,9 +350,9 @@ export default {
         
         const response = await userStore.getUserStats(props.user.id)
         console.log('Stats response:', response)
-        // Le service retourne response.data d'axios, qui contient {data: {...stats...}}
-        // Donc on doit accéder à response.data pour obtenir les stats
-        stats.value = response.data
+        // Le service retourne déjà response.data d'axios
+        // La réponse contient {user, stats, year}
+        stats.value = response.stats
         console.log('Stats value:', stats.value)
       } catch (err) {
         console.error('Error loading user stats:', err)
@@ -317,14 +387,14 @@ export default {
     }
 
     const getMonthlyProgress = () => {
-      if (!stats.value.objective || !stats.value.objective.monthly_target) return 0
-      const progress = (stats.value.applications_this_month || 0) / stats.value.objective.monthly_target * 100
+      if (!adaptedStats.value?.objective || !adaptedStats.value.objective.monthly_target) return 0
+      const progress = (adaptedStats.value.applications_this_month || 0) / adaptedStats.value.objective.monthly_target * 100
       return Math.min(100, Math.round(progress))
     }
 
     const getTotalProgress = () => {
-      if (!stats.value.objective || !stats.value.objective.target_applications) return 0
-      const progress = (stats.value.objective.current_progress || 0) / stats.value.objective.target_applications * 100
+      if (!adaptedStats.value?.objective || !adaptedStats.value.objective.target_applications) return 0
+      const progress = (adaptedStats.value.objective.current_progress || 0) / adaptedStats.value.objective.target_applications * 100
       return Math.min(100, Math.round(progress))
     }
 
@@ -382,17 +452,19 @@ export default {
     watch([() => props.show, () => props.user], ([show, user], [oldShow]) => {
       if (show && user) {
         loadStats()
+        activityCurrentPage.value = 1 // Reset pagination
       } else if (!show && oldShow) {
         // Reset stats when modal closes
         stats.value = null
         error.value = null
+        activityCurrentPage.value = 1
       }
     })
 
     return {
       isLoading,
       error,
-      stats,
+      stats: adaptedStats, // Exposer adaptedStats au lieu de stats brut
       hasStats,
       closeModal,
       loadStats,
@@ -404,7 +476,14 @@ export default {
       getObjectiveStatusIcon,
       getObjectiveStatusText,
       getApplicationStatusClass,
-      getApplicationStatusText
+      getApplicationStatusText,
+      // Pagination activité récente
+      activityCurrentPage,
+      activityPerPage,
+      activityTotalPages,
+      activityStartIndex,
+      activityEndIndex,
+      paginatedRecentApplications
     }
   }
 }

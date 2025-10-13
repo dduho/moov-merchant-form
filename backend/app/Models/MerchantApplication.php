@@ -47,6 +47,7 @@ class MerchantApplication extends Model
         // Informations commerciales
         'business_name',
         'business_type',
+        'business_phone',
         'business_phones',
         'business_email',
         'business_address',

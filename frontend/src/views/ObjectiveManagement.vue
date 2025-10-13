@@ -7,7 +7,7 @@
           <div class="flex-1 min-w-0">
             <div class="flex items-center mb-2">
               <button
-                @click="$router.push('/admin')"
+                @click="$router.push('/dashboard')"
                 class="mr-3 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors duration-200 flex items-center"
               >
                 <i class="fas fa-arrow-left mr-2"></i>

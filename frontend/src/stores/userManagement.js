@@ -6,7 +6,12 @@ export const useUserManagementStore = defineStore('userManagement', () => {
   const users = ref([])
   const commercials = ref([])
   const selectedUser = ref(null)
-  const pagination = ref({})
+  const pagination = ref({
+    current_page: 1,
+    last_page: 1,
+    per_page: 10,
+    total: 0
+  })
   const isLoading = ref(false)
   const error = ref(null)
   const filters = ref({

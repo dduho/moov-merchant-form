@@ -124,8 +124,15 @@
                     <template v-if="canValidate && application?.status === 'pending'">
                       <button 
                         @click="updateStatus('approved'); showActionsMenu = false"
-                        class="flex items-center w-full px-4 py-3 text-sm text-green-700 hover:bg-green-50 transition-colors">
-                        <svg class="w-4 h-4 mr-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        :disabled="!canApprove"
+                        :class="[
+                          'flex items-center w-full px-4 py-3 text-sm transition-colors',
+                          canApprove 
+                            ? 'text-green-700 hover:bg-green-50 cursor-pointer' 
+                            : 'text-gray-400 cursor-not-allowed opacity-50'
+                        ]"
+                        :title="!canApprove ? 'Le téléphone professionnel doit être renseigné' : ''">
+                        <svg class="w-4 h-4 mr-3" :class="canApprove ? 'text-green-600' : 'text-gray-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
                         Approuver la candidature
@@ -452,6 +459,84 @@
 
         <!-- Timeline et Notes -->
         <div class="space-y-6">
+          <!-- Widget Téléphone Professionnel -->
+          <div class="bg-white rounded-2xl shadow-sm p-6">
+            <h2 class="text-xl font-semibold text-orange-600 mb-4">Numéro marchand</h2>
+
+            <template v-if="loading">
+              <!-- Skeleton pour téléphone -->
+              <div class="animate-pulse">
+                <div class="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                <div class="h-6 bg-gray-200 rounded w-40"></div>
+              </div>
+            </template>
+
+            <template v-else>
+              <!-- Mode affichage -->
+              <div v-if="!isEditingBusinessPhone">
+                <div class="flex items-center justify-between mb-4">
+                  <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-700 mb-1">Numéro</p>
+                    <p class="text-lg text-gray-900 font-medium">
+                      {{ application?.business_phone || 'Non attribué' }}
+                    </p>
+                  </div>
+                  <button 
+                    @click="startEditingBusinessPhone"
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl hover:from-orange-700 hover:to-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Modifier
+                  </button>
+                </div>
+                <p v-if="!application?.business_phone" class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start">
+                  <svg class="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>
+                  <span>Requis pour valider la candidature</span>
+                </p>
+              </div>
+
+              <!-- Mode édition -->
+              <form v-else @submit.prevent="updateBusinessPhone" class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Numéro Marchand
+                  </label>
+                  <PhoneInput
+                    v-model="businessPhoneInput"
+                    required
+                    class="w-full"
+                  />
+                </div>
+                <div class="flex items-center justify-end space-x-3">
+                  <button
+                    type="button"
+                    @click="cancelEditingBusinessPhone"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200 shadow-sm"
+                  >
+                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    :disabled="!businessPhoneInput.trim()"
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl hover:from-orange-700 hover:to-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  >
+                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Enregistrer
+                  </button>
+                </div>
+              </form>
+            </template>
+          </div>
           <div class="bg-white rounded-2xl shadow-sm p-6">
             <template v-if="loading">
               <!-- Skeleton pour Timeline -->
@@ -793,6 +878,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notifications'
 import ApiService from '../services/ApiService'
+import PhoneInput from '../components/PhoneInput.vue'
 import * as L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -806,7 +892,9 @@ L.Icon.Default.mergeOptions({
 
 export default {
   name: 'ApplicationDetails',
-  
+  components: {
+    PhoneInput
+  },
   setup() {
     const route = useRoute()
     const router = useRouter()
@@ -820,6 +908,10 @@ export default {
     const mapContainer = ref(null)
     const map = ref(null)
     const showActionsMenu = ref(false)
+    
+    // Variables pour le téléphone professionnel
+    const isEditingBusinessPhone = ref(false)
+    const businessPhoneInput = ref('')
 
     // Permissions calculées
     const canEdit = computed(() => {
@@ -842,6 +934,11 @@ export default {
     const canReject = computed(() => authStore.canRejectApplications)
     const canDelete = computed(() => authStore.canDeleteApplications)
     const canVerifyDocuments = computed(() => authStore.canVerifyDocuments)
+    
+    // Vérifier si on peut approuver (permissions + business_phone renseigné)
+    const canApprove = computed(() => {
+      return canValidate.value && application.value?.business_phone?.trim()
+    })
 
     // Timeline calculée à partir des données disponibles
     const timelineEvents = computed(() => {
@@ -1060,6 +1157,39 @@ export default {
         loading.value = false
       }
     }
+
+    const startEditingBusinessPhone = () => {
+      businessPhoneInput.value = application.value?.business_phone || ''
+      isEditingBusinessPhone.value = true
+    }
+
+    const cancelEditingBusinessPhone = () => {
+      isEditingBusinessPhone.value = false
+      businessPhoneInput.value = ''
+    }
+
+    const updateBusinessPhone = async () => {
+      if (!businessPhoneInput.value.trim()) {
+        notificationStore.error('Erreur', 'Le numéro de téléphone ne peut pas être vide')
+        return
+      }
+
+      try {
+        loading.value = true
+        await ApiService.updateApplication(application.value.id, {
+          business_phone: businessPhoneInput.value
+        })
+        
+        notificationStore.success('Succès', 'Le numéro de téléphone professionnel a été mis à jour')
+        isEditingBusinessPhone.value = false
+        await loadApplication() // Recharger les données
+      } catch (error) {
+        console.error('Erreur mise à jour téléphone:', error)
+        notificationStore.error('Erreur', 'Impossible de mettre à jour le numéro de téléphone')
+      } finally {
+        loading.value = false
+      }
+    }
     
     const getStatusLabel = (status) => {
       const labels = {
@@ -1271,11 +1401,18 @@ export default {
       // Permissions
       canEdit,
       canValidate,
+      canApprove,
       canReject,
       canDelete,
       canVerifyDocuments,
       // Menu burger
-      showActionsMenu
+      showActionsMenu,
+      // Téléphone professionnel
+      isEditingBusinessPhone,
+      businessPhoneInput,
+      startEditingBusinessPhone,
+      cancelEditingBusinessPhone,
+      updateBusinessPhone
     }
   }
 }

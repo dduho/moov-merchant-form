@@ -86,7 +86,7 @@ const routes = [
     }
   },
   {
-    path: '/admin/users',
+    path: '/dashboard/users',
     name: 'UserManagement',
     component: UserManagement,
     meta: {
@@ -96,7 +96,7 @@ const routes = [
     }
   },
   {
-    path: '/admin/objectives',
+    path: '/dashboard/objectives',
     name: 'ObjectiveManagement',
     component: ObjectiveManagement,
     meta: {
