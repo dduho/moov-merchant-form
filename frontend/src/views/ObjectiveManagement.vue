@@ -377,7 +377,7 @@
                   <i :class="getObjectiveStatusIcon(objective)" class="mr-1"></i>
                   {{ getObjectiveStatusText(objective) }}
                 </span>
-                <span class="text-xs text-gray-500">
+                <span v-show="false" class="text-xs text-gray-500">
                   Créé par {{ objective.created_by_user?.first_name }} {{ objective.created_by_user?.last_name }}
                 </span>
               </div>

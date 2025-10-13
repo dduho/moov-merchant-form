@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center">
         <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-          <i class="fas fa-target text-orange-600 text-xl"></i>
+          <i class="fas fa-bullseye text-orange-600 text-xl"></i>
         </div>
         <div class="ml-4">
           <h3 class="text-lg font-semibold text-gray-900">Mes Objectifs</h3>

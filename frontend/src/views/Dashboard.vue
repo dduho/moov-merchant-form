@@ -720,11 +720,11 @@ export default {
     
     // Variables pour la pagination et recherche des statistiques utilisateur
     const userSearchQuery = ref('')
-    const userPerPage = ref(10)
+    const userPerPage = ref(5)
     const userCurrentPage = ref(1)
     const userPagination = ref({
       current_page: 1,
-      per_page: 10,
+      per_page: 5,
       total: 0,
       total_pages: 0,
       has_next: false,

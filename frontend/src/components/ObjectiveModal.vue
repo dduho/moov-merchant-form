@@ -11,7 +11,7 @@
           <div class="flex items-center justify-between mb-6">
             <div class="flex items-center">
               <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-orange-100">
-                <i class="fas fa-target text-orange-600"></i>
+                <i class="fas fa-bullseye text-orange-600 text-xl"></i>
               </div>
               <div class="ml-4">
                 <h3 class="text-lg font-medium text-gray-900">

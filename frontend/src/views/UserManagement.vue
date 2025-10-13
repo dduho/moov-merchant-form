@@ -106,9 +106,9 @@
       <!-- Users Table -->
       <div v-else class="bg-white shadow rounded-lg overflow-hidden">
         <!-- Table Header -->
-        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+        <div class="px-6 py-4 border-b border-gray-200 bg-blue-500">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-medium text-gray-900">
+            <h3 class="text-lg font-medium text-white">
               Utilisateurs ({{ users.length }})
             </h3>
           </div>
@@ -117,7 +117,7 @@
         <!-- Table Content -->
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+            <thead class="bg-blue-50">
               <tr>
                 <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Utilisateur
