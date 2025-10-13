@@ -85,7 +85,7 @@ class DashboardController extends Controller
             $status = $request->get('status');
             $search = $request->get('search');
             
-            $query = MerchantApplication::with(['documents'])->latest('created_at');
+            $query = MerchantApplication::with(['documents', 'user'])->latest('created_at');
             
             // Appliquer le filtrage par utilisateur
             $query = $this->applyUserFilter($query, $request);

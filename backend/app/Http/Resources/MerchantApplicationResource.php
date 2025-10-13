@@ -28,6 +28,8 @@ class MerchantApplicationResource extends JsonResource
             'merchant_phone' => $this->merchant_phone,
             'email' => $this->email,
             'address' => $this->address,
+            'region' => $this->region,
+            'city' => $this->city,
             
             // Documents d'identité
             'id_type' => $this->id_type,

@@ -486,6 +486,19 @@
               <p class="text-xs sm:text-sm text-gray-500 mt-1">Toutes les candidatures avec filtres et recherche</p>
             </div>
             <div class="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
+              <!-- Bouton Export Excel -->
+              <button @click="exportToExcel" 
+                      :disabled="excelExportLoading"
+                      class="flex items-center px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg v-if="!excelExportLoading" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <svg v-else class="w-5 h-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {{ excelExportLoading ? 'Export...' : 'Exporter en Excel' }}
+              </button>
+
               <!-- Bouton Export SP - Visible seulement pour les administrateurs -->
               <button v-if="authStore.isAdmin"
                       @click="exportToSP" 
@@ -670,6 +683,7 @@ import PaginationControls from '../components/PaginationControls.vue'
 import ObjectiveWidget from '../components/ObjectiveWidget.vue'
 import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notifications'
+import * as XLSX from 'xlsx'
 
 export default {
   name: 'Dashboard',
@@ -683,6 +697,7 @@ export default {
     const loading = ref(true)
     const applicationsLoading = ref(false)
     const exportLoading = ref(false)
+    const excelExportLoading = ref(false)
     const selectedPeriod = ref('month')
     const stats = ref({})
     const kpis = ref({})
@@ -935,6 +950,99 @@ export default {
     
     const refreshData = () => {
       loadData()
+    }
+
+    // Fonction pour exporter en Excel
+    const exportToExcel = async () => {
+      try {
+        excelExportLoading.value = true
+        
+        // Récupérer toutes les candidatures avec le filtre de statut actuel
+        const params = {
+          status: selectedStatus.value === 'all' ? null : selectedStatus.value,
+          search: searchQuery.value || null,
+          per_page: 1000 // Récupérer un maximum de résultats
+        }
+        
+        const response = await ApiService.getDashboardRecent(params)
+        
+        if (!response.data.data || response.data.data.length === 0) {
+          notificationStore.warning('Export impossible', 'Aucune candidature à exporter.')
+          return
+        }
+        
+        const applications = response.data.data
+        
+        // Mapper les types de pièces d'identité
+        const idTypeMap = {
+          'cni': 'CNI',
+          'elector': 'Carte d\'électeur',
+          'passport': 'Passeport',
+          'driving_license': 'Permis de conduire',
+          'residence': 'Carte de séjour',
+          'foreign_id': 'Carte d\'identité étrangère'
+        }
+        
+        // Préparer les données pour Excel
+        const excelData = applications.map(app => ({
+          'N°': app.reference_number || '',
+          'Date': app.updated_at ? new Date(app.updated_at).toLocaleDateString('fr-FR') : '',
+          'Numéro marchand': app.business_phone || '',
+          'Nom/Raison Sociale': app.business_name || '',
+          'Type de marchands': app.usage_type || '',
+          'Numéro de pièce': app.id_number || '',
+          'Type de pièce': idTypeMap[app.id_type] || app.id_type || '',
+          'Type d\'activité': app.business_type || '',
+          'Localisation': app.latitude && app.longitude ? `${app.latitude}, ${app.longitude}` : '',
+          'Région': app.region || '',
+          'Contact': app.phone || '',
+          'Commercial': app.commercial ? `${app.commercial.first_name || ''} ${app.commercial.last_name || ''}`.trim() : ''
+        }))
+        
+        // Créer le classeur Excel
+        const worksheet = XLSX.utils.json_to_sheet(excelData)
+        const workbook = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Candidatures')
+        
+        // Ajuster la largeur des colonnes
+        const columnWidths = [
+          { wch: 20 }, // N°
+          { wch: 12 }, // Date
+          { wch: 15 }, // Numéro marchand
+          { wch: 30 }, // Nom/Raison Sociale
+          { wch: 20 }, // Type de marchands
+          { wch: 20 }, // Numéro de pièce
+          { wch: 25 }, // Type de pièce
+          { wch: 25 }, // Type d'activité
+          { wch: 25 }, // Localisation
+          { wch: 15 }, // Région
+          { wch: 15 }, // Contact
+          { wch: 25 }  // Commercial
+        ]
+        worksheet['!cols'] = columnWidths
+        
+        // Générer le nom du fichier avec la date et le statut
+        const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+        const statusSuffix = selectedStatus.value !== 'all' ? `_${selectedStatus.value}` : ''
+        const fileName = `candidatures${statusSuffix}_${currentDate}.xlsx`
+        
+        // Télécharger le fichier
+        XLSX.writeFile(workbook, fileName)
+        
+        notificationStore.success(
+          'Export réussi !', 
+          `${applications.length} candidature(s) exportée(s) en Excel.`
+        )
+        
+      } catch (error) {
+        console.error('Erreur lors de l\'export Excel:', error)
+        notificationStore.error(
+          'Erreur d\'export', 
+          'Une erreur s\'est produite lors de l\'export Excel. Veuillez réessayer.'
+        )
+      } finally {
+        excelExportLoading.value = false
+      }
     }
 
     // Fonction pour exporter vers SP
@@ -1374,6 +1482,7 @@ export default {
       loading,
       applicationsLoading,
       exportLoading,
+      excelExportLoading,
       selectedPeriod,
       stats,
       kpis,
@@ -1398,6 +1507,7 @@ export default {
       debouncedSearch,
       resetFilters,
       refreshData,
+      exportToExcel,
       exportToSP,
       formatDate,
       getPeriodText,
