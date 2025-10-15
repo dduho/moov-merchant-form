@@ -84,23 +84,28 @@
       </div>
 
       <!-- Bouton CTA -->
-      <button @click="goToForm" class="btn-primary">
+      <button v-if="authStore.isAuthenticated" @click="goToForm" class="btn-primary">
         Initier une demande
       </button>
 
       <!-- Lien aide -->
       <div class="text-center mt-6">
-        <a href="#" class="text-sm text-gray-500 hover:text-orange-500 transition-colors">
+        <router-link to="/login" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded text-sm transition-colors">
           <span class="font-semibold">Se connecter</span>
-        </a>
+        </router-link>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import { useAuthStore } from '../stores/auth'
 export default {
   name: 'HomeView',
+  setup() {
+    const authStore = useAuthStore()
+    return { authStore }
+  },
   methods: {
     goToForm() {
       this.$router.push('/formulaire')
