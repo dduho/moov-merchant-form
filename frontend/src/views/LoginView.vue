@@ -141,8 +141,13 @@ const handleSubmit = async () => {
   if (!isValid) return
 
   try {
-    await authStore.login(form.username, form.password)
-    router.push('/dashboard')
+    const loginResult = await authStore.login(form.username, form.password)
+    
+    // Si l'utilisateur doit changer son mot de passe, il sera automatiquement redirigé par le router guard
+    // Sinon, rediriger vers le dashboard
+    if (!loginResult.must_change_password) {
+      router.push('/dashboard')
+    }
   } catch (error) {
     // Erreur déjà gérée par le store
     console.error('Erreur de connexion:', error)

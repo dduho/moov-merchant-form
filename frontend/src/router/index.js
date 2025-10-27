@@ -6,6 +6,7 @@ import FormSuccess from '../views/FormSuccess.vue'
 import Dashboard from '../views/Dashboard.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
+import ChangePasswordRequired from '../views/ChangePasswordRequired.vue'
 import ApplicationDetails from '../views/ApplicationDetails.vue'
 import NotificationPage from '../views/NotificationPage.vue'
 import UserManagement from '../views/UserManagement.vue'
@@ -47,6 +48,15 @@ const routes = [
       title: 'Créer un utilisateur',
       requiresAuth: true,
       requiresAdmin: true
+    }
+  },
+  {
+    path: '/change-password-required',
+    name: 'ChangePasswordRequired',
+    component: ChangePasswordRequired,
+    meta: {
+      title: 'Changement de mot de passe requis',
+      requiresAuth: true
     }
   },
   {
@@ -130,6 +140,11 @@ router.beforeEach((to, from, next) => {
       name: 'Login',
       query: { redirect: to.fullPath }
     })
+  }
+
+  // Si l'utilisateur doit changer son mot de passe et qu'il n'est pas déjà sur la page de changement
+  if (authStore.isAuthenticated && authStore.mustChangePassword && to.name !== 'ChangePasswordRequired') {
+    return next({ name: 'ChangePasswordRequired' })
   }
 
   // Si la route requiert un admin

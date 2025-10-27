@@ -13,6 +13,7 @@ export const useAuthStore = defineStore('auth', {
     isAdmin: (state) => state.user?.roles?.includes('admin') ?? false,
     isCommercial: (state) => state.user?.roles?.includes('commercial') ?? false,
     userFullName: (state) => state.user ? `${state.user.first_name} ${state.user.last_name}` : '',
+    mustChangePassword: (state) => state.user?.must_change_password ?? false,
     
     // Permissions pour les candidatures
     canViewApplications: (state) => {
@@ -80,6 +81,11 @@ export const useAuthStore = defineStore('auth', {
         
         // Mettre à jour l'état et persister
         this.setUser(data.user)
+        
+        // Si l'utilisateur doit changer son mot de passe, retourner l'info
+        if (data.must_change_password) {
+          return { must_change_password: true, ...data }
+        }
         
         return data
       } catch (error) {

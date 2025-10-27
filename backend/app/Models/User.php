@@ -146,4 +146,35 @@ class User extends Authenticatable
         $this->password_changed_at = now();
         $this->save();
     }
+
+    /**
+     * Appliquer les objectifs globaux à cet utilisateur
+     */
+    public function applyGlobalObjectives()
+    {
+        // Récupérer tous les objectifs globaux actifs
+        $globalObjectives = UserObjective::whereNull('user_id')
+            ->active()
+            ->get();
+
+        foreach ($globalObjectives as $globalObjective) {
+            // Vérifier si l'utilisateur n'a pas déjà un objectif pour cette période
+            $existingObjective = $this->objectives()
+                ->where('target_year', $globalObjective->target_year)
+                ->where('target_month', $globalObjective->target_month)
+                ->first();
+
+            if (!$existingObjective) {
+                // Créer un objectif personnel basé sur l'objectif global
+                $this->objectives()->create([
+                    'monthly_target' => $globalObjective->monthly_target,
+                    'yearly_target' => $globalObjective->yearly_target,
+                    'target_year' => $globalObjective->target_year,
+                    'target_month' => $globalObjective->target_month,
+                    'description' => $globalObjective->description,
+                    'is_active' => true
+                ]);
+            }
+        }
+    }
 }

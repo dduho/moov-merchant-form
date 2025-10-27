@@ -78,12 +78,18 @@ class AuthController extends Controller
             'phone' => $request->phone,
             'username' => $request->username,
             'password' => Hash::make($request->password),
-            'is_active' => true
+            'is_active' => true,
+            'must_change_password' => true
         ]);
 
         // Assigner le rôle
         $role = Role::where('slug', $request->role)->first();
         $user->roles()->attach($role->id);
+
+        // Si c'est un commercial, appliquer les objectifs globaux
+        if ($request->role === 'commercial') {
+            $user->applyGlobalObjectives();
+        }
 
         return response()->json([
             'message' => 'Utilisateur créé avec succès',
@@ -138,6 +144,30 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Profil mis à jour avec succès',
             'user' => $user
+        ]);
+    }
+
+    public function changePasswordRequired(Request $request)
+    {
+        $user = $request->user();
+
+        // Vérifier que l'utilisateur doit changer son mot de passe
+        if (!$user->must_change_password) {
+            return response()->json(['message' => 'Changement de mot de passe non requis'], 400);
+        }
+
+        $request->validate([
+            'new_password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $user->password = Hash::make($request->new_password);
+        $user->markPasswordAsChanged();
+
+        return response()->json([
+            'message' => 'Mot de passe changé avec succès',
+            'data' => [
+                'must_change_password' => false
+            ]
         ]);
     }
 }

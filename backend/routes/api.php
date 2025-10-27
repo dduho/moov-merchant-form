@@ -23,6 +23,7 @@ Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::put('/profile', [AuthController::class, 'updateProfile']);
         Route::post('/change-password', [UserManagementController::class, 'changePassword']);
+        Route::post('/change-password-required', [AuthController::class, 'changePasswordRequired']);
     });
 });
 
