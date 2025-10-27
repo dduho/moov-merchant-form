@@ -247,6 +247,30 @@ class ApiService {
         return this.client.get('/dashboard/user-stats', { params: finalParams })
     }
     
+    // Candidatures récentes avec filtres (pour la section "Dernières candidatures")
+    async getDashboardRecent(params = {}) {
+        // Paramètres par défaut
+        const defaultParams = {
+            page: 1,
+            per_page: 6,
+            status: null,
+            search: null,
+            user_id: null
+        }
+        
+        // Fusionner avec les paramètres fournis
+        const finalParams = { ...defaultParams, ...params }
+        
+        // Supprimer les paramètres null ou undefined
+        Object.keys(finalParams).forEach(key => {
+            if (finalParams[key] === null || finalParams[key] === undefined) {
+                delete finalParams[key]
+            }
+        })
+        
+        return this.client.get('/dashboard/recent', { params: finalParams })
+    }
+    
     // ============================================================
     // NOTIFICATIONS
     // ============================================================

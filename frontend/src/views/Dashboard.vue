@@ -559,7 +559,21 @@
               </select>
             </div>
 
-            <!-- Bouton de réinitialisation -->
+            <!-- Filtre par utilisateur (uniquement pour les admins) -->
+            <div v-if="authStore.isAdmin" class="sm:w-48">
+              <label for="user" class="sr-only">Filtrer par utilisateur</label>
+              <select
+                id="user"
+                v-model="selectedUser"
+                @change="applyFilters"
+                class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
+              >
+                <option value="all">Tous les utilisateurs</option>
+                <option v-for="user in users" :key="user.id" :value="user.id">
+                  {{ user.first_name }} {{ user.last_name }} ({{ user.username }})
+                </option>
+              </select>
+            </div>
             <button
               @click="resetFilters"
               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors"
@@ -709,6 +723,8 @@ export default {
     // Variables pour les filtres et pagination
     const searchQuery = ref('')
     const selectedStatus = ref('all')
+    const selectedUser = ref('all')
+    const users = ref([])
     const pagination = ref({
       current_page: 1,
       per_page: 6,
@@ -1318,7 +1334,8 @@ export default {
           page: pagination.value.current_page,
           per_page: pagination.value.per_page,
           status: selectedStatus.value === 'all' ? null : selectedStatus.value,
-          search: searchQuery.value || null
+          search: searchQuery.value || null,
+          user_id: selectedUser.value === 'all' ? null : selectedUser.value
         }
         
         const response = await ApiService.getDashboardRecent(params)
@@ -1361,6 +1378,7 @@ export default {
     const resetFilters = () => {
       searchQuery.value = ''
       selectedStatus.value = 'all'
+      selectedUser.value = 'all'
       applyFilters()
     }
     
@@ -1375,6 +1393,37 @@ export default {
         'all': `${prefix}au total`
       }
       return periodTexts[selectedPeriod.value] || `${prefix}aujourd'hui`
+    }
+    
+    // Fonction pour charger la liste des utilisateurs (pour les admins)
+    const loadUsers = async () => {
+      if (!authStore.isAdmin) return
+      
+      try {
+        // Utiliser l'API existante pour récupérer tous les utilisateurs avec leurs stats
+        const params = {
+          period: 'all', // Pour récupérer tous les utilisateurs
+          page: 1,
+          per_page: 1000, // Récupérer un maximum d'utilisateurs
+          search: null
+        }
+        
+        const response = await ApiService.getDashboardUserStats(params)
+        
+        if (response.data.data && Array.isArray(response.data.data)) {
+          // Extraire les informations utilisateur des statistiques
+          users.value = response.data.data.map(userStat => ({
+            id: userStat.user_id,
+            username: userStat.username,
+            first_name: userStat.first_name || '',
+            last_name: userStat.last_name || '',
+            email: userStat.email || ''
+          }))
+        }
+      } catch (error) {
+        console.error('Erreur chargement utilisateurs:', error)
+        users.value = []
+      }
     }
     
     // Fonctions pour les statistiques utilisateurs
@@ -1475,6 +1524,11 @@ export default {
     onMounted(() => {
       loadData()
       loadApplications() // Charger les candidatures séparément
+      
+      // Charger la liste des utilisateurs si l'utilisateur est admin
+      if (authStore.isAdmin) {
+        loadUsers()
+      }
     })
     
     return {
@@ -1491,6 +1545,8 @@ export default {
       userStats,
       searchQuery,
       selectedStatus,
+      selectedUser,
+      users,
       pagination,
       // Variables pour les stats utilisateurs
       userSearchQuery,

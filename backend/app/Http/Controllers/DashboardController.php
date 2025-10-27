@@ -84,11 +84,17 @@ class DashboardController extends Controller
             $page = max($request->get('page', 1), 1);
             $status = $request->get('status');
             $search = $request->get('search');
+            $userId = $request->get('user_id'); // Nouveau paramètre pour filtrer par utilisateur
             
             $query = MerchantApplication::with(['documents', 'user'])->latest('created_at');
             
             // Appliquer le filtrage par utilisateur
             $query = $this->applyUserFilter($query, $request);
+            
+            // Filtre supplémentaire par utilisateur (pour les admins)
+            if ($userId && $request->user() && $request->user()->hasRole('admin')) {
+                $query->where('user_id', $userId);
+            }
             
             // Filtre par statut
             if ($status && $status !== 'all') {
