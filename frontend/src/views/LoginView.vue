@@ -143,9 +143,11 @@ const handleSubmit = async () => {
   try {
     const loginResult = await authStore.login(form.username, form.password)
     
-    // Si l'utilisateur doit changer son mot de passe, il sera automatiquement redirigé par le router guard
-    // Sinon, rediriger vers le dashboard
-    if (!loginResult.must_change_password) {
+    // Si l'utilisateur doit changer son mot de passe, rediriger vers la page dédiée
+    if (loginResult.must_change_password) {
+      router.push('/change-password-required')
+    } else {
+      // Sinon, rediriger vers le dashboard
       router.push('/dashboard')
     }
   } catch (error) {

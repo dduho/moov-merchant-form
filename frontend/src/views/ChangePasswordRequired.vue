@@ -98,6 +98,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import useVuelidate from '@vuelidate/core'
 import { required, minLength, sameAs } from '@vuelidate/validators'
+import axios from 'axios'
 
 const router = useRouter()
 const authStore = useAuthStore()
