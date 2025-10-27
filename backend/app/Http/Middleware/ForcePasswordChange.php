@@ -36,6 +36,7 @@ class ForcePasswordChange
                 'api/users/commercials',
                 // Routes gestion objectifs autorisées pour les admins
                 'api/objectives',
+                'api/objectives/current',
                 'api/objectives/progress-stats'
             ];
 

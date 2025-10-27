@@ -2,7 +2,7 @@
   <div class="bg-gray-200 px-4 sm:px-6 lg:px-8 min-h-screen flex items-center">
     <div class="max-w-md w-full mx-auto main-content">
       <!-- Logo et titre -->
-      <div class="text-center mb-8 pt-12">
+      <div class="text-center mb-8 pt-2">
         <img class="mx-auto h-16 w-auto" src="/logo.png" alt="Moov Money" />
         <h2 class="mt-6 text-3xl font-bold text-gray-900">
           Changement de mot de passe requis
