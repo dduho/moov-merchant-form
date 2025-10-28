@@ -342,7 +342,7 @@
             </div>
           </template>
           
-          <template v-else-if="userStats.length === 0">
+          <template v-else-if="filteredUserStats.length === 0">
             <div class="text-center py-8">
               <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg class="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -357,7 +357,7 @@
           
           <template v-else>
             <div class="space-y-3">
-              <div v-for="user in userStats" :key="user.user_id" 
+              <div v-for="user in filteredUserStats" :key="user.user_id" 
                    class="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
                 <div class="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
                   <!-- Informations utilisateur -->
@@ -417,18 +417,18 @@
             </div>
 
             <!-- Pagination -->
-            <div v-if="userPagination && userPagination.total_pages > 1" class="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 mt-6 pt-4 border-t border-gray-200">
+            <div v-if="filteredUserPagination.total_pages > 1" class="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 mt-6 pt-4 border-t border-gray-200">
               <div class="text-sm text-gray-500">
-                Affichage {{ ((userPagination.current_page - 1) * userPagination.per_page) + 1 }} à 
-                {{ Math.min(userPagination.current_page * userPagination.per_page, userPagination.total) }} 
-                de {{ userPagination.total }} utilisateurs
+                Affichage {{ ((filteredUserPagination.current_page - 1) * filteredUserPagination.per_page) + 1 }} à 
+                {{ Math.min(filteredUserPagination.current_page * filteredUserPagination.per_page, filteredUserPagination.total) }} 
+                de {{ filteredUserPagination.total }} utilisateurs actifs
               </div>
               
               <div class="flex items-center justify-center sm:justify-start space-x-2">
                 <!-- Bouton précédent -->
                 <button
-                  @click="loadUserStatsPage(userPagination.current_page - 1)"
-                  :disabled="!userPagination.has_prev"
+                  @click="loadUserStatsPage(filteredUserPagination.current_page - 1)"
+                  :disabled="!filteredUserPagination.has_prev"
                   class="inline-flex items-center px-2 sm:px-3 py-1 border border-gray-300 rounded-md text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg class="h-3 w-3 sm:h-4 sm:w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -441,12 +441,12 @@
                 <!-- Numéros de page -->
                 <div class="flex items-center space-x-1 overflow-x-auto max-w-xs sm:max-w-none">
                   <button
-                    v-for="page in getPaginationPages(userPagination.current_page, userPagination.total_pages)"
+                    v-for="page in getPaginationPages(filteredUserPagination.current_page, filteredUserPagination.total_pages)"
                     :key="page"
                     @click="page !== '...' && loadUserStatsPage(page)"
                     :class="[
                       'px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium rounded-md flex-shrink-0',
-                      page === userPagination.current_page
+                      page === filteredUserPagination.current_page
                         ? 'bg-blue-600 text-white'
                         : page === '...'
                         ? 'text-gray-400 cursor-default'
@@ -460,8 +460,8 @@
                 
                 <!-- Bouton suivant -->
                 <button
-                  @click="loadUserStatsPage(userPagination.current_page + 1)"
-                  :disabled="!userPagination.has_next"
+                  @click="loadUserStatsPage(filteredUserPagination.current_page + 1)"
+                  :disabled="!filteredUserPagination.has_next"
                   class="inline-flex items-center px-2 sm:px-3 py-1 border border-gray-300 rounded-md text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span class="hidden sm:inline">Suivant</span>
@@ -699,7 +699,7 @@
 </template>
 
 <script>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import ApiService from '../services/ApiService'
 import MerchantService from '../services/MerchantService'
 import Chart from 'chart.js/auto'
@@ -755,6 +755,30 @@ export default {
       total_pages: 0,
       has_next: false,
       has_prev: false
+    })
+    
+    // Utilisateurs filtrés (uniquement ceux avec des candidatures soumises > 0)
+    const filteredUserStats = computed(() => {
+      return userStats.value.filter(user => user.stats.total_submitted > 0)
+    })
+    
+    // Pagination ajustée pour les utilisateurs filtrés
+    const filteredUserPagination = computed(() => {
+      const filteredUsers = filteredUserStats.value
+      const totalFiltered = filteredUsers.length
+      const perPage = userPerPage.value
+      const currentPage = userCurrentPage.value
+      
+      const totalPages = Math.ceil(totalFiltered / perPage)
+      
+      return {
+        current_page: currentPage,
+        per_page: perPage,
+        total: totalFiltered,
+        total_pages: totalPages,
+        has_next: currentPage < totalPages,
+        has_prev: currentPage > 1
+      }
     })
     
     // Debounce pour la recherche
@@ -1413,6 +1437,7 @@ export default {
       selectedStatus.value = 'all'
       selectedUser.value = 'all'
       userSearchQuery.value = ''
+      userCurrentPage.value = 1 // Reset à la première page
       loadUsers() // Recharger les 5 utilisateurs par défaut
       applyFilters()
     }
@@ -1503,21 +1528,21 @@ export default {
 
     const loadUserStatsPage = (page) => {
       userCurrentPage.value = Number(page)
-      loadUserStats()
+      // Plus besoin de recharger les données car nous travaillons avec les données filtrées côté frontend
     }
 
     const debouncedUserStatsSearch = () => {
       clearTimeout(userSearchTimeout)
       userSearchTimeout = setTimeout(() => {
         userCurrentPage.value = 1 // Reset à la première page
-        loadUserStats()
+        // Plus besoin de recharger les données car le filtrage se fait côté frontend
       }, 500) // Délai de 500ms
     }
 
     const clearUserSearch = () => {
       userSearchQuery.value = ''
       userCurrentPage.value = 1
-      loadUserStats()
+      // Plus besoin de recharger les données car le filtrage se fait côté frontend
     }
 
     // Fonction utilitaire pour générer les pages de pagination
@@ -1579,6 +1604,8 @@ export default {
       alerts,
       recentApplications,
       userStats,
+      filteredUserStats,
+      filteredUserPagination,
       searchQuery,
       selectedStatus,
       selectedUser,
