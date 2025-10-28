@@ -481,9 +481,19 @@
         <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
           <!-- En-tête avec titre et icône -->
           <div class="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 mb-6">
-            <div>
+            <div class="flex items-center space-x-3">
+              <!-- Checkbox principale pour tout sélectionner -->
+              <input
+                id="select-all-applications"
+                type="checkbox"
+                :checked="selectAllApplications"
+                @change="toggleSelectAllApplications"
+                class="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 focus:ring-2"
+              />
+              <label for="select-all-applications" class="text-sm font-medium text-gray-700 cursor-pointer">
+                Tout sélectionner (approuvées)
+              </label>
               <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Dernières candidatures</h3>
-              <p class="text-xs sm:text-sm text-gray-500 mt-1">Toutes les candidatures avec filtres et recherche</p>
             </div>
             <div class="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
               <!-- Bouton Export Excel -->
@@ -619,6 +629,15 @@
                 <div v-for="app in recentApplications" :key="app.id" 
                      class="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors">
                   <div class="flex items-center space-x-3 sm:space-x-4 min-w-0">
+                    <!-- Checkbox pour sélectionner cette candidature (désactivée si non approuvée) -->
+                    <input
+                      :id="'select-app-' + app.id"
+                      type="checkbox"
+                      :checked="selectedApplications.includes(app.id)"
+                      :disabled="app.status !== 'approved'"
+                      @change="toggleApplicationSelection(app.id)"
+                      class="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 focus:ring-2 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
                     <div class="flex-shrink-0">
                       <div class="w-10 h-10 sm:w-12 sm:h-12 bg-primary-100 rounded-full flex items-center justify-center">
                         <span class="text-sm sm:text-lg font-medium text-gray-600">
@@ -729,6 +748,10 @@ export default {
     const recentApplications = ref([])
     const charts = ref({})
     const userStats = ref([])
+    
+    // Variables pour la sélection des candidatures à exporter
+    const selectedApplications = ref([])
+    const selectAllApplications = ref(false)
     
     // Variables pour les filtres et pagination
     const searchQuery = ref('')
@@ -1007,21 +1030,34 @@ export default {
       try {
         excelExportLoading.value = true
         
-        // Récupérer toutes les candidatures avec le filtre de statut actuel
-        const params = {
-          status: selectedStatus.value === 'all' ? null : selectedStatus.value,
-          search: searchQuery.value || null,
-          per_page: 1000 // Récupérer un maximum de résultats
+        let applications = []
+        
+        // Si des candidatures sont sélectionnées, utiliser seulement celles-ci
+        if (selectedApplications.value.length > 0) {
+          // Filtrer les candidatures récentes sélectionnées
+          applications = recentApplications.value.filter(app => selectedApplications.value.includes(app.id))
+        } else {
+          // Sinon, récupérer toutes les candidatures avec le filtre de statut actuel
+          const params = {
+            status: selectedStatus.value === 'all' ? null : selectedStatus.value,
+            search: searchQuery.value || null,
+            per_page: 1000 // Récupérer un maximum de résultats
+          }
+          
+          const response = await ApiService.getDashboardRecent(params)
+          
+          if (!response.data.data || response.data.data.length === 0) {
+            notificationStore.warning('Export impossible', 'Aucune candidature à exporter.')
+            return
+          }
+          
+          applications = response.data.data
         }
         
-        const response = await ApiService.getDashboardRecent(params)
-        
-        if (!response.data.data || response.data.data.length === 0) {
+        if (applications.length === 0) {
           notificationStore.warning('Export impossible', 'Aucune candidature à exporter.')
           return
         }
-        
-        const applications = response.data.data
         
         // Mapper les types de pièces d'identité
         const idTypeMap = {
@@ -1101,10 +1137,25 @@ export default {
         exportLoading.value = true
         
         // Récupérer toutes les candidatures approuvées
-        const approvedApplications = await MerchantService.getApprovedApplicationsForExport()
+        const allApprovedApplications = await MerchantService.getApprovedApplicationsForExport()
         
-        if (!approvedApplications || approvedApplications.length === 0) {
+        if (!allApprovedApplications || allApprovedApplications.length === 0) {
           notificationStore.warning('Export impossible', 'Aucune candidature approuvée à exporter.')
+          return
+        }
+        
+        // Filtrer les candidatures approuvées selon la sélection
+        let approvedApplications = []
+        if (selectedApplications.value.length > 0) {
+          // Utiliser seulement les candidatures approuvées sélectionnées
+          approvedApplications = allApprovedApplications.filter(app => selectedApplications.value.includes(app.id))
+        } else {
+          // Utiliser toutes les candidatures approuvées
+          approvedApplications = allApprovedApplications
+        }
+        
+        if (approvedApplications.length === 0) {
+          notificationStore.warning('Export impossible', 'Aucune candidature approuvée sélectionnée à exporter.')
           return
         }
         
@@ -1384,6 +1435,8 @@ export default {
             total: Number(response.data.pagination.total),
             total_pages: Number(response.data.pagination.total_pages)
           }
+          // Mettre à jour l'état de la sélection globale après le chargement
+          updateSelectAllState()
         }
       } catch (error) {
         console.error('Erreur chargement candidatures:', error)
@@ -1440,6 +1493,41 @@ export default {
       userCurrentPage.value = 1 // Reset à la première page
       loadUsers() // Recharger les 5 utilisateurs par défaut
       applyFilters()
+    }
+    
+    // Fonctions pour la gestion de la sélection des candidatures
+    const toggleApplicationSelection = (applicationId) => {
+      const index = selectedApplications.value.indexOf(applicationId)
+      if (index > -1) {
+        selectedApplications.value.splice(index, 1)
+      } else {
+        selectedApplications.value.push(applicationId)
+      }
+      updateSelectAllState()
+    }
+    
+    const toggleSelectAllApplications = () => {
+      const approvedApplications = recentApplications.value.filter(app => app.status === 'approved')
+      if (selectAllApplications.value) {
+        // Désélectionner toutes les candidatures approuvées
+        selectedApplications.value = selectedApplications.value.filter(id => 
+          !approvedApplications.some(app => app.id === id)
+        )
+      } else {
+        // Sélectionner toutes les candidatures approuvées
+        const approvedIds = approvedApplications.map(app => app.id)
+        selectedApplications.value = [...new Set([...selectedApplications.value, ...approvedIds])]
+      }
+      selectAllApplications.value = !selectAllApplications.value
+    }
+    
+    const updateSelectAllState = () => {
+      const approvedApplications = recentApplications.value.filter(app => app.status === 'approved')
+      const totalApproved = approvedApplications.length
+      const selectedApprovedCount = selectedApplications.value.filter(id => 
+        approvedApplications.some(app => app.id === id)
+      ).length
+      selectAllApplications.value = totalApproved > 0 && selectedApprovedCount === totalApproved
     }
     
     // Fonction pour adapter les textes selon la période sélectionnée
@@ -1632,6 +1720,12 @@ export default {
       exportToSP,
       formatDate,
       getPeriodText,
+      // Variables pour la sélection des candidatures
+      selectedApplications,
+      selectAllApplications,
+      toggleApplicationSelection,
+      toggleSelectAllApplications,
+      updateSelectAllState,
       // Fonctions pour les stats utilisateurs
       loadUserStats,
       loadUserStatsPage,
