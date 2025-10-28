@@ -481,19 +481,9 @@
         <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
           <!-- En-tête avec titre et icône -->
           <div class="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 mb-6">
-            <div class="flex items-center space-x-3">
-              <!-- Checkbox principale pour tout sélectionner -->
-              <input
-                id="select-all-applications"
-                type="checkbox"
-                :checked="selectAllApplications"
-                @change="toggleSelectAllApplications"
-                class="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 focus:ring-2"
-              />
-              <label for="select-all-applications" class="text-sm font-medium text-gray-700 cursor-pointer">
-                Tout sélectionner (approuvées)
-              </label>
+            <div>
               <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Dernières candidatures</h3>
+              <p class="text-xs sm:text-sm text-gray-500 mt-1">Toutes les candidatures avec filtres et recherche</p>
             </div>
             <div class="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
               <!-- Bouton Export Excel -->
@@ -625,19 +615,68 @@
                 </div>
               </template>
 
-              <template v-else-if="recentApplications.length > 0">
+              <!-- Checkbox Tout sélectionner juste avant la liste -->
+              <div v-if="recentApplications.length > 0" class="px-4 sm:px-6 py-3 border-b border-gray-200 bg-gray-50">
+                <div class="flex items-center space-x-3">
+                  <div class="relative">
+                    <input
+                      id="select-all-applications"
+                      type="checkbox"
+                      :checked="selectAllApplications"
+                      @change="toggleSelectAllApplications"
+                      class="sr-only peer"
+                    />
+                    <label
+                      for="select-all-applications"
+                      class="flex items-center justify-center w-5 h-5 border-2 border-gray-300 rounded-md cursor-pointer transition-all duration-200 ease-in-out hover:border-orange-400 peer-checked:bg-orange-500 peer-checked:border-orange-500"
+                    >
+                      <svg
+                        v-if="selectAllApplications"
+                        class="w-3 h-3 text-white transition-opacity duration-200"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </label>
+                  </div>
+                  <label for="select-all-applications" class="text-sm font-medium text-gray-700 cursor-pointer">
+                    Tout sélectionner (approuvées)
+                  </label>
+                </div>
+              </div>
+
+              <!-- Liste des candidatures -->
+              <div v-if="recentApplications.length > 0">
                 <div v-for="app in recentApplications" :key="app.id" 
                      class="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors">
                   <div class="flex items-center space-x-3 sm:space-x-4 min-w-0">
                     <!-- Checkbox pour sélectionner cette candidature (désactivée si non approuvée) -->
-                    <input
-                      :id="'select-app-' + app.id"
-                      type="checkbox"
-                      :checked="selectedApplications.includes(app.id)"
-                      :disabled="app.status !== 'approved'"
-                      @change="toggleApplicationSelection(app.id)"
-                      class="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 focus:ring-2 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
+                    <div class="relative flex-shrink-0">
+                      <input
+                        :id="'select-app-' + app.id"
+                        type="checkbox"
+                        :checked="selectedApplications.includes(app.id)"
+                        :disabled="app.status !== 'approved'"
+                        @change="toggleApplicationSelection(app.id)"
+                        class="sr-only peer"
+                      />
+                      <label
+                        :for="'select-app-' + app.id"
+                        class="flex items-center justify-center w-5 h-5 border-2 border-gray-300 rounded-md cursor-pointer transition-all duration-200 ease-in-out hover:border-orange-400 peer-checked:bg-orange-500 peer-checked:border-orange-500 peer-disabled:opacity-40 peer-disabled:cursor-not-allowed peer-disabled:hover:border-gray-300"
+                      >
+                        <svg
+                          v-if="selectedApplications.includes(app.id)"
+                          class="w-3 h-3 text-white transition-opacity duration-200"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </label>
+                    </div>
                     <div class="flex-shrink-0">
                       <div class="w-10 h-10 sm:w-12 sm:h-12 bg-primary-100 rounded-full flex items-center justify-center">
                         <span class="text-sm sm:text-lg font-medium text-gray-600">
@@ -680,20 +719,18 @@
                     </router-link>
                   </div>
                 </div>
-              </template>
+              </div>
 
               <!-- Message si aucune candidature -->
-              <template v-else>
-                <div class="px-6 py-12 text-center">
-                  <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <h3 class="text-sm font-medium text-gray-900 mb-1">Aucune candidature trouvée</h3>
-                  <p class="text-sm text-gray-500">Aucune candidature ne correspond aux critères de recherche.</p>
-                </div>
-              </template>
+              <div v-else class="px-6 py-12 text-center">
+                <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <h3 class="text-sm font-medium text-gray-900 mb-1">Aucune candidature trouvée</h3>
+                <p class="text-sm text-gray-500">Aucune candidature ne correspond aux critères de recherche.</p>
+              </div>
             </div>
-            </div>
+          </div>
           </div>
 
           <!-- Pagination -->
