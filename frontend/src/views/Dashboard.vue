@@ -274,7 +274,7 @@
                 </div>
                 <input
                   v-model="userSearchQuery"
-                  @input="debouncedUserSearch"
+                  @input="debouncedUserStatsSearch"
                   type="text"
                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder="Rechercher par nom, prénom, username, email ou téléphone..."
@@ -560,29 +560,39 @@
             </div>
 
             <!-- Filtre par utilisateur (uniquement pour les admins) -->
-            <div v-if="authStore.isAdmin" class="sm:w-48">
+            <div v-if="authStore.isAdmin" class="sm:w-48 sm:self-start">
               <label for="user" class="sr-only">Filtrer par utilisateur</label>
-              <select
+              <input
                 id="user"
-                v-model="selectedUser"
-                @change="applyFilters"
+                v-model="userSearchQuery"
+                type="text"
+                placeholder="Rechercher un utilisateur..."
+                list="users-list"
                 class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
-              >
+                @input="debouncedUserSearch"
+                @change="handleUserSelection"
+              />
+              <datalist id="users-list">
                 <option value="all">Tous les utilisateurs</option>
-                <option v-for="user in users" :key="user.id" :value="user.id">
-                  {{ user.first_name }} {{ user.last_name }} ({{ user.username }})
+                <option v-for="user in users" :key="user.id" :value="user.full_name + ' (' + user.username + ')'">
+                  {{ user.full_name }} ({{ user.username }})
                 </option>
-              </select>
+              </datalist>
+              <p v-if="users.length >= 5" class="text-xs text-gray-500 mt-1">
+                💡 Tapez pour rechercher plus d'utilisateurs
+              </p>
             </div>
-            <button
-              @click="resetFilters"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors"
-            >
-              <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Réinitialiser
-            </button>
+            <div class="sm:self-start">
+              <button
+                @click="resetFilters"
+                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Réinitialiser
+              </button>
+            </div>
           </div>
           
           <div class="border rounded-xl overflow-hidden">
@@ -725,6 +735,7 @@ export default {
     const selectedStatus = ref('all')
     const selectedUser = ref('all')
     const users = ref([])
+    const userSearchQuery = ref('')
     const pagination = ref({
       current_page: 1,
       per_page: 6,
@@ -735,7 +746,6 @@ export default {
     })
     
     // Variables pour la pagination et recherche des statistiques utilisateur
-    const userSearchQuery = ref('')
     const userPerPage = ref(5)
     const userCurrentPage = ref(1)
     const userPagination = ref({
@@ -1375,10 +1385,35 @@ export default {
       }, 500) // Délai de 500ms
     }
 
+    const debouncedUserSearch = () => {
+      clearTimeout(userSearchTimeout)
+      userSearchTimeout = setTimeout(() => {
+        loadUsers(userSearchQuery.value || null)
+      }, 300) // Délai plus court pour la recherche d'utilisateurs
+    }
+
+    const handleUserSelection = () => {
+      // Trouver l'utilisateur correspondant à la valeur sélectionnée
+      if (userSearchQuery.value === 'all' || userSearchQuery.value === 'Tous les utilisateurs') {
+        selectedUser.value = 'all'
+      } else {
+        // Chercher l'utilisateur par nom complet
+        const user = users.value.find(u => 
+          (u.full_name + ' (' + u.username + ')') === userSearchQuery.value
+        )
+        if (user) {
+          selectedUser.value = user.id
+        }
+      }
+      applyFilters()
+    }
+
     const resetFilters = () => {
       searchQuery.value = ''
       selectedStatus.value = 'all'
       selectedUser.value = 'all'
+      userSearchQuery.value = ''
+      loadUsers() // Recharger les 5 utilisateurs par défaut
       applyFilters()
     }
     
@@ -1396,16 +1431,16 @@ export default {
     }
     
     // Fonction pour charger la liste des utilisateurs (pour les admins)
-    const loadUsers = async () => {
+    const loadUsers = async (searchQuery = null) => {
       if (!authStore.isAdmin) return
       
       try {
-        // Utiliser l'API existante pour récupérer tous les utilisateurs avec leurs stats
+        // Charger seulement 5 utilisateurs par défaut, ou rechercher si une query est fournie
         const params = {
-          period: 'all', // Pour récupérer tous les utilisateurs
+          period: 'all',
           page: 1,
-          per_page: 1000, // Récupérer un maximum d'utilisateurs
-          search: null
+          per_page: searchQuery ? 50 : 5, // 50 résultats pour la recherche, 5 par défaut
+          search: searchQuery
         }
         
         const response = await ApiService.getDashboardUserStats(params)
@@ -1417,7 +1452,8 @@ export default {
             username: userStat.username,
             first_name: userStat.first_name || '',
             last_name: userStat.last_name || '',
-            email: userStat.email || ''
+            email: userStat.email || '',
+            full_name: `${userStat.first_name || ''} ${userStat.last_name || ''}`.trim()
           }))
         }
       } catch (error) {
@@ -1470,7 +1506,7 @@ export default {
       loadUserStats()
     }
 
-    const debouncedUserSearch = () => {
+    const debouncedUserStatsSearch = () => {
       clearTimeout(userSearchTimeout)
       userSearchTimeout = setTimeout(() => {
         userCurrentPage.value = 1 // Reset à la première page
@@ -1527,7 +1563,7 @@ export default {
       
       // Charger la liste des utilisateurs si l'utilisateur est admin
       if (authStore.isAdmin) {
-        loadUsers()
+        loadUsers() // Chargement par défaut (5 utilisateurs)
       }
     })
     
@@ -1547,9 +1583,9 @@ export default {
       selectedStatus,
       selectedUser,
       users,
+      userSearchQuery,
       pagination,
       // Variables pour les stats utilisateurs
-      userSearchQuery,
       userPerPage,
       userCurrentPage,
       userPagination,
@@ -1561,6 +1597,8 @@ export default {
       handlePageChange,
       applyFilters,
       debouncedSearch,
+      debouncedUserSearch,
+      handleUserSelection,
       resetFilters,
       refreshData,
       exportToExcel,
@@ -1570,7 +1608,7 @@ export default {
       // Fonctions pour les stats utilisateurs
       loadUserStats,
       loadUserStatsPage,
-      debouncedUserSearch,
+      debouncedUserStatsSearch,
       clearUserSearch,
       getPaginationPages
     }
