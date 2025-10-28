@@ -496,7 +496,7 @@
                 <svg v-else class="w-5 h-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                {{ excelExportLoading ? 'Export...' : 'Exporter en Excel' }}
+                {{ excelExportLoading ? 'Export...' : 'Export XLSX' }}
               </button>
 
               <!-- Bouton Export SP - Visible seulement pour les administrateurs -->
@@ -510,7 +510,21 @@
                 <svg v-else class="w-5 h-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                {{ exportLoading ? 'Export...' : 'Exporter vers SP' }}
+                {{ exportLoading ? 'Export...' : 'Creation SP' }}
+              </button>
+
+              <!-- Bouton Update SP - Visible seulement pour les administrateurs -->
+              <button v-if="authStore.isAdmin"
+                      @click="exportToSPUpdate"
+                      :disabled="updateExportLoading"
+                      class="flex items-center px-4 py-2 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg v-if="!updateExportLoading" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <svg v-else class="w-5 h-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {{ updateExportLoading ? 'Export...' : 'Update SP' }}
               </button>
               <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
                 <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -777,6 +791,7 @@ export default {
     const loading = ref(true)
     const applicationsLoading = ref(false)
     const exportLoading = ref(false)
+    const updateExportLoading = ref(false)
     const excelExportLoading = ref(false)
     const selectedPeriod = ref('month')
     const stats = ref({})
@@ -1214,12 +1229,75 @@ export default {
         
         // Recharger les données pour mettre à jour l'affichage
         refreshData()
+        // Rafraîchir la liste des candidatures pour refléter les changements de statut
+        loadApplications()
+        // Vider la sélection des checkboxes après l'export
+        selectedApplications.value = []
         
       } catch (error) {
         console.error('Erreur lors de l\'export:', error)
         notificationStore.error('Erreur d\'export', 'Une erreur s\'est produite lors de l\'export. Veuillez réessayer.')
       } finally {
         exportLoading.value = false
+      }
+    }
+
+    // Fonction pour exporter vers SP (Update)
+    const exportToSPUpdate = async () => {
+      try {
+        updateExportLoading.value = true
+        
+        // Récupérer toutes les candidatures approuvées
+        const allApprovedApplications = await MerchantService.getApprovedApplicationsForExport()
+        
+        if (!allApprovedApplications || allApprovedApplications.length === 0) {
+          notificationStore.warning('Export impossible', 'Aucune candidature approuvée à exporter.')
+          return
+        }
+        
+        // Filtrer les candidatures approuvées selon la sélection
+        let approvedApplications = []
+        if (selectedApplications.value.length > 0) {
+          // Utiliser seulement les candidatures approuvées sélectionnées
+          approvedApplications = allApprovedApplications.filter(app => selectedApplications.value.includes(app.id))
+        } else {
+          // Utiliser toutes les candidatures approuvées
+          approvedApplications = allApprovedApplications
+        }
+        
+        if (approvedApplications.length === 0) {
+          notificationStore.warning('Export impossible', 'Aucune candidature approuvée sélectionnée à exporter.')
+          return
+        }
+        
+        const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+        
+        // Générer les fichiers XML pour l'update
+        const updateKycXml = generateUpdateKycXml(approvedApplications)
+        const updateNameXml = generateUpdateNameXml(approvedApplications)
+        
+        // Télécharger les fichiers
+        downloadFile(`UPDATE-KYC-${currentDate}.xml`, updateKycXml)
+        downloadFile(`CHANGE-ORG-NAME-${currentDate}.xml`, updateNameXml)
+        
+        // Marquer les candidatures comme exportées pour update
+        const applicationIds = approvedApplications.map(app => app.id)
+        await MerchantService.markApplicationsAsExported(applicationIds)
+        
+        notificationStore.success('Export réussi !', `${approvedApplications.length} candidature(s) exportée(s) pour mise à jour SP.`)
+        
+        // Recharger les données pour mettre à jour l'affichage
+        refreshData()
+        // Rafraîchir la liste des candidatures pour refléter les changements de statut
+        loadApplications()
+        // Vider la sélection des checkboxes après l'export
+        selectedApplications.value = []
+        
+      } catch (error) {
+        console.error('Erreur lors de l\'export update:', error)
+        notificationStore.error('Erreur d\'export', 'Une erreur s\'est produite lors de l\'export. Veuillez réessayer.')
+      } finally {
+        updateExportLoading.value = false
       }
     }
 
@@ -1407,6 +1485,84 @@ export default {
       })
       
       xml += '</BulkCreateOrganizationOperatorRequest>'
+      return xml
+    }
+
+    // Fonction pour générer le XML UPDATE-KYC
+    const generateUpdateKycXml = (applications) => {
+      let xml = '<?xml version="1.0" encoding="utf-8"?>\n<BulkUpdateKYCForOrganizationRequest>\n'
+      
+      applications.forEach(app => {
+        const businessPhone = (app.merchant_phone || app.business_phone || '').replace(/^\+228/, '')
+        const shortCode = `228${businessPhone}`
+        const organizationName = app.business_name || ''
+        const email = app.email || ''
+        const region = app.region || ''
+        const phone = `228${businessPhone}`
+        const firstName = app.first_name || ''
+        const lastName = app.last_name || ''
+        const nationality = app.nationality || ''
+        const birthDate = formatDateForXml(app.birth_date)
+        const idType = mapIdType(app.id_type)
+        const idNumber = app.id_number || ''
+        const idExpiryDate = formatDateForXml(app.id_expiry_date)
+        const usageType = app.usage_type || ''
+
+        xml += `\t<Organization ShortCode="${shortCode}">\n\t\t<SimpleKYC>\n`
+        
+        // Contact Information
+        xml += `\t\t\t<KYC FieldType="[Contact Information][Company]" FieldValue="${organizationName}" />\n`
+        xml += `\t\t\t<KYC FieldType="[Contact Information][Country]" FieldValue="TGO" />\n`
+        xml += `\t\t\t<KYC FieldType="[Contact Information][Email Address]" FieldValue="${email}" />\n`
+        xml += `\t\t\t<KYC FieldType="[Contact Information][Region-field]" FieldValue="${region}" />\n`
+        xml += `\t\t\t<KYC FieldType="[Contact Information][Alternate Number]" FieldValue="${phone}" />\n\n`
+        
+        // Owner Information
+        xml += `\t\t\t<KYC FieldType="[Owner Information][First Name]" FieldValue="${firstName}" />\n`
+        xml += `\t\t\t<KYC FieldType="[Owner Information][Last Name]" FieldValue="${lastName}" />\n`
+        xml += `\t\t\t<KYC FieldType="[Owner Information][Nationality]" FieldValue="${nationality}" />\n`
+        xml += `\t\t\t<KYC FieldType="[Owner Information][Date of Birth]" FieldValue="${birthDate}" />\n`
+        xml += `\t\t\t<KYC FieldType="[Owner Information][Owner ID Type]" FieldValue="${idType}" />\n`
+        xml += `\t\t\t<KYC FieldType="[Owner Information][Owner ID Number]" FieldValue="${idNumber}" />\n`
+        xml += `\t\t\t<KYC FieldType="[Owner Information][Owner ID Expiry Date]" FieldValue="${idExpiryDate}" />\n\n`
+        
+        // Organization Type
+        xml += `\t\t\t<KYC FieldType="[Organization Type][Organization Type]" FieldValue="${usageType}" />\n`
+        xml += `\t\t\t<KYC FieldType="[Contact Details][Preferred Notification Language]" FieldValue="fr" />\n\n`
+        
+        // Notification preferences
+        xml += `\t\t\t<KYC FieldType="[Contact Details][Preferred Notification Channel]"\n\t\t\t\tFieldValue="1001">\n\t\t\t</KYC>\n`
+        
+        if (phone && phone.trim() !== '') {
+          xml += `\t\t\t<KYC FieldType="[Contact Details][Notification Receiving MSISDN]"\n\t\t\t\tFieldValue="${phone}">\n\t\t\t</KYC>\n`
+        }
+        
+        if (email && email.trim() !== '') {
+          xml += `\t\t\t<KYC FieldType="[Contact Details][Notification Receiving E-mail]"\n\t\t\t\tFieldValue="${email}">\n\t\t\t</KYC>\n`
+        }
+        
+        xml += `\t\t</SimpleKYC>\n\t</Organization>\n`
+      })
+      
+      xml += '</BulkUpdateKYCForOrganizationRequest>'
+      return xml
+    }
+
+    // Fonction pour générer le XML CHANGE ORG NAME
+    const generateUpdateNameXml = (applications) => {
+      let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<BulkUpdateNameForOrganizationRequest>\n'
+      
+      applications.forEach(app => {
+        const businessPhone = (app.merchant_phone || app.business_phone || '').replace(/^\+228/, '')
+        const shortCode = `228${businessPhone}`
+        const organizationName = app.business_name || ''
+        
+        xml += `\t<Organization ShortCode="${shortCode}">\n`
+        xml += `\t\t<OrganizationName Value="${organizationName}" />\n`
+        xml += `\t</Organization>\n`
+      })
+      
+      xml += '</BulkUpdateNameForOrganizationRequest>'
       return xml
     }
 
@@ -1722,6 +1878,7 @@ export default {
       loading,
       applicationsLoading,
       exportLoading,
+      updateExportLoading,
       excelExportLoading,
       selectedPeriod,
       stats,
@@ -1755,6 +1912,7 @@ export default {
       refreshData,
       exportToExcel,
       exportToSP,
+      exportToSPUpdate,
       formatDate,
       getPeriodText,
       // Variables pour la sélection des candidatures
