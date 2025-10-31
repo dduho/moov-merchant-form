@@ -1479,6 +1479,7 @@ export default {
         }
 
         xml += `\t\t<Role ID="500000000000013115" />
+\t\t<Role ID="500000000000013114" />
 \t\t<MSISDN Value="${phone}" />
 \t</OrganizationOperator>
 `
