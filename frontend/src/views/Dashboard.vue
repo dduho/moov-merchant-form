@@ -1314,6 +1314,15 @@ export default {
       return mapping[idType] || '01'
     }
 
+    // Fonction pour mapper le genre
+    const mapGender = (gender) => {
+      const mapping = {
+        'M': '1',  // Masculin
+        'F': '2'   // Féminin
+      }
+      return mapping[gender] || '1'
+    }
+
     // Fonction pour formater les dates au format yyyymmdd
     const formatDateForXml = (dateString) => {
       if (!dateString) return ''
@@ -1444,7 +1453,7 @@ export default {
         }
 
         xml += `\t<OrganizationOperator>
-\t\t<Notification Language="FR" />
+\t\t<Notification Language="fr" />
 \t\t<Organization ShortCode="${shortCode}" />
 \t\t<AuthenticationType Value="WEB" />
 \t\t<AuthenticationType Value="HANDSET" />
@@ -1457,7 +1466,7 @@ export default {
         xml += addKycTag("[Personal Details][Nationality]", nationality)
         xml += addKycTag("[Personal Details][Date of Birth]", birthDate)
         xml += addKycTag("[Personal Details][Country]", "TGO")
-        xml += addKycTag("[Personal Details][Gender]", gender)
+        xml += addKycTag("[Personal Details][Gender]", mapGender(gender))
         xml += addKycTag("[Personal Details][Place of Birth]", birthPlace)
         xml += addKycTag("[Personal Details][PLAINALIAS]", usageType)
         xml += `\t\t</SimpleKYC>
