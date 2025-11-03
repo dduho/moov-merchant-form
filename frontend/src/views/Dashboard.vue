@@ -1465,10 +1465,13 @@ export default {
         xml += addKycTag("[Personal Details][Last Name]", lastName)
         xml += addKycTag("[Personal Details][Nationality]", nationality)
         xml += addKycTag("[Personal Details][Date of Birth]", birthDate)
-        xml += addKycTag("[Personal Details][Country]", "TGO")
+        xml += addKycTag("[Contact Information][Country]", "TGO")
         xml += addKycTag("[Personal Details][Gender]", mapGender(gender))
         xml += addKycTag("[Personal Details][Place of Birth]", birthPlace)
         xml += addKycTag("[Personal Details][PLAINALIAS]", usageType)
+        xml += addKycTag("[Contact Details][Preferred Notification Channel]", "1001")
+        xml += addKycTag("[Contact Details][Notification Receiving MSISDN]", phone)
+        xml += addKycTag("[Contact Details][Preferred Notification Language]", "fr")
         xml += `\t\t</SimpleKYC>
 `
 
