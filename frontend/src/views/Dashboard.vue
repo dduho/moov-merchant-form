@@ -890,12 +890,6 @@ export default {
         // Charger les statistiques utilisateur séparément si l'utilisateur est admin
         if (authStore.isAdmin) {
           await loadUserStats()
-        } else {
-          console.log('Utilisateur non-admin, pas de chargement des stats utilisateur', {
-            user: authStore.user?.username,
-            isAdmin: authStore.isAdmin,
-            roles: authStore.user?.roles
-          })
         }
         
         // Créer les graphiques
@@ -1785,10 +1779,6 @@ export default {
     const loadUserStats = async () => {
       if (!authStore.isAdmin) return
       
-      console.log('Utilisateur admin détecté, chargement des stats utilisateur...', { 
-        user: authStore.user, 
-        isAdmin: authStore.isAdmin 
-      })
       try {
         const params = {
           period: selectedPeriod.value,
@@ -1800,7 +1790,6 @@ export default {
         const userStatsRes = await ApiService.getDashboardUserStats(params)
         userStats.value = userStatsRes.data.data
         userPagination.value = userStatsRes.data.pagination
-        console.log('Statistiques utilisateur chargées:', userStats.value.length, 'utilisateurs')
       } catch (error) {
         console.warn('Impossible de charger les statistiques utilisateur:', {
           status: error.response?.status,

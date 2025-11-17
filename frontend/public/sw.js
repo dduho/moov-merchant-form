@@ -11,11 +11,9 @@ const STATIC_ASSETS = [
 
 // Installation du Service Worker
 self.addEventListener('install', event => {
-  console.log('[SW] Installation...')
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('[SW] Mise en cache des assets statiques')
         return cache.addAll(STATIC_ASSETS)
       })
       .then(() => self.skipWaiting())
@@ -24,7 +22,6 @@ self.addEventListener('install', event => {
 
 // Activation du Service Worker
 self.addEventListener('activate', event => {
-  console.log('[SW] Activation...')
   event.waitUntil(
     caches.keys()
       .then(cacheNames => {
@@ -32,7 +29,6 @@ self.addEventListener('activate', event => {
           cacheNames
             .filter(name => name !== CACHE_NAME && name !== DYNAMIC_CACHE)
             .map(name => {
-              console.log('[SW] Suppression ancien cache:', name)
               return caches.delete(name)
             })
         )
@@ -114,8 +110,6 @@ self.addEventListener('message', event => {
 
 // Background Sync pour les formulaires
 self.addEventListener('sync', event => {
-  console.log('[SW] Background Sync:', event.tag)
-  
   if (event.tag === 'sync-merchant-forms') {
     event.waitUntil(syncMerchantForms())
   }
@@ -126,8 +120,6 @@ async function syncMerchantForms() {
     // Récupérer les formulaires en attente depuis IndexedDB
     const db = await openDatabase()
     const forms = await getPendingForms(db)
-    
-    console.log(`[SW] Synchronisation de ${forms.length} formulaire(s)`)
     
     for (const form of forms) {
       try {
@@ -142,7 +134,6 @@ async function syncMerchantForms() {
         if (response.ok) {
           // Supprimer le formulaire synchronisé
           await deleteSyncedForm(db, form.id)
-          console.log(`[SW] Formulaire ${form.id} synchronisé avec succès`)
         }
       } catch (error) {
         console.error(`[SW] Erreur sync formulaire ${form.id}:`, error)

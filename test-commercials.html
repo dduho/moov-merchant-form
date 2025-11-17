@@ -28,8 +28,6 @@
                     credentials: 'include'
                 });
                 
-                console.log('CSRF Response:', csrfResponse.status);
-                
                 // Ensuite se connecter
                 const loginData = {
                     email: 'admin@test.com',
@@ -48,7 +46,6 @@
                 });
                 
                 const data = await response.json();
-                console.log('Login Response:', data);
                 
                 if (data.access_token) {
                     token = data.access_token;
@@ -87,8 +84,6 @@
                     },
                     credentials: 'include'
                 });
-                
-                console.log('Commercials Response Status:', response.status);
                 
                 if (response.status === 200) {
                     const data = await response.json();

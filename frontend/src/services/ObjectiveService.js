@@ -67,11 +67,8 @@ class ObjectiveService {
   
   // Obtenir l'objectif de l'utilisateur actuel
   async getCurrentUserObjective() {
-    console.log('ObjectiveService: Calling GET /objectives/current')
     try {
       const response = await this.client.get('/objectives/current')
-      console.log('ObjectiveService: Response received:', response)
-      console.log('ObjectiveService: Response data:', response.data)
       return response.data
     } catch (error) {
       console.error('ObjectiveService: Error calling /objectives/current:', error)

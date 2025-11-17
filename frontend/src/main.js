@@ -17,7 +17,7 @@ app.use(router)
 app.config.errorHandler = (err, instance, info) => {
   // Ignorer les erreurs liées aux extensions de navigateur
   if (err.message && err.message.includes('message channel closed')) {
-    console.debug('Extension browser error ignored:', err.message)
+    // Extension browser error ignored
     return
   }
   
@@ -28,7 +28,7 @@ app.config.errorHandler = (err, instance, info) => {
 // Gestionnaire d'erreurs non capturées
 window.addEventListener('unhandledrejection', (event) => {
   if (event.reason && event.reason.message && event.reason.message.includes('message channel closed')) {
-    console.debug('Extension promise rejection ignored:', event.reason.message)
+    // Extension promise rejection ignored
     event.preventDefault()
     return
   }
@@ -64,8 +64,8 @@ axios.get('/sanctum/csrf-cookie').catch(error => {
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
-      .then(registration => console.log('SW registered:', registration))
-      .catch(error => console.log('SW registration failed:', error))
+      .then(() => {})
+      .catch(() => {})
   })
 }
 
@@ -78,4 +78,4 @@ await authStore.init()
 // Mount the app
 app.mount('#app')
 
-console.log('✅ Application Moov Money démarrée')
+// Application démarrée

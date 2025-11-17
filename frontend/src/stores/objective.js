@@ -232,9 +232,7 @@ export const useObjectiveStore = defineStore('objective', () => {
     fetchProgressStats,
     getCurrentUserObjective: async () => {
       try {
-        console.log('Store: Calling ObjectiveService.getCurrentUserObjective()')
         const response = await ObjectiveService.getCurrentUserObjective()
-        console.log('Store: Response received:', response)
         return response
       } catch (err) {
         console.error('Store: Error in getCurrentUserObjective:', err)

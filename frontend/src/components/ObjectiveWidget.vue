@@ -290,10 +290,7 @@ export default {
     }
 
     const loadObjectives = async () => {
-      console.log('loadObjectives called, isCommercial:', isCommercial.value)
-      
       if (!isCommercial.value) {
-        console.log('User is not commercial, skipping load')
         return
       }
 
@@ -301,19 +298,11 @@ export default {
         isLoading.value = true
         error.value = null
 
-        console.log('Calling getCurrentUserObjective...')
         const response = await objectiveStore.getCurrentUserObjective()
-        console.log('getCurrentUserObjective response:', response)
         
         if (response.data) {
           currentObjective.value = response.data.objective
           currentProgress.value = response.data.progress
-          console.log('Objectives loaded successfully:', {
-            objective: currentObjective.value,
-            progress: currentProgress.value
-          })
-        } else {
-          console.log('No data in response:', response)
         }
       } catch (err) {
         console.error('Error loading objectives:', err)
@@ -325,23 +314,17 @@ export default {
     }
 
     const refreshObjectives = async () => {
-      console.log('refreshObjectives called, isCommercial:', isCommercial.value, 'refreshing:', refreshing.value)
-      
       if (!isCommercial.value || refreshing.value) {
-        console.log('Skipping refresh')
         return
       }
 
       try {
         refreshing.value = true
-        console.log('Refreshing objectives...')
         const response = await objectiveStore.getCurrentUserObjective()
-        console.log('Refresh response:', response)
         
         if (response.data) {
           currentObjective.value = response.data.objective
           currentProgress.value = response.data.progress
-          console.log('Objectives refreshed successfully')
         }
       } catch (err) {
         console.error('Error refreshing objectives:', err)
@@ -353,31 +336,19 @@ export default {
 
     // Lifecycle
     onMounted(() => {
-      console.log('ObjectiveWidget mounted')
-      console.log('User:', authStore.user)
-      console.log('authStore.isCommercial:', authStore.isCommercial)
-      console.log('isCommercial.value:', isCommercial.value)
-      
-      // Charger les objectifs si l'utilisateur est déjà authentifié
       if (isCommercial.value) {
-        console.log('User is commercial on mount, loading objectives...')
         loadObjectives()
         
         // Auto refresh every 5 minutes
         refreshInterval = setInterval(() => {
           refreshObjectives()
         }, 5 * 60 * 1000)
-      } else {
-        console.log('User is NOT commercial on mount, will wait for watch trigger')
       }
     })
 
     // Watch pour détecter quand l'utilisateur devient commercial
     watch(() => isCommercial.value, (newValue, oldValue) => {
-      console.log('isCommercial changed:', { old: oldValue, new: newValue })
-      
       if (newValue && !oldValue) {
-        console.log('User is now commercial, loading objectives...')
         loadObjectives()
         
         // Démarrer le refresh automatique

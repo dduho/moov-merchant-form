@@ -18,7 +18,6 @@ class ApiService {
             (response) => response,
             (error) => {
                 if (error.response?.status === 401) {
-                    console.warn('Unauthenticated request:', error.config.url);
                     // Optionnel: rediriger vers la page de connexion
                     // window.location.href = '/login';
                 }

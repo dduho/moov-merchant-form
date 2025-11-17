@@ -937,8 +937,7 @@ export default {
             });
           }
           
-          console.log('Application data loaded:', data);
-          console.log('Form data updated:', formData.value);
+          // logs retirés
         } else {
           throw new Error('Aucune donnée reçue');
         }
@@ -1087,9 +1086,7 @@ export default {
       }
       else if (step === 3) {
         // Debug: Log values during validation
-        console.log('=== VALIDATION ÉTAPE 3 ===')
-        console.log('formData.value.region:', formData.value.region)
-        console.log('formData.value.city:', formData.value.city)
+        // logs retirés étape 3
         
         // Validate business information
         if (!formData.value.businessName) errors.value.businessName = 'Champ obligatoire'
@@ -1263,28 +1260,16 @@ export default {
 
     // Soumission du formulaire
     const submitForm = async () => {
-      console.log('=== DÉBUT SUBMITFORM ===')
-      console.log('currentStep.value:', currentStep.value)
-      
       // Validate final step before submission
       const isValid = validateStep(currentStep.value)
-      console.log('Validation du step final:', isValid)
-      console.log('Erreurs après validation:', errors.value)
       
       if (!isValid) {
-        console.log('Validation échouée, arrêt de la soumission')
         notificationStore.error(
           'Erreur de validation',
           'Veuillez corriger les erreurs avant de continuer'
         )
         return
       }
-
-      // Debug: Log form data before submission
-      console.log('=== FORM DATA AVANT SOUMISSION ===')
-      console.log('formData.region:', formData.value.region)
-      console.log('formData.city:', formData.value.city)
-      console.log('Contenu complet de formData:', JSON.stringify(formData.value, null, 2))
 
       isSubmitting.value = true
       try {
@@ -1448,8 +1433,6 @@ export default {
           
           // Remplir les champs commerciaux seulement s'ils sont vides et que c'est un commercial
           if (isCommercial.value && userInfo.value && !isEditMode.value) {
-            console.log('Remplissage automatique - Commercial connecté:', userInfo.value);
-            
             // Pré-remplir seulement les champs vides
             if (!formData.value.commercialLastName) {
               formData.value.commercialLastName = userInfo.value.last_name || '';
@@ -1460,12 +1443,6 @@ export default {
             if (!formData.value.commercialPhone) {
               formData.value.commercialPhone = userInfo.value.phone || '';
             }
-            
-            console.log('Champs commerciaux après pré-remplissage:', {
-              commercialLastName: formData.value.commercialLastName,
-              commercialFirstName: formData.value.commercialFirstName,
-              commercialPhone: formData.value.commercialPhone
-            });
           }
         }
           

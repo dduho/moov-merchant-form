@@ -351,12 +351,10 @@
         function showResult(elementId, message, type) {
             const element = document.getElementById(elementId);
             element.innerHTML = `<div class="${type}">${message}</div>`;
-            console.log(`[${type.toUpperCase()}] ${message}`);
         }
 
         // Initialisation
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Interface admin prête!');
             // Obtenir le token CSRF au chargement
             getCsrfToken();
         });

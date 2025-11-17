@@ -26,8 +26,6 @@ class MerchantService {
   
   // Soumission d'une candidature marchand
   async submitApplication(formData) {
-    console.log('=== SUBMIT APPLICATION START ===')
-    console.log('Form data received:', formData)
     const submitData = new FormData()
     
     // Informations personnelles - N'ajouter que si les valeurs existent et ne sont pas vides
@@ -172,7 +170,6 @@ class MerchantService {
     const getFile = (fileObj) => {
       if (!fileObj) return null
       
-      console.log('getFile input:', fileObj)
       
       // Direct File check
       if (fileObj instanceof File) return fileObj
@@ -186,7 +183,6 @@ class MerchantService {
       // Check for Vue proxy objects with 'dataUrl' property (base64 encoded files)
       
       if (fileObj && typeof fileObj === 'object' && fileObj.dataUrl && typeof fileObj.dataUrl === 'string') {
-        console.log('Found dataUrl property, converting base64 to File')
         try {
           // Convert base64 data URL to Blob synchronously
           const dataUrl = fileObj.dataUrl
@@ -205,7 +201,6 @@ class MerchantService {
             type: fileObj.type || mime,
             lastModified: fileObj.lastModified || Date.now()
           })
-          console.log('Successfully converted dataUrl to File:', file)
           return file
         } catch (error) {
           console.error('Failed to convert dataUrl to File:', error)
@@ -214,7 +209,6 @@ class MerchantService {
       
       // Check for Vue proxy objects with 'file' property (most common case)
       if (fileObj && typeof fileObj === 'object' && fileObj.file) {
-        console.log('Found file property:', fileObj.file)
         if (fileObj.file instanceof File) {
           return fileObj.file
         }
@@ -252,11 +246,9 @@ class MerchantService {
       if (typeof fileObj === 'object') {
         for (const key of Object.keys(fileObj)) {
           if (fileObj[key] instanceof File) {
-            console.log(`Found File in property '${key}':`, fileObj[key])
             return fileObj[key]
           }
           if (fileObj[key] instanceof Blob) {
-            console.log(`Found Blob in property '${key}':`, fileObj[key])
             return new File([fileObj[key]], fileObj.name || `document.${key}`, { 
               type: fileObj.type || fileObj[key].type,
               lastModified: fileObj.lastModified || Date.now()
@@ -264,34 +256,24 @@ class MerchantService {
           }
         }
       }
-      
-      console.log('getFile failed to extract file from:', fileObj)
       return null
     }
-
-    console.log('=== ABOUT TO PROCESS DOCUMENTS ===')
-    console.log('formData.documents check:', formData.documents)
-    console.log('formData.documents truthy?:', !!formData.documents)
+    
 
     // Documents - S'assurer que ce sont des objets File valides
     if (formData.documents) {
-      console.log('Processing documents section...')
-      console.log('Documents object:', formData.documents)
       
       const file_idCard = getFile(formData.documents.idCard)
-      console.log('ID Card extraction result:', file_idCard ? `File(${file_idCard.name}, ${file_idCard.size} bytes)` : 'null')
       if (file_idCard) {
         submitData.append('id_card', file_idCard)
       }
       
       const file_anidCard = getFile(formData.documents.anidCard)
-      console.log('ANID Card extraction result:', file_anidCard ? `File(${file_anidCard.name}, ${file_anidCard.size} bytes)` : 'null')
       if (file_anidCard) {
         submitData.append('anid_card', file_anidCard)
       }
       
       const file_cfeCard = getFile(formData.documents.cfeCard)
-      console.log('CFE Card extraction result:', file_cfeCard ? `File(${file_cfeCard.name}, ${file_cfeCard.size} bytes)` : 'null')
       if (file_cfeCard) {
         submitData.append('cfe_document', file_cfeCard)
       }
@@ -319,65 +301,7 @@ class MerchantService {
     }
 
     // Debug: Log document processing and FormData being sent
-    console.log('=== Document Processing Debug ===')
-    console.log('formData.documents exists:', !!formData.documents)
-    if (formData.documents) {
-      console.log('Available documents:', Object.keys(formData.documents))
-      Object.entries(formData.documents).forEach(([key, doc]) => {
-        console.log(`\n${key} analysis:`)
-        if (!doc) {
-          console.log('  - Value is null/undefined')
-        } else {
-          console.log('  - Type:', typeof doc)
-          console.log('  - Is File:', doc instanceof File)
-          console.log('  - Has file property:', doc && typeof doc === 'object' && doc.file instanceof File)
-          console.log('  - Keys in object:', Object.keys(doc))
-          console.log('  - Full structure:', JSON.parse(JSON.stringify(doc)))
-          
-          // Try different property access patterns
-          console.log('  - doc.file:', doc.file)
-          console.log('  - doc.data:', doc.data)
-          console.log('  - doc.value:', doc.value)
-          console.log('  - doc[0]:', doc[0])
-          
-          // Test the getFile function
-          const extractedFile = getFile(doc)
-          console.log('  - Extracted file:', extractedFile)
-          console.log('  - Extracted file is File:', extractedFile instanceof File)
-        }
-      })
-      
-      // Test individual extractions
-      const testIdCard = getFile(formData.documents.idCard)
-      const testAnidCard = getFile(formData.documents.anidCard) 
-      const testCfeCard = getFile(formData.documents.cfeCard)
-      
-      console.log('\n=== Individual Extractions ===')
-      console.log('ID Card extracted:', testIdCard ? testIdCard.name : 'null')
-      console.log('ANID Card extracted:', testAnidCard ? testAnidCard.name : 'null')
-      console.log('CFE Card extracted:', testCfeCard ? testCfeCard.name : 'null')
-    } else {
-      console.log('No formData.documents object found!')
-    }
-    
-    // Log what's being appended to FormData
-    console.log('\n=== FormData Entries ===')
-    for (let [key, value] of submitData.entries()) {
-      if (value instanceof File) {
-        console.log(`${key}: File(${value.name}, ${value.size} bytes)`)
-      } else {
-        console.log(`${key}: ${value}`)
-      }
-    }
-    
-    console.log('=== FormData being sent ===')
-    for (let [key, value] of submitData.entries()) {
-      if (value instanceof File) {
-        console.log(`${key}: File(${value.name}, ${value.size} bytes)`)
-      } else {
-        console.log(`${key}: ${value}`)
-      }
-    }
+    // Debug logs removed
     
     const response = await this.client.post('/merchant-applications', submitData, {
       headers: {
@@ -434,7 +358,7 @@ class MerchantService {
 
   // Version JSON de la mise à jour (plus fiable avec Laravel PUT)
   async updateApplicationJSON(applicationId, formData) {
-    console.log('Updating application with JSON:', applicationId, formData)
+    
     
     const jsonData = {
       // Informations personnelles
@@ -485,7 +409,7 @@ class MerchantService {
     }
 
     try {
-      console.log('Sending JSON update data:', jsonData)
+      
       
       const response = await this.client.put(`/merchant-applications/${applicationId}/full`, jsonData, {
         headers: {
@@ -507,11 +431,7 @@ class MerchantService {
 
   // Version FormData de la mise à jour (pour référence)
   async updateApplicationFormData(applicationId, formData) {
-    console.log('Updating application:', applicationId, formData)
-    console.log('formData type:', typeof formData)
-    console.log('formData keys:', Object.keys(formData))
-    console.log('formData.firstName:', formData.firstName)
-    console.log('formData.lastName:', formData.lastName)
+    
     
     const submitData = new FormData()
     
@@ -643,18 +563,12 @@ class MerchantService {
     }
 
     try {
-      // Log des données envoyées pour débogage
-      console.log('Données envoyées pour la mise à jour:', {
-        applicationId,
-        formDataEntries: Array.from(submitData.entries()),
-        timestamp: new Date().toISOString()
-      });
+      // Debug logs removed
 
       // Laravel doesn't parse FormData well for PUT requests, so we'll add _method for method spoofing
       submitData.append('_method', 'PUT')
       
-      console.log('DEBUG: Making POST request with method spoofing to:', `/merchant-applications/${applicationId}/full`)
-      console.log('DEBUG: FormData entries:', Array.from(submitData.entries()))
+      
 
       const response = await this.client.post(`/merchant-applications/${applicationId}/full`, submitData, {
         headers: {

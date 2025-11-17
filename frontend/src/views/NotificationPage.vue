@@ -209,7 +209,7 @@ const unreadCount = computed(() => {
   const localCount = notifications.value.filter(n => !n.is_read).length
   
   // Debug temporaire
-  console.log('Debug unreadCount - Store:', storeCount, 'Local:', localCount, 'Notifications:', notifications.value.length)
+  // debug retiré
   
   if (typeof storeCount === 'number' && !isNaN(storeCount)) {
     return storeCount

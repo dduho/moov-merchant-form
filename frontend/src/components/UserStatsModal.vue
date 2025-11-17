@@ -349,11 +349,7 @@ export default {
         error.value = null
         
         const response = await userStore.getUserStats(props.user.id)
-        console.log('Stats response:', response)
-        // Le service retourne déjà response.data d'axios
-        // La réponse contient {user, stats, year}
         stats.value = response.stats
-        console.log('Stats value:', stats.value)
       } catch (err) {
         console.error('Error loading user stats:', err)
         error.value = err.response?.data?.message || 'Erreur lors du chargement des statistiques'

@@ -41,7 +41,7 @@ export const useSystemNotificationStore = defineStore('systemNotifications', () 
     try {
       const response = await NotificationService.getAll(unreadOnly, limit)
       
-      console.log('Response from API:', response) // Debug
+      // Notifications récupérées depuis l'API
       
       // La structure de réponse est { success: true, data: [], unread_count: X }
       if (response && response.success) {
@@ -57,7 +57,7 @@ export const useSystemNotificationStore = defineStore('systemNotifications', () 
       lastFetch.value = new Date()
     } catch (err) {
       error.value = err.message || 'Erreur lors du chargement des notifications'
-      console.error('Erreur fetchNotifications:', err)
+      // Erreur lors de la récupération des notifications
       // En cas d'erreur, réinitialiser les données
       notifications.value = []
       unreadCount.value = 0
@@ -81,7 +81,7 @@ export const useSystemNotificationStore = defineStore('systemNotifications', () 
       const count = await NotificationService.getUnreadCount()
       unreadCount.value = count
     } catch (err) {
-      console.error('Erreur updateUnreadCount:', err)
+      // Erreur lors de la mise à jour du compteur
     }
   }
 
@@ -90,9 +90,7 @@ export const useSystemNotificationStore = defineStore('systemNotifications', () 
    */
   const markAsRead = async (notificationId) => {
     try {
-      console.log('Marquage notification comme lue:', notificationId)
       await NotificationService.markAsRead(notificationId)
-      console.log('Notification marquée avec succès')
       
       // Mettre à jour localement
       const notification = notifications.value.find(n => n.id === notificationId)
@@ -103,8 +101,7 @@ export const useSystemNotificationStore = defineStore('systemNotifications', () 
       }
     } catch (err) {
       error.value = err.message || 'Erreur lors du marquage comme lu'
-      console.error('Erreur markAsRead:', err)
-      console.error('Détails de l\'erreur:', err.response?.data)
+      // Erreur marquage comme lu
       throw err // Relancer l'erreur pour qu'elle remonte
     }
   }
@@ -126,7 +123,7 @@ export const useSystemNotificationStore = defineStore('systemNotifications', () 
       unreadCount.value = 0
     } catch (err) {
       error.value = err.message || 'Erreur lors du marquage de toutes comme lues'
-      console.error('Erreur markAllAsRead:', err)
+      // Erreur marquage toutes comme lues
     }
   }
 
@@ -148,7 +145,7 @@ export const useSystemNotificationStore = defineStore('systemNotifications', () 
       }
     } catch (err) {
       error.value = err.message || 'Erreur lors de la suppression'
-      console.error('Erreur deleteNotification:', err)
+      // Erreur suppression notification
     }
   }
 
@@ -217,7 +214,7 @@ export const useSystemNotificationStore = defineStore('systemNotifications', () 
     
     // Si pas d'utilisateur connecté, retourner vide
     if (!currentUser) {
-      console.warn('Aucun utilisateur connecté pour valider les notifications')
+      // Aucun utilisateur connecté pour valider les notifications
       return []
     }
 
@@ -240,7 +237,7 @@ export const useSystemNotificationStore = defineStore('systemNotifications', () 
         ]
 
         if (!allowedTypes.includes(notification.type)) {
-          console.warn('Type de notification non autorisé pour commercial:', notification.type)
+          // Type de notification non autorisé pour commercial
           return false
         }
 

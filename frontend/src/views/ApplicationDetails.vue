@@ -1,9 +1,9 @@
 <template>
-  <div class="min-h-screen p-4 sm:p-6">
+  <div class="min-h-screen p-4 sm:p-6 application-details-page">
     <!-- Content Container -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
       <!-- Header avec navigation -->
-      <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
+      <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 print-hide-on-print">
         <template v-if="loading">
           <!-- Skeleton pour le header -->
           <div class="flex items-center justify-between">
@@ -365,7 +365,7 @@
           </div>
 
           <!-- Documents -->
-          <div class="bg-white rounded-2xl shadow-sm p-6">
+          <div class="bg-white rounded-2xl shadow-sm p-6 print-hide-on-print">
             <template v-if="loading">
               <!-- Skeleton pour les documents -->
               <div class="w-32 h-6 bg-gray-200 rounded animate-pulse mb-6"></div>
@@ -485,7 +485,7 @@
                   </div>
                   <button 
                     @click="startEditingBusinessPhone"
-                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl hover:from-orange-700 hover:to-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl hover:from-orange-700 hover:to-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 print-hide-on-print"
                   >
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -539,7 +539,7 @@
               </form>
             </template>
           </div>
-          <div class="bg-white rounded-2xl shadow-sm p-6">
+          <div class="bg-white rounded-2xl shadow-sm p-6 print-hide-on-print">
             <template v-if="loading">
               <!-- Skeleton pour Timeline -->
               <div class="w-24 h-6 bg-gray-200 rounded animate-pulse mb-6"></div>
@@ -870,6 +870,16 @@
       </div>
         </div>
       </div>
+      <button
+        type="button"
+        @click="printApplication"
+        class="fixed bottom-6 right-6 z-50 inline-flex items-center px-5 py-3 rounded-full bg-gradient-to-r from-orange-600 to-amber-600 text-white font-semibold shadow-xl hover:from-orange-700 hover:to-amber-700 focus:outline-none focus:ring-4 focus:ring-orange-300 transition-all duration-200 print-hide-on-print"
+      >
+        <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2V9h20v7a2 2 0 01-2 2h-2m-4 0h-4v4h4v-4z" />
+        </svg>
+        Imprimer en PDF
+      </button>
     </div>
   </div>
 </template>
@@ -1017,10 +1027,7 @@ export default {
       loading.value = true
       try {
         const response = await ApiService.getApplication(route.params.id)
-        console.log('Response from API:', response.data)
         application.value = response.data.data
-        console.log('Documents in application:', application.value?.documents)
-        console.log('Number of documents:', application.value?.documents?.length)
       } catch (error) {
         console.error('Erreur chargement candidature:', error)
         // Rediriger vers le dashboard en cas d'erreur
@@ -1191,6 +1198,10 @@ export default {
       } finally {
         loading.value = false
       }
+    }
+
+    const printApplication = () => {
+      window.print()
     }
     
     const getStatusLabel = (status) => {
@@ -1414,7 +1425,8 @@ export default {
       businessPhoneInput,
       startEditingBusinessPhone,
       cancelEditingBusinessPhone,
-      updateBusinessPhone
+      updateBusinessPhone,
+      printApplication
     }
   }
 }
@@ -1453,6 +1465,29 @@ export default {
   #location-map {
     height: 250px !important;
     min-height: 250px !important;
+  }
+}
+
+@media print {
+  :global(body) {
+    margin: 0 !important;
+    background: #fff !important;
+  }
+
+  :global(header),
+  :global(footer),
+  .print-hide-on-print {
+    display: none !important;
+  }
+
+  .application-details-page {
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  .max-w-7xl {
+    max-width: none !important;
+    padding: 0 !important;
   }
 }
 </style>
