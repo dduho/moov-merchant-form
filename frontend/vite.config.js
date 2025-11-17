@@ -47,5 +47,13 @@ export default defineConfig({
       host: 'localhost',
       port: 3000
     }
+  },
+  build: {
+    target: 'esnext',
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
+      }
+    }
   }
 })
