@@ -1,1 +1,8 @@
 node_modules
+
+# Deployment scripts (local only)
+deploy-*.sh
+deploy-*.ps1
+create-admin.php
+moov-queue.service
+nginx-moov-merchant.conf
