@@ -85,8 +85,17 @@ class DocumentController extends Controller
                 ], 422);
             }
             
-            // Stocker le fichier via le service
-            $stored = $this->documentStorage->store($file, $type);
+            // Récupérer le numéro de référence si une candidature est spécifiée
+            $referencePrefix = null;
+            if ($request->filled('merchant_application_id')) {
+                $application = MerchantApplication::find($request->input('merchant_application_id'));
+                if ($application) {
+                    $referencePrefix = $application->reference_number;
+                }
+            }
+            
+            // Stocker le fichier via le service avec le préfixe de référence
+            $stored = $this->documentStorage->store($file, $type, $referencePrefix);
             
             // Créer l'entrée en base de données
             $documentData = [

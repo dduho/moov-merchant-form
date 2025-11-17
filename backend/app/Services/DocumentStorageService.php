@@ -21,11 +21,11 @@ class DocumentStorageService
         $this->basePath = 'merchant-documents';
     }
     
-    public function store(UploadedFile $file, string $documentType): array
+    public function store(UploadedFile $file, string $documentType, ?string $referencePrefix = null): array
     {
         $this->validateFile($file);
         
-        $filename = $this->generateSecureFilename($file, $documentType);
+        $filename = $this->generateSecureFilename($file, $documentType, $referencePrefix);
         $path = $this->basePath . '/' . $documentType . '/' . date('Y/m');
         $fullPath = $path . '/' . $filename;
         
@@ -69,11 +69,16 @@ class DocumentStorageService
         }
     }
     
-    protected function generateSecureFilename(UploadedFile $file, string $documentType): string
+    protected function generateSecureFilename(UploadedFile $file, string $documentType, ?string $referencePrefix = null): string
     {
         $extension = $file->getClientOriginalExtension();
         $timestamp = now()->format('YmdHis');
         $random = Str::random(12);
+        
+        // Si un préfixe de référence est fourni, l'ajouter au début du nom de fichier
+        if ($referencePrefix) {
+            return "{$referencePrefix}_{$documentType}_{$timestamp}_{$random}.{$extension}";
+        }
         
         return "{$documentType}_{$timestamp}_{$random}.{$extension}";
     }

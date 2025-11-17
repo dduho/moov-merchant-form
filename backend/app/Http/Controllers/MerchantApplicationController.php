@@ -650,7 +650,8 @@ class MerchantApplicationController extends Controller
         string $ip
     ): void {
         try {
-            $stored = $this->documentStorage->store($file, $type);
+            // Utiliser le numéro de référence comme préfixe pour le nom de fichier
+            $stored = $this->documentStorage->store($file, $type, $application->reference_number);
             
             $application->documents()->create([
                 'document_type' => $type,
