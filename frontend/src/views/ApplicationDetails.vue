@@ -50,12 +50,14 @@
                 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium',
                 application?.status === 'pending' && 'bg-yellow-100 text-yellow-800',
                 application?.status === 'approved' && 'bg-green-100 text-green-800',
+                application?.status === 'exported_for_creation' && 'bg-green-100 text-green-800',
                 application?.status === 'rejected' && 'bg-red-100 text-red-800'
               ]">
                 <div :class="[
                   'w-2 h-2 rounded-full mr-2',
                   application?.status === 'pending' && 'bg-yellow-500',
                   application?.status === 'approved' && 'bg-green-500',
+                  application?.status === 'exported_for_creation' && 'bg-green-500',
                   application?.status === 'rejected' && 'bg-red-500'
                 ]"></div>
                 {{ getStatusLabel(application?.status) }}

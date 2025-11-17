@@ -206,7 +206,7 @@ const notifications = computed(() => notificationStore.notifications)
 const unreadCount = computed(() => {
   // S'assurer qu'on retourne toujours un nombre
   const storeCount = notificationStore.unreadCount
-  const localCount = notifications.value.filter(n => !n.read_at).length
+  const localCount = notifications.value.filter(n => !n.is_read).length
   
   // Debug temporaire
   console.log('Debug unreadCount - Store:', storeCount, 'Local:', localCount, 'Notifications:', notifications.value.length)
@@ -221,7 +221,7 @@ const isLoading = computed(() => notificationStore.isLoading)
 const error = computed(() => notificationStore.error)
 
 const readCount = computed(() => {
-  return notifications.value.filter(n => n.read_at).length
+  return notifications.value.filter(n => n.is_read).length
 })
 
 const filteredNotifications = computed(() => {
@@ -229,9 +229,9 @@ const filteredNotifications = computed(() => {
 
   // Filtre par statut
   if (statusFilter.value === 'unread') {
-    filtered = filtered.filter(n => !n.read_at)
+    filtered = filtered.filter(n => !n.is_read)
   } else if (statusFilter.value === 'read') {
-    filtered = filtered.filter(n => n.read_at)
+    filtered = filtered.filter(n => n.is_read)
   }
 
   // Filtre par type
@@ -241,8 +241,8 @@ const filteredNotifications = computed(() => {
 
   // Trier par date (plus récent en premier) et statut (non lues en premier)
   return filtered.sort((a, b) => {
-    const aIsRead = !!a.read_at
-    const bIsRead = !!b.read_at
+    const aIsRead = !!a.is_read
+    const bIsRead = !!b.is_read
     if (aIsRead !== bIsRead) {
       return aIsRead ? 1 : -1
     }
@@ -269,7 +269,7 @@ const markAllAsRead = async () => {
 const deleteAllRead = async () => {
   if (isDeletingAllRead.value) return
   
-  const readNotifications = notifications.value.filter(n => n.read_at)
+  const readNotifications = notifications.value.filter(n => n.is_read)
   if (readNotifications.length === 0) return
   
   if (!confirm(`Êtes-vous sûr de vouloir supprimer ${readNotifications.length} notification${readNotifications.length > 1 ? 's' : ''} lue${readNotifications.length > 1 ? 's' : ''} ?`)) {

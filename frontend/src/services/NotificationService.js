@@ -3,11 +3,19 @@ import ApiService from './ApiService'
 export class NotificationService {
   /**
    * Obtenir toutes les notifications de l'utilisateur
+   * Le filtrage se fait côté serveur selon le rôle de l'utilisateur
    */
   static async getAll(unreadOnly = false, limit = 20) {
     try {
-      // Temporarily use test endpoint for development
-      const response = await ApiService.getNotificationsTest()
+      const params = {
+        limit
+      }
+      
+      if (unreadOnly) {
+        params.unread_only = true
+      }
+      
+      const response = await ApiService.getNotifications(params)
       return response.data
     } catch (error) {
       console.error('Erreur lors de la récupération des notifications:', error)
@@ -17,12 +25,12 @@ export class NotificationService {
 
   /**
    * Obtenir le nombre de notifications non lues
+   * Le comptage est filtré côté serveur selon le rôle
    */
   static async getUnreadCount() {
     try {
-      // Temporarily use test endpoint for development
-      const response = await ApiService.getNotificationsTest()
-      return response.data.meta.unread_count
+      const response = await ApiService.getUnreadNotificationsCount()
+      return response.data.unread_count
     } catch (error) {
       console.error('Erreur lors de la récupération du nombre de notifications non lues:', error)
       throw error

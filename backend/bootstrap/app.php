@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'throttle.api' => \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
             'force.password.change' => \App\Http\Middleware\ForcePasswordChange::class,
+            'ensure.notification.belongs.to.user' => \App\Http\Middleware\EnsureNotificationBelongsToUser::class,
         ]);
         
         // CORS - Laravel 12 gère mieux les CORS

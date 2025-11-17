@@ -125,9 +125,14 @@ Route::middleware(['throttle:api'])->group(function () {
     Route::middleware(['web', 'auth:sanctum', 'force.password.change'])->prefix('notifications')->name('notifications.')->group(function () {
         Route::get('/', [NotificationController::class, 'index'])->name('index');
         Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
-        Route::patch('/{notification}/read', [NotificationController::class, 'markAsRead'])->name('mark-as-read');
+        
+        // Routes avec middleware supplémentaire pour vérifier l'appartenance des notifications
+        Route::middleware('ensure.notification.belongs.to.user')->group(function () {
+            Route::patch('/{notification}/read', [NotificationController::class, 'markAsRead'])->name('mark-as-read');
+            Route::delete('/{notification}', [NotificationController::class, 'destroy'])->name('destroy');
+        });
+        
         Route::patch('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-as-read');
-        Route::delete('/{notification}', [NotificationController::class, 'destroy'])->name('destroy');
     });
     
     // ============================================================
@@ -258,6 +263,49 @@ Route::get('/test-notifications', function () {
     
     return response()->json(['success' => true, 'notification' => $notification, 'user' => $user]);
 });
+
+// Route de test de diagnostic pour les notifications
+Route::get('/test-notifications-diagnosis', function () {
+    try {
+        $user = auth()->user();
+        
+        if (!$user) {
+            return response()->json([
+                'error' => 'Non authentifié'
+            ], 401);
+        }
+        
+        // Test simple de récupération des notifications
+        $notifications = $user->notifications()
+            ->notExpired()
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+            
+        return response()->json([
+            'success' => true,
+            'user_id' => $user->id,
+            'user_name' => $user->first_name . ' ' . $user->last_name,
+            'user_roles' => $user->roles->pluck('slug'),
+            'notifications_count' => $notifications->count(),
+            'notifications' => $notifications->map(function($n) {
+                return [
+                    'id' => $n->id,
+                    'type' => $n->type,
+                    'title' => $n->title,
+                    'is_read' => $n->isRead(),
+                    'created_at' => $n->created_at
+                ];
+            })
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Erreur lors du diagnostic: ' . $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+})->middleware(['auth:sanctum']);
 
 // Route de test pour approuver une candidature
 Route::post('/test-approve/{id}', function ($id) {
@@ -418,3 +466,66 @@ Route::get('/test-notifications-api', function () {
         return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
     }
 });
+
+// Route de test pour marquer une notification comme lue (sans middleware)
+Route::get('/test-mark-notification-read/{id}', function ($id) {
+    $user = auth()->user();
+    if (!$user) {
+        return response()->json(['error' => 'Non authentifié'], 401);
+    }
+    
+    try {
+        $notification = \App\Models\Notification::find($id);
+        
+        if (!$notification) {
+            return response()->json(['error' => 'Notification non trouvée'], 404);
+        }
+        
+        if ($notification->user_id !== $user->id) {
+            return response()->json(['error' => 'Non autorisé'], 403);
+        }
+        
+        $notification->read_at = now();
+        $notification->save();
+        
+        return response()->json([
+            'success' => 'Notification marquée comme lue', 
+            'notification' => [
+                'id' => $notification->id,
+                'type' => $notification->type,
+                'is_read_before' => $notification->getOriginal('read_at') !== null,
+                'is_read_after' => $notification->isRead(),
+                'read_at' => $notification->read_at
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
+    }
+})->middleware(['web', 'auth:sanctum']);
+
+// Route de test pour créer une notification
+Route::get('/create-test-notification', function () {
+    $user = auth()->user();
+    if (!$user) {
+        return response()->json(['error' => 'Non authentifié'], 401);
+    }
+    
+    try {
+        $notification = \App\Models\Notification::create([
+            'id' => \Illuminate\Support\Str::uuid(),
+            'type' => 'test_notification',
+            'notifiable_type' => 'App\\Models\\User',
+            'notifiable_id' => $user->id,
+            'user_id' => $user->id,
+            'data' => json_encode(['message' => 'Test notification for marking as read']),
+            'read_at' => null,
+        ]);
+        
+        return response()->json([
+            'success' => 'Notification créée',
+            'notification' => $notification
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+})->middleware(['web', 'auth:sanctum']);

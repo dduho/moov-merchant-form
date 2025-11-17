@@ -75,10 +75,13 @@ class NotificationService
                         ->subject("Nouvelle candidature - {$application->reference_number}");
             });
             
-            // Créer des notifications en base de données pour tous les admins
+            // Créer des notifications en base de données UNIQUEMENT pour les administrateurs
             $adminUsers = User::whereHas('roles', function($query) {
                 $query->where('name', 'admin');
-            })->get();
+            })
+            ->where('is_active', true)
+            ->where('is_blocked', false)
+            ->get();
             
             foreach ($adminUsers as $admin) {
                 $this->createNotification(
@@ -89,9 +92,31 @@ class NotificationService
                     [
                         'application_id' => $application->id,
                         'applicant_name' => $application->full_name,
-                        'reference_number' => $application->reference_number
-                    ]
+                        'reference_number' => $application->reference_number,
+                        'commercial_id' => $application->user_id // ID du commercial qui a créé la candidature
+                    ],
+                    "/applications/{$application->id}"
                 );
+            }
+            
+            // Si la candidature a été créée par un commercial, lui envoyer aussi une confirmation
+            if ($application->user_id && $application->user) {
+                $commercial = $application->user;
+                if ($commercial->hasRole('commercial')) {
+                    $this->createNotification(
+                        $commercial,
+                        'application_submitted',
+                        'Candidature soumise avec succès',
+                        "Votre candidature #{$application->reference_number} pour {$application->full_name} a été soumise et est en cours de traitement.",
+                        [
+                            'application_id' => $application->id,
+                            'applicant_name' => $application->full_name,
+                            'reference_number' => $application->reference_number
+                        ],
+                        "/applications/{$application->id}",
+                        'normal'
+                    );
+                }
             }
             
         } catch (\Exception $e) {
@@ -279,6 +304,7 @@ class NotificationService
 
     /**
      * Obtenir les notifications non lues d'un utilisateur
+     * Les commerciaux ne voient que leurs notifications personnelles
      */
     public function getUnreadNotifications(User $user, int $limit = 10)
     {
@@ -289,11 +315,19 @@ class NotificationService
             ->limit($limit)
             ->get();
             
+        // Filtrer les notifications pour les commerciaux
+        if ($user->hasRole('commercial') && !$user->hasRole('admin')) {
+            $notifications = $notifications->filter(function($notification) use ($user) {
+                return $this->isNotificationRelevantForCommercial($notification, $user);
+            });
+        }
+            
         return \App\Http\Resources\NotificationResource::collection($notifications);
     }
 
     /**
      * Obtenir toutes les notifications d'un utilisateur
+     * Les commerciaux ne voient que leurs notifications personnelles
      */
     public function getAllNotifications(User $user, int $limit = 50)
     {
@@ -303,7 +337,138 @@ class NotificationService
             ->limit($limit)
             ->get();
             
+        // Filtrer les notifications pour les commerciaux
+        if ($user->hasRole('commercial') && !$user->hasRole('admin')) {
+            $notifications = $notifications->filter(function($notification) use ($user) {
+                return $this->isNotificationRelevantForCommercial($notification, $user);
+            });
+        }
+            
         return \App\Http\Resources\NotificationResource::collection($notifications);
+    }
+
+    /**
+     * Vérifier si une notification est pertinente pour un commercial
+     */
+    private function isNotificationRelevantForCommercial(Notification $notification, User $commercial): bool
+    {
+        // La notification appartient déjà à ce commercial
+        if ($notification->user_id === $commercial->id) {
+            // Vérifier si c'est une notification concernant ses propres candidatures
+            $data = $notification->data ?? [];
+            
+            // Si c'est une notification liée à une candidature, vérifier que c'est la sienne
+            if (isset($data['application_id'])) {
+                $application = MerchantApplication::find($data['application_id']);
+                if ($application) {
+                    // Le commercial ne doit voir que les notifications de ses propres candidatures
+                    return $application->user_id === $commercial->id;
+                }
+            }
+            
+            // Autres types de notifications personnelles autorisées
+            return true;
+        }
+        
+        // Aucune autre notification n'est autorisée pour les commerciaux
+        return false;
+    }
+
+    /**
+     * Notifier un commercial spécifique concernant sa candidature
+     */
+    public function notifyCommercialAboutOwnApplication(
+        User $commercial, 
+        MerchantApplication $application, 
+        string $type, 
+        string $title, 
+        string $message,
+        string $priority = 'normal'
+    ): ?Notification {
+        // Vérifier que le commercial est bien le propriétaire de la candidature
+        if ($application->user_id !== $commercial->id || !$commercial->hasRole('commercial')) {
+            Log::warning('Tentative de notification incorrecte pour commercial', [
+                'commercial_id' => $commercial->id,
+                'application_id' => $application->id,
+                'application_user_id' => $application->user_id
+            ]);
+            return null;
+        }
+
+        return $this->createNotification(
+            $commercial,
+            $type,
+            $title,
+            $message,
+            [
+                'application_id' => $application->id,
+                'applicant_name' => $application->full_name,
+                'reference_number' => $application->reference_number
+            ],
+            "/applications/{$application->id}",
+            $priority
+        );
+    }
+
+    /**
+     * Obtenir les statistiques de notifications pour un utilisateur
+     */
+    public function getNotificationStats(User $user): array
+    {
+        $baseQuery = $user->notifications()->notExpired();
+        
+        // Pour les commerciaux, filtrer les notifications
+        if ($user->hasRole('commercial') && !$user->hasRole('admin')) {
+            $baseQuery->whereIn('type', [
+                'application_submitted',
+                'application_approved', 
+                'application_rejected',
+                'personal_notification',
+                'objective_assigned',
+                'objective_updated'
+            ]);
+        }
+
+        $total = $baseQuery->count();
+        $unread = (clone $baseQuery)->unread()->count();
+        $read = $total - $unread;
+        
+        $byType = [];
+        if ($user->hasRole('admin')) {
+            // Les admins voient toutes les statistiques
+            $byType = $user->notifications()
+                ->notExpired()
+                ->selectRaw('type, count(*) as count')
+                ->groupBy('type')
+                ->pluck('count', 'type')
+                ->toArray();
+        } else {
+            // Les commerciaux voient seulement leurs types autorisés
+            $allowedTypes = [
+                'application_submitted',
+                'application_approved', 
+                'application_rejected',
+                'personal_notification',
+                'objective_assigned',
+                'objective_updated'
+            ];
+            
+            $byType = $user->notifications()
+                ->notExpired()
+                ->whereIn('type', $allowedTypes)
+                ->selectRaw('type, count(*) as count')
+                ->groupBy('type')
+                ->pluck('count', 'type')
+                ->toArray();
+        }
+
+        return [
+            'total' => $total,
+            'unread' => $unread,
+            'read' => $read,
+            'by_type' => $byType,
+            'user_role' => $user->hasRole('admin') ? 'admin' : 'commercial'
+        ];
     }
 
     /**
