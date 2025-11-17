@@ -158,17 +158,17 @@
         </template>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 print-grid-layout">
         <!-- Informations principales -->
-        <div class="lg:col-span-2 space-y-6">
-          <div class="bg-white rounded-2xl shadow-sm p-6">
+        <div class="lg:col-span-2 space-y-6 print-stack">
+          <div class="bg-white rounded-2xl shadow-sm p-6 print-card">
             <template v-if="loading">
               <!-- Skeleton pour les informations principales -->
               <div class="w-64 h-6 bg-gray-200 rounded animate-pulse mb-6"></div>
               
               <div class="space-y-8">
                 <!-- Skeleton pour informations personnelles -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 print-grid-dense">
                   <div v-for="i in 8" :key="'info-skeleton-'+i">
                     <div class="w-20 h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
                     <div class="w-32 h-4 bg-gray-200 rounded animate-pulse"></div>
@@ -178,7 +178,7 @@
                 <!-- Skeleton pour documents d'identification -->
                 <div class="pt-6 border-t border-gray-200">
                   <div class="w-48 h-6 bg-gray-200 rounded animate-pulse mb-6"></div>
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 print-grid-dense">
                     <div v-for="i in 3" :key="'doc-skeleton-'+i">
                       <div class="w-24 h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
                       <div class="w-28 h-4 bg-gray-200 rounded animate-pulse"></div>
@@ -195,7 +195,7 @@
                 <!-- Skeleton pour informations commerciales -->
                 <div class="pt-6 border-t border-gray-200">
                   <div class="w-48 h-6 bg-gray-200 rounded animate-pulse mb-6"></div>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 print-grid-dense">
                     <div v-for="i in 6" :key="'business-skeleton-'+i">
                       <div class="w-24 h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
                       <div class="w-40 h-4 bg-gray-200 rounded animate-pulse"></div>
@@ -206,7 +206,7 @@
                 <!-- Skeleton pour informations supplémentaires -->
                 <div class="pt-6 border-t border-gray-200">
                   <div class="w-48 h-6 bg-gray-200 rounded animate-pulse mb-6"></div>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 print-grid-dense">
                     <div v-for="i in 3" :key="'extra-info-skeleton-'+i">
                       <div class="w-32 h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
                       <div class="w-24 h-4 bg-gray-200 rounded animate-pulse"></div>
@@ -365,7 +365,7 @@
           </div>
 
           <!-- Documents -->
-          <div class="bg-white rounded-2xl shadow-sm p-6 print-hide-on-print">
+          <div class="bg-white rounded-2xl shadow-sm p-6 print-card print-hide-on-print">
             <template v-if="loading">
               <!-- Skeleton pour les documents -->
               <div class="w-32 h-6 bg-gray-200 rounded animate-pulse mb-6"></div>
@@ -460,9 +460,9 @@
         </div>
 
         <!-- Timeline et Notes -->
-        <div class="space-y-6">
+        <div class="space-y-6 print-stack">
           <!-- Widget Téléphone Professionnel -->
-          <div class="bg-white rounded-2xl shadow-sm p-6">
+          <div class="bg-white rounded-2xl shadow-sm p-6 print-card">
             <h2 class="text-xl font-semibold text-orange-600 mb-4">Numéro marchand</h2>
 
             <template v-if="loading">
@@ -539,7 +539,7 @@
               </form>
             </template>
           </div>
-          <div class="bg-white rounded-2xl shadow-sm p-6 print-hide-on-print">
+          <div class="bg-white rounded-2xl shadow-sm p-6 print-card print-hide-on-print">
             <template v-if="loading">
               <!-- Skeleton pour Timeline -->
               <div class="w-24 h-6 bg-gray-200 rounded animate-pulse mb-6"></div>
@@ -645,7 +645,7 @@
             </template>
           </div>
 
-          <div v-if="canEdit" class="bg-white rounded-2xl shadow-sm p-6">
+          <div v-if="canEdit" class="bg-white rounded-2xl shadow-sm p-6 print-card">
             <template v-if="loading">
               <!-- Skeleton pour Notes administrateur -->
               <div class="w-36 h-6 bg-gray-200 rounded animate-pulse mb-6"></div>
@@ -745,7 +745,7 @@
           </div>
 
           <!-- Section Localisation -->
-      <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div class="bg-white rounded-2xl shadow-sm overflow-hidden print-card">
         <div class="p-6">
           <template v-if="loading">
             <!-- Skeleton pour Localisation -->
@@ -775,16 +775,16 @@
               <!-- Coordonnées GPS -->
               <div class="flex space-x-4">
                 <div class="flex-1">
-                  <label class="block text-sm font-medium mb-2" style="color: #005BA4">Latitude</label>
-                  <div class="bg-gray-50 rounded-lg px-3">
+                  <label class="block text-sm font-medium mb-1" style="color: #005BA4">Latitude</label>
+                  <div class="bg-gray-50 rounded px-1">
                     <span class="text-sm font-mono text-gray-700">
                       {{ application?.latitude || 'Non renseignée' }}
                     </span>
                   </div>
                 </div>
                 <div class="flex-1">
-                  <label class="block text-sm font-medium mb-2" style="color: #005BA4">Longitude</label>
-                  <div class="bg-gray-50 rounded-lg px-3">
+                  <label class="block text-sm font-medium mb-1" style="color: #005BA4">Longitude</label>
+                  <div class="bg-gray-50 rounded px-1">
                     <span class="text-sm font-mono text-gray-700">
                       {{ application?.longitude || 'Non renseignée' }}
                     </span>
@@ -794,8 +794,8 @@
 
               <!-- Adresse du commerce -->
               <div>
-                <label class="block text-sm font-medium mb-2" style="color: #005BA4">Adresse du commerce</label>
-                <div class="bg-gray-50 rounded-lg px-3">
+                <label class="block text-sm font-medium mb-1" style="color: #005BA4">Adresse du commerce</label>
+                <div class="bg-gray-50 rounded px-1">
                   <p class="text-sm text-gray-700">
                     {{ application?.shop_address || 'Non renseignée' }}
                   </p>
@@ -804,8 +804,8 @@
 
               <!-- Description de la localisation -->
               <div v-if="application?.location_description">
-                <label class="block text-sm font-medium mb-2" style="color: #005BA4">Description de la localisation</label>
-                <div class="bg-gray-50 rounded-lg px-3">
+                <label class="block text-sm font-medium mb-1" style="color: #005BA4">Description de la localisation</label>
+                <div class="bg-gray-50 rounded px-1">
                   <p class="text-sm text-gray-700 whitespace-pre-wrap">
                     {{ application.location_description }}
                   </p>
@@ -813,16 +813,16 @@
               </div>
 
               <!-- Carte intégrée -->
-              <div v-if="application?.latitude && application?.longitude" class="pt-4">
-                <label class="block text-sm font-medium mb-2" style="color: #005BA4">Localisation sur la carte</label>
-                <div class="bg-gray-50 rounded-lg p-3">
+              <div v-if="application?.latitude && application?.longitude" class="pt-2">
+                <label class="block text-sm font-medium mb-1" style="color: #005BA4">Localisation sur la carte</label>
+                <div class="bg-gray-50 rounded">
                   <div
                     ref="mapContainer" 
                     id="location-map"
                     class="w-full h-80 rounded-lg border border-gray-200"
                     style="min-height: 320px;"
                   ></div>
-                  <p class="text-xs text-gray-500 mt-2 text-center">
+                  <p class="text-xs text-gray-500 mt-1 text-center">
                     📍 {{ application.latitude }}, {{ application.longitude }}
                   </p>
                 </div>
@@ -833,7 +833,7 @@
       </div>
 
       <!-- Section Signature -->
-      <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div class="bg-white rounded-2xl shadow-sm overflow-hidden print-card">
         <div class="p-6">
           <template v-if="loading">
             <!-- Skeleton pour Signature -->
@@ -1349,7 +1349,6 @@ export default {
             <p class="text-xs text-gray-500">📍 ${application.value.latitude}, ${application.value.longitude}</p>
           </div>
         `)
-        .openPopup()
 
         // Permettre le zoom et la navigation
         map.value.scrollWheelZoom.enable()
@@ -1472,6 +1471,9 @@ export default {
   :global(body) {
     margin: 0 !important;
     background: #fff !important;
+    font-size: 12px !important;
+    color: #0f172a !important;
+    line-height: 1.35 !important;
   }
 
   :global(header),
@@ -1487,7 +1489,140 @@ export default {
 
   .max-w-7xl {
     max-width: none !important;
-    padding: 0 !important;
+    padding: 0 6mm 8mm !important;
+  }
+
+  .print-grid-layout {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    align-items: flex-start !important;
+  }
+
+  .print-stack {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .print-grid-layout > .lg\:col-span-2 {
+    grid-column: auto !important;
+  }
+
+  .print-stack > * + * {
+    margin-top: 0 !important;
+  }
+
+  .space-y-6 > * + * {
+    margin-top: 8px !important;
+  }
+
+  .space-y-8 > * + * {
+    margin-top: 8px !important;
+  }
+
+  .space-y-4 > * + * {
+    margin-top: 6px !important;
+  }
+
+  .print-card {
+    box-shadow: none !important;
+    border-radius: 8px !important;
+    border: 1px solid #dfe3ea !important;
+    background: #fff !important;
+    padding: 8px !important;
+    page-break-inside: avoid !important;
+  }
+
+  .print-card h2 {
+    font-size: 16px !important;
+    margin-top: 0 !important;
+    margin-bottom: 6px !important;
+    color: #d97706 !important;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .print-card h3 {
+    font-size: 14px !important;
+    margin-bottom: 6px !important;
+    color: #d97706 !important;
+    text-transform: uppercase;
+  }
+
+  .print-grid-dense {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  .print-grid-dense label {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase;
+    color: #6b7280 !important;
+  }
+
+  .print-grid-dense .mt-1 {
+    margin-top: 4px !important;
+  }
+
+  .bg-gray-50,
+  .bg-gray-100,
+  .bg-orange-100,
+  .bg-yellow-50,
+  .bg-red-50,
+  .bg-green-50,
+  .bg-blue-50 {
+    background: #fff !important;
+  }
+
+  .border-gray-200,
+  .border-yellow-200,
+  .border-green-200,
+  .border-blue-200 {
+    border-color: #dfe3ea !important;
+  }
+
+  .text-gray-900 {
+    color: #111827 !important;
+  }
+
+  .text-sm {
+    font-size: 11px !important;
+  }
+
+  .text-lg {
+    font-size: 13px !important;
+  }
+
+  .print-card img {
+    max-height: 200px;
+    object-fit: contain;
+  }
+
+  #location-map {
+    height: 280px !important;
+    min-height: 280px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+  }
+
+  #location-map + p {
+    margin-top: 4px !important;
+    font-size: 9px !important;
+  }
+
+  .px-3,
+  .px-2 {
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+  }
+
+  .py-1 {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
   }
 }
 </style>
