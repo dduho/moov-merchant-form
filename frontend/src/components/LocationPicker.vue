@@ -146,6 +146,11 @@ export default {
       if (accuracy) newLocation.accuracy = accuracy
       
       location.value = newLocation
+      
+      // Synchroniser les champs manuels
+      manualLat.value = lat
+      manualLng.value = lng
+      
       emit('location-selected', newLocation)
       
       if (map) {
@@ -216,6 +221,8 @@ export default {
     onMounted(() => {
       if (props.initialLocation) {
         location.value = props.initialLocation
+        manualLat.value = props.initialLocation.lat
+        manualLng.value = props.initialLocation.lng
       }
     })
     

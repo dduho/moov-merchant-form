@@ -1273,16 +1273,29 @@ export default {
 
       isSubmitting.value = true
       try {
+        // Préparer les données pour l'envoi
+        const dataToSubmit = { ...formData.value }
+        
+        // Transformer location {lat, lng} en latitude/longitude séparés
+        if (dataToSubmit.location) {
+          dataToSubmit.latitude = dataToSubmit.location.lat
+          dataToSubmit.longitude = dataToSubmit.location.lng
+          if (dataToSubmit.location.accuracy) {
+            dataToSubmit.location_accuracy = dataToSubmit.location.accuracy
+          }
+          delete dataToSubmit.location // Supprimer l'objet location
+        }
+        
         if (isEditMode.value) {
           // Mode édition : utiliser updateApplication
-          await merchantStore.updateApplication(applicationId.value, formData.value)
+          await merchantStore.updateApplication(applicationId.value, dataToSubmit)
           notificationStore.success(
             'Candidature modifiée !',
             'Votre demande a été mise à jour avec succès'
           )
         } else {
           // Mode création : utiliser submitApplication
-          await merchantStore.submitApplication(formData.value)
+          await merchantStore.submitApplication(dataToSubmit)
           notificationStore.success(
             'Candidature envoyée !',
             'Votre demande a été soumise avec succès'
