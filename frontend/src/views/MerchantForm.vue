@@ -1193,7 +1193,9 @@ export default {
 
     // Gestion de la localisation
     const handleLocationSelected = (location) => {
+      console.log('📍 handleLocationSelected called with:', location);
       formData.value.location = location
+      console.log('✅ formData.location updated to:', formData.value.location);
       autoSave()
     }
 
@@ -1288,6 +1290,8 @@ export default {
       try {
         // Préparer les données pour l'envoi
         const dataToSubmit = { ...formData.value }
+        
+        console.log('📤 Submitting form with location:', dataToSubmit.location);
         
         // Note: La transformation de location en latitude/longitude est faite dans MerchantService
         // Ne pas transformer ici pour éviter les doublons
