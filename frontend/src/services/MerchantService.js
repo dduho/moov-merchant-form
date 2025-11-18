@@ -529,6 +529,8 @@ class MerchantService {
     // Documents - Individual fields (matching backend expectations)
     if (formData.documents) {
       console.log('[DEBUG] Documents trouvés dans formData:', Object.keys(formData.documents));
+      console.log('[DEBUG] Type de documents:', Array.isArray(formData.documents) ? 'Array' : 'Object');
+      console.log('[DEBUG] Contenu complet de documents:', formData.documents);
       
       // Helper function to extract file from object or return direct file
       // Only return files that need to be uploaded (skip already uploaded documents)
@@ -553,22 +555,27 @@ class MerchantService {
           return fileObj.file
         }
         
-        console.log('[DEBUG] Aucun fichier trouvé dans:', fileObj);
+        console.log('[DEBUG] Aucun fichier trouvé dans:', JSON.stringify(fileObj));
         return null
       }
       
+      console.log('[DEBUG] Traitement des documents individuels...');
+      
       const file_idCard = getFile(formData.documents.idCard)
       if (file_idCard) {
+        console.log('[DEBUG] Ajout de id_card:', file_idCard.name);
         submitData.append('id_card', file_idCard)
       }
       
       const file_anidCard = getFile(formData.documents.anidCard)
       if (file_anidCard) {
+        console.log('[DEBUG] Ajout de anid_card:', file_anidCard.name);
         submitData.append('anid_card', file_anidCard)
       }
       
       const file_cfeCard = getFile(formData.documents.cfeCard)
       if (file_cfeCard) {
+        console.log('[DEBUG] Ajout de cfe_document:', file_cfeCard.name);
         submitData.append('cfe_document', file_cfeCard)
       }
       
