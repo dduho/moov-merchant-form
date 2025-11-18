@@ -889,11 +889,20 @@ export default {
           if (data.accept_terms !== undefined) formData.value.acceptTerms = data.accept_terms;
           
           // Gérer la localisation
+          console.log('🗺️ Location data from API:', { 
+            latitude: data.latitude, 
+            longitude: data.longitude,
+            type_lat: typeof data.latitude,
+            type_lng: typeof data.longitude
+          });
           if (data.latitude && data.longitude) {
             formData.value.location = {
               lat: parseFloat(data.latitude),
               lng: parseFloat(data.longitude)
             };
+            console.log('✅ Location set in formData:', formData.value.location);
+          } else {
+            console.log('❌ Missing latitude or longitude in API response');
           }
           
           // Gérer la signature
