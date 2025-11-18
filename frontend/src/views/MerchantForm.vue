@@ -1276,15 +1276,8 @@ export default {
         // Préparer les données pour l'envoi
         const dataToSubmit = { ...formData.value }
         
-        // Transformer location {lat, lng} en latitude/longitude séparés
-        if (dataToSubmit.location) {
-          dataToSubmit.latitude = dataToSubmit.location.lat
-          dataToSubmit.longitude = dataToSubmit.location.lng
-          if (dataToSubmit.location.accuracy) {
-            dataToSubmit.location_accuracy = dataToSubmit.location.accuracy
-          }
-          delete dataToSubmit.location // Supprimer l'objet location
-        }
+        // Note: La transformation de location en latitude/longitude est faite dans MerchantService
+        // Ne pas transformer ici pour éviter les doublons
         
         if (isEditMode.value) {
           // Mode édition : utiliser updateApplication
