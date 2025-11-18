@@ -496,12 +496,22 @@ class MerchantService {
       submitData.append('nif_number', formData.nifNumber.trim())
     }
 
-    // Localisation (optional fields)
-    if (formData.latitude) {
-      submitData.append('latitude', formData.latitude)
-    }
-    if (formData.longitude) {
-      submitData.append('longitude', formData.longitude)
+    // Localisation - support both location object and direct lat/lng fields
+    if (formData.location) {
+      if (formData.location.lat) {
+        submitData.append('latitude', formData.location.lat.toString())
+      }
+      if (formData.location.lng) {
+        submitData.append('longitude', formData.location.lng.toString())
+      }
+    } else {
+      // Fallback to direct latitude/longitude fields if location object not present
+      if (formData.latitude) {
+        submitData.append('latitude', formData.latitude.toString())
+      }
+      if (formData.longitude) {
+        submitData.append('longitude', formData.longitude.toString())
+      }
     }
     if (formData.locationAccuracy) {
       submitData.append('location_accuracy', formData.locationAccuracy)
@@ -518,20 +528,32 @@ class MerchantService {
 
     // Documents - Individual fields (matching backend expectations)
     if (formData.documents) {
+      console.log('[DEBUG] Documents trouvés dans formData:', Object.keys(formData.documents));
+      
       // Helper function to extract file from object or return direct file
       // Only return files that need to be uploaded (skip already uploaded documents)
       const getFile = (fileObj) => {
         if (!fileObj) return null
         
         // Skip already uploaded documents (they have uploaded: true property)
-        if (fileObj.uploaded === true) return null
+        if (fileObj.uploaded === true) {
+          console.log('[DEBUG] Document déjà uploadé, ignoré:', fileObj.name || fileObj.id);
+          return null
+        }
         
         // Direct File check
-        if (fileObj instanceof File) return fileObj
+        if (fileObj instanceof File) {
+          console.log('[DEBUG] Document direct File:', fileObj.name);
+          return fileObj
+        }
         
         // Check for wrapped file in 'file' property (most common case from FileUpload component)
-        if (fileObj.file instanceof File) return fileObj.file
+        if (fileObj.file instanceof File) {
+          console.log('[DEBUG] Document avec propriété file:', fileObj.file.name);
+          return fileObj.file
+        }
         
+        console.log('[DEBUG] Aucun fichier trouvé dans:', fileObj);
         return null
       }
       
