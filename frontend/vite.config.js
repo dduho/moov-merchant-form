@@ -7,19 +7,52 @@ export default defineConfig({
     vue(),
     VitePWA({
       registerType: 'autoUpdate',
+      devOptions: {
+        enabled: true
+      },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        runtimeCaching: [{
-          urlPattern: /^https:\/\/api\.moovmoney\.com\/.*/i,
-          handler: 'NetworkFirst',
-          options: {
-            cacheName: 'api-cache',
-            expiration: {
-              maxEntries: 10,
-              maxAgeSeconds: 60 * 60 * 24 * 365
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,ttf,eot}'],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api/],
+        runtimeCaching: [
+          {
+            urlPattern: /^https?:\/\/.*\/api\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              networkTimeoutSeconds: 10,
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 5 * 60 // 5 minutes
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images-cache',
+              expiration: {
+                maxEntries: 60,
+                maxAgeSeconds: 30 * 24 * 60 * 60 // 30 jours
+              }
+            }
+          },
+          {
+            urlPattern: /\.(?:woff|woff2|ttf|eot)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'fonts-cache',
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 365 * 24 * 60 * 60 // 1 an
+              }
             }
           }
-        }]
+        ]
       },
       manifest: {
         name: 'Moov Money Marchand',
@@ -28,10 +61,17 @@ export default defineConfig({
         theme_color: '#ff6b35',
         background_color: '#ffffff',
         display: 'standalone',
+        start_url: '/',
+        scope: '/',
         icons: [
           {
             src: 'pwa-192x192.png',
             sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
             type: 'image/png'
           }
         ]

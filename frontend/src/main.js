@@ -6,6 +6,7 @@ import router from './router'
 import { useAuthStore } from './stores/auth'
 import App from './App.vue'
 import './style.css'
+import './registerSW'
 
 // Create the app and pinia instance first
 const app = createApp(App)
@@ -61,12 +62,17 @@ axios.get(csrfUrl).catch(error => {
   console.error('Erreur lors de l\'obtention du CSRF token:', error)
 })
 
-
+// Register PWA service worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(() => {})
-      .catch(() => {})
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      // Unregister old service workers
+      registrations.forEach(registration => {
+        if (registration.active && registration.active.scriptURL.includes('/sw.js')) {
+          registration.unregister()
+        }
+      })
+    })
   })
 }
 
