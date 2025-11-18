@@ -230,6 +230,14 @@ export default {
       }
     })
     
+    // Watch manual coordinate changes and auto-emit
+    watch([manualLat, manualLng], ([lat, lng]) => {
+      if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+        console.log('🔄 Manual coordinates changed, auto-emitting:', { lat, lng });
+        setLocation(lat, lng);
+      }
+    })
+    
     onMounted(() => {
       console.log('⚡ LocationPicker onMounted - initialLocation:', props.initialLocation);
       if (props.initialLocation) {
