@@ -1344,6 +1344,7 @@ export default {
         const organizationName = app.business_name || ''
         const email = app.email || ''
         const region = app.region || ''
+        const city = app.city || ''
         const phone = `228${businessPhone}`
         const firstName = app.first_name || ''
         const lastName = app.last_name || ''
@@ -1371,6 +1372,7 @@ export default {
         xml += addKycTag("[Contact Information][Country]", "TGO")
         xml += addKycTag("[Contact Information][Email Address]", email)
         xml += addKycTag("[Contact Information][Region-field]", region)
+        xml += addKycTag("[Contact Information][City / Village]", city)
         xml += addKycTag("[Contact Information][Alternate Number]", phone)
         xml += '\n'
         xml += addKycTag("[Owner Information][First Name]", firstName)
@@ -1505,6 +1507,7 @@ export default {
         const organizationName = app.business_name || ''
         const email = app.email || ''
         const region = app.region || ''
+        const city = app.city || ''
         const phone = `228${businessPhone}`
         const firstName = app.first_name || ''
         const lastName = app.last_name || ''
@@ -1522,6 +1525,7 @@ export default {
         xml += `\t\t\t<KYC FieldType="[Contact Information][Country]" FieldValue="TGO" />\n`
         xml += `\t\t\t<KYC FieldType="[Contact Information][Email Address]" FieldValue="${email}" />\n`
         xml += `\t\t\t<KYC FieldType="[Contact Information][Region-field]" FieldValue="${region}" />\n`
+        xml += `\t\t\t<KYC FieldType="[Contact Information][City / Village]" FieldValue="${city}" />\n`
         xml += `\t\t\t<KYC FieldType="[Contact Information][Alternate Number]" FieldValue="${phone}" />\n\n`
         
         // Owner Information
