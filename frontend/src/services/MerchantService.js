@@ -555,6 +555,34 @@ class MerchantService {
           return fileObj.file
         }
         
+        // If file property exists but is not a File instance, it might be a serialized file
+        // Try to reconstruct from dataUrl
+        if (fileObj.dataUrl && fileObj.name && fileObj.type) {
+          try {
+            console.log('[DEBUG] Reconstruction du fichier depuis dataUrl:', fileObj.name);
+            // Convert base64 data URL to Blob
+            const arr = fileObj.dataUrl.split(',')
+            const mime = arr[0].match(/:(.*?);/)[1]
+            const bstr = atob(arr[1])
+            let n = bstr.length
+            const u8arr = new Uint8Array(n)
+            while (n--) {
+              u8arr[n] = bstr.charCodeAt(n)
+            }
+            const blob = new Blob([u8arr], { type: mime })
+            
+            // Create File from Blob
+            const file = new File([blob], fileObj.name, {
+              type: fileObj.type || mime,
+              lastModified: fileObj.lastModified || Date.now()
+            })
+            console.log('[DEBUG] Fichier reconstruit avec succès:', file.name, file.size, 'bytes');
+            return file
+          } catch (error) {
+            console.error('[DEBUG] Erreur reconstruction fichier:', error);
+          }
+        }
+        
         console.log('[DEBUG] Aucun fichier trouvé dans:', JSON.stringify(fileObj));
         return null
       }
