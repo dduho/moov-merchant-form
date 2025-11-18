@@ -47,7 +47,14 @@ class ApplicationDocument extends Model
     protected function url(): Attribute
     {
         return Attribute::make(
-            get: fn () => url('/documents/' . str_replace('merchant-documents/', '', $this->file_path))
+            get: function () {
+                // Le file_path est comme 'merchant-documents/xxx.jpg'
+                // On doit le convertir en URL publique via le storage link
+                if ($this->file_path) {
+                    return url('/storage/' . $this->file_path);
+                }
+                return null;
+            }
         );
     }
 
