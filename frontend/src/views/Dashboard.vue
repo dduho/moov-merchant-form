@@ -1358,15 +1358,15 @@ export default {
         // Helper function to add KYC tag only if value is not empty
         const addKycTag = (fieldType, fieldValue) => {
           if (fieldValue && fieldValue.trim() !== '') {
-            return `\t\t\t<KYC FieldType="${fieldType}" FieldValue="${fieldValue}" />\n`
+            return `      <KYC FieldType="${fieldType}" FieldValue="${fieldValue}" />\n`
           }
           return ''
         }
 
-        xml += `\t<Organization>
-\t\t<ShortCode Value="${shortCode}" />
-\t\t<OrganizationName Value="${organizationName}" />
-\t\t<SimpleKYC>
+        xml += `  <Organization>
+    <ShortCode Value="${shortCode}" />
+    <OrganizationName Value="${organizationName}" />
+    <SimpleKYC>
 `
         xml += addKycTag("[Contact Information][Company]", organizationName)
         xml += addKycTag("[Contact Information][Country]", "TGO")
@@ -1386,24 +1386,24 @@ export default {
         xml += addKycTag("[Organization Type][Organization Type]", usageType)
         xml += addKycTag("[Contact Details][Preferred Notification Language]", "fr")
         xml += '\n'
-        xml += `\t\t\t<KYC FieldType="[Contact Details][Preferred Notification Channel]"
-\t\t\t\tFieldValue="1001">
-\t\t\t</KYC>
+        xml += `      <KYC FieldType="[Contact Details][Preferred Notification Channel]"
+        FieldValue="1001">
+      </KYC>
 `
         if (phone && phone.trim() !== '') {
-          xml += `\t\t\t<KYC FieldType="[Contact Details][Notification Receiving MSISDN]"
-\t\t\t\tFieldValue="${phone}">
-\t\t\t</KYC>
+          xml += `      <KYC FieldType="[Contact Details][Notification Receiving MSISDN]"
+        FieldValue="${phone}">
+      </KYC>
 `
         }
         if (email && email.trim() !== '') {
-          xml += `\t\t\t<KYC FieldType="[Contact Details][Notification Receiving E-mail]"
-\t\t\t\tFieldValue="${email}">
-\t\t\t</KYC>
+          xml += `      <KYC FieldType="[Contact Details][Notification Receiving E-mail]"
+        FieldValue="${email}">
+      </KYC>
 `
         }
-        xml += `\t\t</SimpleKYC>
-\t</Organization>
+        xml += `    </SimpleKYC>
+  </Organization>
 `
       })
       
@@ -1435,7 +1435,7 @@ export default {
         // Helper function to add KYC tag only if value is not empty
         const addKycTag = (fieldType, fieldValue) => {
           if (fieldValue && fieldValue.trim() !== '') {
-            return `\t\t\t<KYC FieldType="${fieldType}" FieldValue="${fieldValue}" />\n`
+            return `      <KYC FieldType="${fieldType}" FieldValue="${fieldValue}" />\n`
           }
           return ''
         }
@@ -1443,19 +1443,19 @@ export default {
         // Helper function to add MultipleKYC tag only if value is not empty
         const addMultipleKycTag = (fieldType, fieldValue) => {
           if (fieldValue && fieldValue.trim() !== '') {
-            return `\t\t\t<KYC FieldType="${fieldType}" FieldValue="${fieldValue}" />\n`
+            return `      <KYC FieldType="${fieldType}" FieldValue="${fieldValue}" />\n`
           }
           return ''
         }
 
-        xml += `\t<OrganizationOperator>
-\t\t<Notification Language="fr" />
-\t\t<Organization ShortCode="${shortCode}" />
-\t\t<AuthenticationType Value="WEB" />
-\t\t<AuthenticationType Value="HANDSET" />
-\t\t<UserName Value="${username}" />		
-\t\t<OperatorID Value="${operatorId}" />	
-\t\t<SimpleKYC>
+        xml += `  <OrganizationOperator>
+    <Notification Language="fr" />
+    <Organization ShortCode="${shortCode}" />
+    <AuthenticationType Value="WEB" />
+    <AuthenticationType Value="HANDSET" />
+    <UserName Value="${username}" />
+    <OperatorID Value="${operatorId}" />
+    <SimpleKYC>
 `
         xml += addKycTag("[Personal Details][First Name]", firstName)
         xml += addKycTag("[Personal Details][Last Name]", lastName)
@@ -1468,7 +1468,7 @@ export default {
         xml += addKycTag("[Contact Details][Preferred Notification Channel]", "1001")
         xml += addKycTag("[Contact Details][Notification Receiving MSISDN]", phone)
         xml += addKycTag("[Contact Details][Preferred Notification Language]", "fr")
-        xml += `\t\t</SimpleKYC>
+        xml += `    </SimpleKYC>
 `
 
         // Only add MultipleKYC section if we have at least one non-empty value
@@ -1477,19 +1477,19 @@ export default {
                             (idExpiryDate && idExpiryDate.trim() !== '')
         
         if (hasIdDetails) {
-          xml += `\t\t<MultipleKYC OperationType="Add">
+          xml += `    <MultipleKYC OperationType="Add">
 `
           xml += addMultipleKycTag("[ID Details][ID Type]", idType)
           xml += addMultipleKycTag("[ID Details][ID Number]", idNumber)
           xml += addMultipleKycTag("[ID Details][ID Expiry Date]", idExpiryDate)
-          xml += `\t\t</MultipleKYC>
+          xml += `    </MultipleKYC>
 `
         }
 
-        xml += `\t\t<Role ID="500000000000013115" />
-\t\t<Role ID="500000000000013114" />
-\t\t<MSISDN Value="${phone}" />
-\t</OrganizationOperator>
+        xml += `    <Role ID="500000000000013115" />
+    <Role ID="500000000000013114" />
+    <MSISDN Value="${phone}" />
+  </OrganizationOperator>
 `
       })
       
@@ -1518,41 +1518,41 @@ export default {
         const idExpiryDate = formatDateForXml(app.id_expiry_date)
         const usageType = app.usage_type || ''
 
-        xml += `\t<Organization ShortCode="${shortCode}">\n\t\t<SimpleKYC>\n`
+        xml += `  <Organization ShortCode="${shortCode}">\n    <SimpleKYC>\n`
         
         // Contact Information
-        xml += `\t\t\t<KYC FieldType="[Contact Information][Company]" FieldValue="${organizationName}" />\n`
-        xml += `\t\t\t<KYC FieldType="[Contact Information][Country]" FieldValue="TGO" />\n`
-        xml += `\t\t\t<KYC FieldType="[Contact Information][Email Address]" FieldValue="${email}" />\n`
-        xml += `\t\t\t<KYC FieldType="[Contact Information][Region-field]" FieldValue="${region}" />\n`
-        xml += `\t\t\t<KYC FieldType="[Contact Information][City / Village]" FieldValue="${city}" />\n`
-        xml += `\t\t\t<KYC FieldType="[Contact Information][Alternate Number]" FieldValue="${phone}" />\n\n`
+        xml += `      <KYC FieldType="[Contact Information][Company]" FieldValue="${organizationName}" />\n`
+        xml += `      <KYC FieldType="[Contact Information][Country]" FieldValue="TGO" />\n`
+        xml += `      <KYC FieldType="[Contact Information][Email Address]" FieldValue="${email}" />\n`
+        xml += `      <KYC FieldType="[Contact Information][Region-field]" FieldValue="${region}" />\n`
+        xml += `      <KYC FieldType="[Contact Information][City / Village]" FieldValue="${city}" />\n`
+        xml += `      <KYC FieldType="[Contact Information][Alternate Number]" FieldValue="${phone}" />\n\n`
         
         // Owner Information
-        xml += `\t\t\t<KYC FieldType="[Owner Information][First Name]" FieldValue="${firstName}" />\n`
-        xml += `\t\t\t<KYC FieldType="[Owner Information][Last Name]" FieldValue="${lastName}" />\n`
-        xml += `\t\t\t<KYC FieldType="[Owner Information][Nationality]" FieldValue="${nationality}" />\n`
-        xml += `\t\t\t<KYC FieldType="[Owner Information][Date of Birth]" FieldValue="${birthDate}" />\n`
-        xml += `\t\t\t<KYC FieldType="[Owner Information][Owner ID Type]" FieldValue="${idType}" />\n`
-        xml += `\t\t\t<KYC FieldType="[Owner Information][Owner ID Number]" FieldValue="${idNumber}" />\n`
-        xml += `\t\t\t<KYC FieldType="[Owner Information][Owner ID Expiry Date]" FieldValue="${idExpiryDate}" />\n\n`
+        xml += `      <KYC FieldType="[Owner Information][First Name]" FieldValue="${firstName}" />\n`
+        xml += `      <KYC FieldType="[Owner Information][Last Name]" FieldValue="${lastName}" />\n`
+        xml += `      <KYC FieldType="[Owner Information][Nationality]" FieldValue="${nationality}" />\n`
+        xml += `      <KYC FieldType="[Owner Information][Date of Birth]" FieldValue="${birthDate}" />\n`
+        xml += `      <KYC FieldType="[Owner Information][Owner ID Type]" FieldValue="${idType}" />\n`
+        xml += `      <KYC FieldType="[Owner Information][Owner ID Number]" FieldValue="${idNumber}" />\n`
+        xml += `      <KYC FieldType="[Owner Information][Owner ID Expiry Date]" FieldValue="${idExpiryDate}" />\n\n`
         
         // Organization Type
-        xml += `\t\t\t<KYC FieldType="[Organization Type][Organization Type]" FieldValue="${usageType}" />\n`
-        xml += `\t\t\t<KYC FieldType="[Contact Details][Preferred Notification Language]" FieldValue="fr" />\n\n`
+        xml += `      <KYC FieldType="[Organization Type][Organization Type]" FieldValue="${usageType}" />\n`
+        xml += `      <KYC FieldType="[Contact Details][Preferred Notification Language]" FieldValue="fr" />\n\n`
         
         // Notification preferences
-        xml += `\t\t\t<KYC FieldType="[Contact Details][Preferred Notification Channel]"\n\t\t\t\tFieldValue="1001">\n\t\t\t</KYC>\n`
+        xml += `      <KYC FieldType="[Contact Details][Preferred Notification Channel]"\n        FieldValue="1001">\n      </KYC>\n`
         
         if (phone && phone.trim() !== '') {
-          xml += `\t\t\t<KYC FieldType="[Contact Details][Notification Receiving MSISDN]"\n\t\t\t\tFieldValue="${phone}">\n\t\t\t</KYC>\n`
+          xml += `      <KYC FieldType="[Contact Details][Notification Receiving MSISDN]"\n        FieldValue="${phone}">\n      </KYC>\n`
         }
         
         if (email && email.trim() !== '') {
-          xml += `\t\t\t<KYC FieldType="[Contact Details][Notification Receiving E-mail]"\n\t\t\t\tFieldValue="${email}">\n\t\t\t</KYC>\n`
+          xml += `      <KYC FieldType="[Contact Details][Notification Receiving E-mail]"\n        FieldValue="${email}">\n      </KYC>\n`
         }
         
-        xml += `\t\t</SimpleKYC>\n\t</Organization>\n`
+        xml += `    </SimpleKYC>\n  </Organization>\n`
       })
       
       xml += '</BulkUpdateKYCForOrganizationRequest>'
@@ -1568,9 +1568,9 @@ export default {
         const shortCode = `228${businessPhone}`
         const organizationName = app.business_name || ''
         
-        xml += `\t<Organization ShortCode="${shortCode}">\n`
-        xml += `\t\t<OrganizationName Value="${organizationName}" />\n`
-        xml += `\t</Organization>\n`
+        xml += `  <Organization ShortCode="${shortCode}">\n`
+        xml += `    <OrganizationName Value="${organizationName}" />\n`
+        xml += `  </Organization>\n`
       })
       
       xml += '</BulkUpdateNameForOrganizationRequest>'
