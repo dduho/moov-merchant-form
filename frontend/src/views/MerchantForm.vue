@@ -1308,6 +1308,13 @@ export default {
         if (isEditMode.value) {
           // Mode édition : utiliser updateApplication
           await merchantStore.updateApplication(applicationId.value, dataToSubmit)
+          
+          // Vider le formulaire après mise à jour réussie
+          formData.value = { ...defaultFormData }
+          currentStep.value = 1
+          errors.value = {}
+          await merchantStore.clearFormData()
+          
           notificationStore.success(
             'Candidature modifiée !',
             'Votre demande a été mise à jour avec succès'
