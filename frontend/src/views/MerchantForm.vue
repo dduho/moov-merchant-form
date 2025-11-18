@@ -1466,14 +1466,22 @@ export default {
         if (isEditMode.value) {
           await loadApplicationData(applicationId.value);
         } else {
-          // Charger les données sauvegardées pour un nouveau formulaire
-          const savedData = await merchantStore.loadFormData();
+          // Vérifier si l'utilisateur veut explicitement un nouveau formulaire
+          const isNewForm = route.query.new === 'true';
+          
+          // Si c'est un nouveau formulaire explicite, vider le cache
+          if (isNewForm) {
+            await merchantStore.clearFormData();
+          }
+          
+          // Charger les données sauvegardées pour un brouillon en cours
+          const savedData = isNewForm ? null : await merchantStore.loadFormData();
           
           // Initialiser avec les données par défaut
           formData.value = { ...defaultFormData };
         
-          // Appliquer les données sauvegardées d'abord
-          if (savedData) {
+          // Appliquer les données sauvegardées seulement si ce n'est pas un nouveau formulaire
+          if (savedData && !isNewForm) {
             formData.value = { ...formData.value, ...savedData };
           }
           

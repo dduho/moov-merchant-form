@@ -128,7 +128,7 @@ const handleLogout = async () => {
                     <div class="py-1">
                       <!-- Formulaire de candidature -->
                       <router-link
-                        to="/formulaire"
+                        to="/formulaire?new=true"
                         class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors group"
                         @click="userMenuOpen = false"
                       >

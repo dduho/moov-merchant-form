@@ -51,7 +51,7 @@
         
         <!-- Boutons d'action -->
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <router-link to="/formulaire" class="btn-secondary">
+          <router-link to="/formulaire?new=true" class="btn-secondary">
             <i class="fas fa-plus mr-2"></i>
             Nouvelle candidature
           </router-link>
