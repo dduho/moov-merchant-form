@@ -480,7 +480,7 @@
                   <div class="flex-1">
                     <p class="text-sm font-medium text-gray-700 mb-1">Numéro</p>
                     <p class="text-lg text-gray-900 font-medium">
-                      {{ application?.business_phone || 'Non attribué' }}
+                      {{ application?.merchant_phone || 'Non attribué' }}
                     </p>
                   </div>
                   <button 
@@ -494,7 +494,7 @@
                     Modifier
                   </button>
                 </div>
-                <p v-if="!application?.business_phone" class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start">
+                <p v-if="!application?.merchant_phone" class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start">
                   <svg class="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                   </svg>
@@ -947,9 +947,9 @@ export default {
     const canDelete = computed(() => authStore.canDeleteApplications)
     const canVerifyDocuments = computed(() => authStore.canVerifyDocuments)
     
-    // Vérifier si on peut approuver (permissions + business_phone renseigné)
+    // Vérifier si on peut approuver (permissions + merchant_phone renseigné)
     const canApprove = computed(() => {
-      return canValidate.value && application.value?.business_phone?.trim()
+      return canValidate.value && application.value?.merchant_phone?.trim()
     })
 
     // Timeline calculée à partir des données disponibles
@@ -1168,7 +1168,7 @@ export default {
     }
 
     const startEditingBusinessPhone = () => {
-      businessPhoneInput.value = application.value?.business_phone || ''
+      businessPhoneInput.value = application.value?.merchant_phone || ''
       isEditingBusinessPhone.value = true
     }
 
@@ -1186,10 +1186,10 @@ export default {
       try {
         loading.value = true
         await ApiService.updateApplication(application.value.id, {
-          business_phone: businessPhoneInput.value
+          merchant_phone: businessPhoneInput.value
         })
         
-        notificationStore.success('Succès', 'Le numéro de téléphone professionnel a été mis à jour')
+        notificationStore.success('Succès', 'Le numéro marchand a été mis à jour')
         isEditingBusinessPhone.value = false
         await loadApplication() // Recharger les données
       } catch (error) {

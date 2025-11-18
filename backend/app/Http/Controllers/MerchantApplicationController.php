@@ -86,8 +86,7 @@ class MerchantApplicationController extends Controller
                       ->orWhere('business_name', 'LIKE', "%{$searchTerm}%")
                       ->orWhere('reference_number', 'LIKE', "%{$searchTerm}%")
                       ->orWhere('phone', 'LIKE', "%{$searchTerm}%")
-                      ->orWhere('merchant_phone', 'LIKE', "%{$searchTerm}%")
-                      ->orWhere('business_phone', 'LIKE', "%{$searchTerm}%");
+                      ->orWhere('merchant_phone', 'LIKE', "%{$searchTerm}%");
                 });
             }
         }
@@ -292,7 +291,7 @@ class MerchantApplicationController extends Controller
 
         $validated = $request->validate([
             'admin_notes' => 'sometimes|string|max:1000|nullable',
-            'business_phone' => 'sometimes|string|max:20|nullable',
+            'merchant_phone' => 'sometimes|string|max:20|nullable',
         ]);
         
         $merchantApplication->update($validated);
@@ -391,7 +390,7 @@ class MerchantApplicationController extends Controller
             // Validation des données (réutiliser les règles de création en version statique)
             $rules = StoreMerchantApplicationRequest::rulesFor($merchantApplication->id);
 
-            // Pas de traitement spécial nécessaire pour business_phone (valeur simple)
+            // Pas de traitement spécial nécessaire pour merchant_phone (valeur simple)
             $data = $request->all();
             
             // Debug: Log des données reçues
