@@ -38,7 +38,7 @@ class StoreMerchantApplicationRequest extends FormRequest
             
             // Informations commerciales
             'business_name' => 'required|string|max:255',
-            'business_type' => 'required|in:boutique,pharmacie,station-service,supermarche,autre',
+            'business_type' => 'required|in:boulangerie,entrepreneuriat,secretariat-bureautique,commerce-general,coiffure,vente-objets-arts,informatique,restaurant,pret-a-porter,vente-pieces-detachees,directrice-societe,btp,elevage,quincaillerie,vente-pagnes,lavage-sec,vente-produits-vivriers,vente-equipements-sportifs,fabrication-reparation-chaussures,graphiste-designer,menuiserie-decoration,artiste-plasticien,transfert-argent,location-appartements-meubles,pharmacie,hotel,autre,boutique,station-service,supermarche',
             'business_phones' => 'nullable|array',
             'business_phones.*' => 'nullable|string|max:20',
             'business_email' => 'nullable|email|max:255',
@@ -182,7 +182,7 @@ class StoreMerchantApplicationRequest extends FormRequest
             
             // Informations commerciales
             'business_name' => 'required|string|max:255',
-            'business_type' => 'required|in:boutique,pharmacie,station-service,supermarche,autre',
+            'business_type' => 'required|in:boulangerie,entrepreneuriat,secretariat-bureautique,commerce-general,coiffure,vente-objets-arts,informatique,restaurant,pret-a-porter,vente-pieces-detachees,directrice-societe,btp,elevage,quincaillerie,vente-pagnes,lavage-sec,vente-produits-vivriers,vente-equipements-sportifs,fabrication-reparation-chaussures,graphiste-designer,menuiserie-decoration,artiste-plasticien,transfert-argent,location-appartements-meubles,pharmacie,hotel,autre,boutique,station-service,supermarche',
             'business_phones' => 'nullable|array',
             'business_phones.*' => 'nullable|string|max:20',
             'business_email' => 'nullable|email|max:255',
