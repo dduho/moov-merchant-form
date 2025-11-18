@@ -68,7 +68,7 @@ class AuthController extends Controller
             'phone' => 'required|string|unique:users',
             'username' => 'required|string|unique:users|min:4',
             'password' => 'required|string|min:6',
-            'role' => ['required', Rule::in(['admin', 'commercial'])],
+            'role_slug' => ['required', Rule::in(['admin', 'commercial'])],
         ]);
 
         $user = User::create([
@@ -83,11 +83,11 @@ class AuthController extends Controller
         ]);
 
         // Assigner le rôle
-        $role = Role::where('slug', $request->role)->first();
+        $role = Role::where('slug', $request->role_slug)->first();
         $user->roles()->attach($role->id);
 
         // Si c'est un commercial, appliquer les objectifs globaux
-        if ($request->role === 'commercial') {
+        if ($request->role_slug === 'commercial') {
             $user->applyGlobalObjectives();
         }
 

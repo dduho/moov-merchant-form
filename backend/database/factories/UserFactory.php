@@ -24,7 +24,6 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'role' => 'commercial',
             'first_name' => fake()->firstName(),
             'last_name' => fake()->lastName(),
             'email' => fake()->unique()->safeEmail(),
@@ -38,22 +37,24 @@ class UserFactory extends Factory
 
     /**
      * Configure the model factory to create an admin.
+     * Note: You need to attach the role manually after creating the user:
+     * $user = User::factory()->admin()->create();
+     * $user->roles()->attach(Role::where('slug', 'admin')->first());
      */
     public function admin(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'role' => 'admin',
-        ]);
+        return $this->state(fn (array $attributes) => []);
     }
 
     /**
      * Configure the model factory to create a commercial user.
+     * Note: You need to attach the role manually after creating the user:
+     * $user = User::factory()->commercial()->create();
+     * $user->roles()->attach(Role::where('slug', 'commercial')->first());
      */
     public function commercial(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'role' => 'commercial',
-        ]);
+        return $this->state(fn (array $attributes) => []);
     }
 
     /**

@@ -12,7 +12,6 @@ class User extends Authenticatable
     use HasFactory, Notifiable, HasApiTokens;
 
     protected $fillable = [
-        'role',
         'first_name',
         'last_name',
         'email',
@@ -32,7 +31,6 @@ class User extends Authenticatable
 
     protected $casts = [
         'password' => 'hashed',
-        'role' => 'string',
         'is_active' => 'boolean',
         'is_blocked' => 'boolean',
         'must_change_password' => 'boolean',
@@ -47,7 +45,7 @@ class User extends Authenticatable
 
     public function hasRole($role)
     {
-        return $this->role === $role;
+        return $this->roles()->where('slug', $role)->exists();
     }
 
     public function isCommercial()

@@ -19,7 +19,7 @@ const form = reactive({
   phone: '',
   username: '',
   password: '',
-  role: ''
+  role_slug: ''
 })
 
 const rules = {
@@ -38,7 +38,7 @@ const rules = {
     required: helpers.withMessage('Le mot de passe est requis', required),
     minLength: helpers.withMessage('Le mot de passe doit faire au moins 6 caractères', minLength(6))
   },
-  role: { required: helpers.withMessage('Le rôle est requis', required) }
+  role_slug: { required: helpers.withMessage('Le rôle est requis', required) }
 }
 
 const v$ = useVuelidate(rules, form)
@@ -53,7 +53,7 @@ const handleSubmit = async () => {
     // Afficher la notification de succès
     notificationStore.success(
       'Utilisateur créé avec succès',
-      `L'utilisateur ${form.first_name} ${form.last_name} a été créé avec le rôle ${form.role}.`
+      `L'utilisateur ${form.first_name} ${form.last_name} a été créé avec le rôle ${form.role_slug}.`
     )
     
     // Réinitialiser le formulaire
@@ -248,16 +248,16 @@ const handleSubmit = async () => {
             </label>
             <div class="mt-1">
               <select
-                v-model="form.role"
+                v-model="form.role_slug"
                 required
                 class="form-input h-12 block w-full"
-                :class="{ 'border-red-500': v$.role.$error }"
+                :class="{ 'border-red-500': v$.role_slug.$error }"
               >
                 <option value="">Sélectionnez un rôle</option>
                 <option value="admin">Administrateur</option>
                 <option value="commercial">Commercial</option>
               </select>
-              <p v-if="v$.role.$error" class="mt-1 text-sm text-red-600">
+              <p v-if="v$.role_slug.$error" class="mt-1 text-sm text-red-600">
                 {{ v$.role.$errors[0].$message }}
               </p>
             </div>
