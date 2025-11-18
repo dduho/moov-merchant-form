@@ -94,8 +94,8 @@ export default {
     const showMap = ref(false)
     const isGettingLocation = ref(false)
     const location = ref(props.initialLocation)
-    const manualLat = ref('')
-    const manualLng = ref('')
+    const manualLat = ref(props.initialLocation?.lat || '')
+    const manualLng = ref(props.initialLocation?.lng || '')
     
     let map = null
     let marker = null
@@ -215,6 +215,14 @@ export default {
     watch(showMap, async (show) => {
       if (show) {
         await initMap()
+      }
+    })
+    
+    watch(() => props.initialLocation, (newLocation) => {
+      if (newLocation) {
+        location.value = newLocation
+        manualLat.value = newLocation.lat || ''
+        manualLng.value = newLocation.lng || ''
       }
     })
     
