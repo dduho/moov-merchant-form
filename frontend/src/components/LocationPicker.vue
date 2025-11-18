@@ -41,9 +41,10 @@
     </div>
     
     <!-- Sélection manuelle des coordonnées -->
-    <details class="border border-gray-200 rounded-xl">
+    <details class="border border-gray-200 rounded-xl" open>
       <summary class="p-4 cursor-pointer text-sm font-medium text-gray-700 hover:bg-gray-50">
-        Saisie manuelle des coordonnées
+        <i class="fas fa-pencil-alt mr-2 text-orange-500"></i>
+        Saisie manuelle des coordonnées (recommandé si pas de HTTPS)
       </summary>
       <div class="p-4 border-t border-gray-200 space-y-4">
         <div class="grid grid-cols-2 gap-4">
@@ -159,6 +160,14 @@ export default {
         return
       }
       
+      // Vérifier si on est en HTTPS ou localhost
+      const isSecureContext = window.isSecureContext || location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+      
+      if (!isSecureContext) {
+        alert('⚠️ La géolocalisation nécessite une connexion sécurisée (HTTPS).\n\nVeuillez utiliser la saisie manuelle des coordonnées ou cliquer sur la carte pour définir votre position.')
+        return
+      }
+      
       isGettingLocation.value = true
       
       navigator.geolocation.getCurrentPosition(
@@ -169,7 +178,17 @@ export default {
         },
         (error) => {
           console.error('Erreur géolocalisation:', error)
-          alert('Impossible d\'obtenir votre position. Veuillez autoriser la géolocalisation.')
+          let message = 'Impossible d\'obtenir votre position.'
+          
+          if (error.code === 1) {
+            message = '⚠️ Accès à la localisation refusé.\n\nSi vous êtes en HTTP (non sécurisé), la géolocalisation est bloquée par le navigateur.\n\nVeuillez utiliser la saisie manuelle des coordonnées ou cliquer sur la carte.'
+          } else if (error.code === 2) {
+            message = 'Position non disponible. Veuillez réessayer.'
+          } else if (error.code === 3) {
+            message = 'Délai d\'attente dépassé. Veuillez réessayer.'
+          }
+          
+          alert(message)
           isGettingLocation.value = false
         },
         {

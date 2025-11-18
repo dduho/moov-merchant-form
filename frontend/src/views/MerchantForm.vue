@@ -331,7 +331,7 @@
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">
                     <div class="form-group">
                       <label class="form-label">Nom commercial *</label>
-                      <input v-model="formData.businessName" type="text" class="form-input h-12"
+                      <input v-model="formData.businessName" type="text" class="form-input h-12 uppercase"
                         placeholder="Nom de votre commerce" required>
                     </div>
 
@@ -408,7 +408,7 @@
                         <option value="">Sélectionnez le type d'utilisation</option>
                         <option value="TRADER">TRADER - Commerçant simple</option>
                         <option value="MERC">MERC - Marchand avec TPE</option>
-                        <option value="TRADERWNIF">TRADERWNIF - Commerçant avec NIF</option>
+                        <option value="TRADERWNIF">TRADERWNIF - Commerçant sans NIF</option>
                         <option value="CORP">CORP - Entreprise/Corporation</option>
                       </select>
                     </div>
