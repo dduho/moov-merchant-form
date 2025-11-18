@@ -90,14 +90,12 @@ export default {
   },
   emits: ['location-selected'],
   setup(props, { emit }) {
-    console.log('🗺️ LocationPicker setup - initialLocation:', props.initialLocation);
     const mapContainer = ref(null)
     const showMap = ref(false)
     const isGettingLocation = ref(false)
     const location = ref(props.initialLocation)
     const manualLat = ref(props.initialLocation?.lat || '')
     const manualLng = ref(props.initialLocation?.lng || '')
-    console.log('📍 LocationPicker - manualLat:', manualLat.value, 'manualLng:', manualLng.value);
     
     let map = null
     let marker = null
@@ -221,30 +219,25 @@ export default {
     })
     
     watch(() => props.initialLocation, (newLocation) => {
-      console.log('🔄 LocationPicker watch - initialLocation changed:', newLocation);
       if (newLocation) {
         location.value = newLocation
         manualLat.value = newLocation.lat || ''
         manualLng.value = newLocation.lng || ''
-        console.log('✅ Updated manualLat:', manualLat.value, 'manualLng:', manualLng.value);
       }
     })
     
     // Watch manual coordinate changes and auto-emit
     watch([manualLat, manualLng], ([lat, lng]) => {
       if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
-        console.log('🔄 Manual coordinates changed, auto-emitting:', { lat, lng });
         setLocation(lat, lng);
       }
     })
     
     onMounted(() => {
-      console.log('⚡ LocationPicker onMounted - initialLocation:', props.initialLocation);
       if (props.initialLocation) {
         location.value = props.initialLocation
         manualLat.value = props.initialLocation.lat
         manualLng.value = props.initialLocation.lng
-        console.log('✅ Mounted - manualLat:', manualLat.value, 'manualLng:', manualLng.value);
       }
     })
     

@@ -528,10 +528,6 @@ class MerchantService {
 
     // Documents - Individual fields (matching backend expectations)
     if (formData.documents) {
-      console.log('[DEBUG] Documents trouvés dans formData:', Object.keys(formData.documents));
-      console.log('[DEBUG] Type de documents:', Array.isArray(formData.documents) ? 'Array' : 'Object');
-      console.log('[DEBUG] Contenu complet de documents:', formData.documents);
-      
       // Helper function to extract file from object or return direct file
       // Only return files that need to be uploaded (skip already uploaded documents)
       const getFile = (fileObj) => {
@@ -539,19 +535,16 @@ class MerchantService {
         
         // Skip already uploaded documents (they have uploaded: true property)
         if (fileObj.uploaded === true) {
-          console.log('[DEBUG] Document déjà uploadé, ignoré:', fileObj.name || fileObj.id);
           return null
         }
         
         // Direct File check
         if (fileObj instanceof File) {
-          console.log('[DEBUG] Document direct File:', fileObj.name);
           return fileObj
         }
         
         // Check for wrapped file in 'file' property (most common case from FileUpload component)
         if (fileObj.file instanceof File) {
-          console.log('[DEBUG] Document avec propriété file:', fileObj.file.name);
           return fileObj.file
         }
         
@@ -559,7 +552,6 @@ class MerchantService {
         // Try to reconstruct from dataUrl
         if (fileObj.dataUrl && fileObj.name && fileObj.type) {
           try {
-            console.log('[DEBUG] Reconstruction du fichier depuis dataUrl:', fileObj.name);
             // Convert base64 data URL to Blob
             const arr = fileObj.dataUrl.split(',')
             const mime = arr[0].match(/:(.*?);/)[1]
@@ -576,34 +568,27 @@ class MerchantService {
               type: fileObj.type || mime,
               lastModified: fileObj.lastModified || Date.now()
             })
-            console.log('[DEBUG] Fichier reconstruit avec succès:', file.name, file.size, 'bytes');
             return file
           } catch (error) {
-            console.error('[DEBUG] Erreur reconstruction fichier:', error);
+            console.error('Error reconstructing file:', error);
           }
         }
         
-        console.log('[DEBUG] Aucun fichier trouvé dans:', JSON.stringify(fileObj));
         return null
       }
       
-      console.log('[DEBUG] Traitement des documents individuels...');
-      
       const file_idCard = getFile(formData.documents.idCard)
       if (file_idCard) {
-        console.log('[DEBUG] Ajout de id_card:', file_idCard.name);
         submitData.append('id_card', file_idCard)
       }
       
       const file_anidCard = getFile(formData.documents.anidCard)
       if (file_anidCard) {
-        console.log('[DEBUG] Ajout de anid_card:', file_anidCard.name);
         submitData.append('anid_card', file_anidCard)
       }
       
       const file_cfeCard = getFile(formData.documents.cfeCard)
       if (file_cfeCard) {
-        console.log('[DEBUG] Ajout de cfe_document:', file_cfeCard.name);
         submitData.append('cfe_document', file_cfeCard)
       }
       

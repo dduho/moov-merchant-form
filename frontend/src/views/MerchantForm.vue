@@ -911,20 +911,11 @@ export default {
           if (data.accept_terms !== undefined) formData.value.acceptTerms = data.accept_terms;
           
           // Gérer la localisation
-          console.log('🗺️ Location data from API:', { 
-            latitude: data.latitude, 
-            longitude: data.longitude,
-            type_lat: typeof data.latitude,
-            type_lng: typeof data.longitude
-          });
           if (data.latitude && data.longitude) {
             formData.value.location = {
               lat: parseFloat(data.latitude),
               lng: parseFloat(data.longitude)
             };
-            console.log('✅ Location set in formData:', formData.value.location);
-          } else {
-            console.log('❌ Missing latitude or longitude in API response');
           }
           
           // Gérer la signature
@@ -1215,9 +1206,7 @@ export default {
 
     // Gestion de la localisation
     const handleLocationSelected = (location) => {
-      console.log('📍 handleLocationSelected called with:', location);
       formData.value.location = location
-      console.log('✅ formData.location updated to:', formData.value.location);
       autoSave()
     }
 
@@ -1312,8 +1301,6 @@ export default {
       try {
         // Préparer les données pour l'envoi
         const dataToSubmit = { ...formData.value }
-        
-        console.log('📤 Submitting form with location:', dataToSubmit.location);
         
         // Note: La transformation de location en latitude/longitude est faite dans MerchantService
         // Ne pas transformer ici pour éviter les doublons
