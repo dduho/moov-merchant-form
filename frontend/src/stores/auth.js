@@ -47,7 +47,7 @@ export const useAuthStore = defineStore('auth', {
       // Si on a un utilisateur en localStorage, vérifier s'il est toujours connecté
       if (this.user) {
         try {
-          const { data } = await axios.get('/api/auth/me')
+          const { data } = await axios.get('/auth/me')
           this.setUser(data)
         } catch (error) {
           console.error('Session expirée:', error)
@@ -75,7 +75,7 @@ export const useAuthStore = defineStore('auth', {
         await axios.get(csrfUrl)
         
         // Faire la requête de login
-        const { data } = await axios.post('/api/auth/login', {
+        const { data } = await axios.post('/auth/login', {
           username,
           password
         })
@@ -101,7 +101,7 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true
       this.error = null
       try {
-        const { data } = await axios.post('/api/auth/register', userData)
+        const { data } = await axios.post('/auth/register', userData)
         return data
       } catch (error) {
         this.error = error.response?.data?.message || 'Une erreur est survenue'
@@ -114,7 +114,7 @@ export const useAuthStore = defineStore('auth', {
     async logout() {
       this.loading = true
       try {
-        await axios.post('/api/auth/logout')
+        await axios.post('/auth/logout')
         this.clearUser()
       } catch (error) {
         console.error('Erreur lors de la déconnexion:', error)
@@ -128,7 +128,7 @@ export const useAuthStore = defineStore('auth', {
     async fetchUser() {
       this.loading = true
       try {
-        const { data } = await axios.get('/api/auth/me')
+        const { data } = await axios.get('/auth/me')
         this.setUser(data)
       } catch (error) {
         this.error = error.response?.data?.message || 'Une erreur est survenue'
@@ -146,7 +146,7 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true
       this.error = null
       try {
-        const { data } = await axios.put('/api/auth/profile', profileData)
+        const { data } = await axios.put('/auth/profile', profileData)
         this.setUser(data.user)
         return data
       } catch (error) {
