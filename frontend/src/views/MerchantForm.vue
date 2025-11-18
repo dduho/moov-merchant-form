@@ -1289,6 +1289,13 @@ export default {
         } else {
           // Mode création : utiliser submitApplication
           await merchantStore.submitApplication(dataToSubmit)
+          
+          // Vider le formulaire après soumission réussie
+          formData.value = { ...defaultFormData }
+          currentStep.value = 1
+          errors.value = {}
+          await merchantStore.clearFormData()
+          
           notificationStore.success(
             'Candidature envoyée !',
             'Votre demande a été soumise avec succès'
