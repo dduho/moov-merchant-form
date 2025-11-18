@@ -48,10 +48,9 @@ class ApplicationDocument extends Model
     {
         return Attribute::make(
             get: function () {
-                // Le file_path est comme 'merchant-documents/xxx.jpg'
-                // On doit le convertir en URL publique via le storage link
-                if ($this->file_path) {
-                    return url('/storage/' . $this->file_path);
+                // Utiliser la route API pour servir le document de manière sécurisée
+                if ($this->id) {
+                    return url('/api/documents/' . $this->id);
                 }
                 return null;
             }
