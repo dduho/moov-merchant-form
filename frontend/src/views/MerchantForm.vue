@@ -436,17 +436,6 @@
                     </div>
                   </div>
 
-                  <!-- Numéro de téléphone du commerce -->
-                  <div class="mb-6" v-show="false">
-                    <label class="form-label">Numéro marchand (optionnel)</label>
-                    <PhoneInput v-model="formData.businessPhone" 
-                      :class="{ 'border-red-500': errors.businessPhone }"
-                      placeholder="Numéro de téléphone du commerce" />
-                    <p v-if="errors.businessPhone" class="mt-1 text-sm text-red-600">
-                      {{ errors.businessPhone }}
-                    </p>
-                  </div>
-
                   <!-- Cartes CFE et NIF -->
                   <div class="border-t pt-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
@@ -887,8 +876,6 @@ export default {
           if (data.city) formData.value.city = data.city;
           if (data.business_email) formData.value.businessEmail = data.business_email;
           if (data.usage_type) formData.value.usageType = data.usage_type;
-          // Le téléphone business peut être dans merchant_phone selon les données
-          if (data.merchant_phone) formData.value.businessPhone = data.merchant_phone;
           if (data.has_cfe !== undefined) formData.value.hasCFE = data.has_cfe;
           if (data.cfe_number) formData.value.cfeNumber = data.cfe_number;
           if (data.cfe_expiry_date) formData.value.cfeExpiryDate = data.cfe_expiry_date;
@@ -1466,22 +1453,14 @@ export default {
         if (isEditMode.value) {
           await loadApplicationData(applicationId.value);
         } else {
-          // Vérifier si l'utilisateur veut explicitement un nouveau formulaire
-          const isNewForm = route.query.new === 'true';
-          
-          // Si c'est un nouveau formulaire explicite, vider le cache
-          if (isNewForm) {
-            await merchantStore.clearFormData();
-          }
-          
           // Charger les données sauvegardées pour un brouillon en cours
-          const savedData = isNewForm ? null : await merchantStore.loadFormData();
+          const savedData = await merchantStore.loadFormData();
           
           // Initialiser avec les données par défaut
           formData.value = { ...defaultFormData };
         
-          // Appliquer les données sauvegardées seulement si ce n'est pas un nouveau formulaire
-          if (savedData && !isNewForm) {
+          // Appliquer les données sauvegardées si disponibles
+          if (savedData) {
             formData.value = { ...formData.value, ...savedData };
           }
           

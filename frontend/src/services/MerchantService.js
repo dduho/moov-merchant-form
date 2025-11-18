@@ -50,10 +50,6 @@ class MerchantService {
     if (formData.personalPhone && formData.personalPhone.trim()) {
       submitData.append('phone', formData.personalPhone.trim())
     }
-    // merchant_phone est optionnel et sera renseigné plus tard par l'admin
-    if (formData.merchantPhone && formData.merchantPhone.trim()) {
-      submitData.append('merchant_phone', formData.merchantPhone.trim())
-    }
     if (formData.email && formData.email.trim()) {
       submitData.append('email', formData.email.trim())
     }
@@ -442,10 +438,6 @@ class MerchantService {
     submitData.append('gender', formData.gender || '')
     submitData.append('nationality', (formData.nationality && formData.nationality.trim()) || '')
     submitData.append('phone', (formData.personalPhone && formData.personalPhone.trim()) || '')
-    // merchant_phone est optionnel et sera renseigné plus tard par l'admin
-    if (formData.merchantPhone && formData.merchantPhone.trim()) {
-      submitData.append('merchant_phone', formData.merchantPhone.trim())
-    }
     if (formData.email && formData.email.trim()) {
       submitData.append('email', formData.email.trim())
     }

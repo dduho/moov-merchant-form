@@ -1477,7 +1477,7 @@ export default {
                             (idExpiryDate && idExpiryDate.trim() !== '')
         
         if (hasIdDetails) {
-          xml += `    <MultipleKYC OperationType="Add">
+          xml += `    <MultipleKYC>
 `
           xml += addMultipleKycTag("[ID Details][ID Type]", idType)
           xml += addMultipleKycTag("[ID Details][ID Number]", idNumber)

@@ -108,7 +108,7 @@ export default {
   },
   methods: {
     goToForm() {
-      this.$router.push('/formulaire?new=true')
+      this.$router.push('/formulaire')
     }
   }
 }
