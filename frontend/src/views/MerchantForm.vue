@@ -923,16 +923,20 @@ export default {
                 id: doc.id
               };
               
-              switch (doc.type) {
-                case 'id_card':
-                  formData.value.documents.idCard = documentObject;
-                  break;
-                case 'anid_card':
-                  formData.value.documents.anidCard = documentObject;
-                  break;
-                case 'cfe_card':
-                  formData.value.documents.cfeCard = documentObject;
-                  break;
+              // Mapper les types de documents backend vers les clés frontend
+              const documentTypeMapping = {
+                'id_card': 'idCard',
+                'anid_card': 'anidCard',
+                'residence_card': 'residenceCard',
+                'cfe_card': 'cfeCard',
+                'business_license': 'businessDocument',
+                'nif_document': 'nifDocument',
+                'other': 'residenceProof'
+              };
+              
+              const frontendKey = documentTypeMapping[doc.type];
+              if (frontendKey) {
+                formData.value.documents[frontendKey] = documentObject;
               }
             });
           }
