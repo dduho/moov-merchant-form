@@ -50,11 +50,9 @@ class MerchantService {
     if (formData.personalPhone && formData.personalPhone.trim()) {
       submitData.append('phone', formData.personalPhone.trim())
     }
-    if (formData.merchantPhone || formData.personalPhone || formData.businessPhone) {
-      const merchantPhone = formData.merchantPhone || formData.personalPhone || formData.businessPhone
-      if (merchantPhone && merchantPhone.trim()) {
-        submitData.append('merchant_phone', merchantPhone.trim())
-      }
+    // merchant_phone est optionnel et sera renseigné plus tard par l'admin
+    if (formData.merchantPhone && formData.merchantPhone.trim()) {
+      submitData.append('merchant_phone', formData.merchantPhone.trim())
     }
     if (formData.email && formData.email.trim()) {
       submitData.append('email', formData.email.trim())
@@ -369,7 +367,7 @@ class MerchantService {
       gender: formData.gender || '',
       nationality: formData.nationality || '',
       phone: formData.personalPhone || '',
-      merchant_phone: formData.merchantPhone || formData.personalPhone || '',
+      merchant_phone: formData.merchantPhone || null,
       email: formData.email || '',
       address: formData.address || '',
       
@@ -444,7 +442,10 @@ class MerchantService {
     submitData.append('gender', formData.gender || '')
     submitData.append('nationality', (formData.nationality && formData.nationality.trim()) || '')
     submitData.append('phone', (formData.personalPhone && formData.personalPhone.trim()) || '')
-    submitData.append('merchant_phone', (formData.merchantPhone && formData.merchantPhone.trim()) || (formData.personalPhone && formData.personalPhone.trim()) || '')
+    // merchant_phone est optionnel et sera renseigné plus tard par l'admin
+    if (formData.merchantPhone && formData.merchantPhone.trim()) {
+      submitData.append('merchant_phone', formData.merchantPhone.trim())
+    }
     if (formData.email && formData.email.trim()) {
       submitData.append('email', formData.email.trim())
     }
