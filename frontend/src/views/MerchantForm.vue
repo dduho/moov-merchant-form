@@ -339,11 +339,33 @@
                       <label class="form-label">Type d'activité *</label>
                       <select v-model="formData.businessType" class="form-input h-12" required>
                         <option value="">Sélectionnez</option>
-                        <option value="boutique">Boutique générale</option>
+                        <option value="boulangerie">Boulangerie</option>
+                        <option value="entrepreneuriat">Entrepreneuriat</option>
+                        <option value="secretariat-bureautique">Secrétariat bureautique</option>
+                        <option value="commerce-general">Commerce général</option>
+                        <option value="coiffure">Coiffure</option>
+                        <option value="vente-objets-arts">Vente d'objets d'arts</option>
+                        <option value="informatique">Informatique</option>
+                        <option value="restaurant">Restaurant</option>
+                        <option value="pret-a-porter">Prêt à porter</option>
+                        <option value="vente-pieces-detachees">Vente des pièces détachées</option>
+                        <option value="directrice-societe">Directrice de société</option>
+                        <option value="btp">BTP</option>
+                        <option value="elevage">Elevage</option>
+                        <option value="quincaillerie">Quincaillerie</option>
+                        <option value="vente-pagnes">Vente de pagnes</option>
+                        <option value="lavage-sec">Lavage à sec</option>
+                        <option value="vente-produits-vivriers">Vente de produits vivriers</option>
+                        <option value="vente-equipements-sportifs">Vente des équipements sportifs</option>
+                        <option value="fabrication-reparation-chaussures">Fabrication et réparation de chaussures</option>
+                        <option value="graphiste-designer">Graphiste designer</option>
+                        <option value="menuiserie-decoration">Menuiserie-décoration</option>
+                        <option value="artiste-plasticien">Artiste plasticien</option>
+                        <option value="transfert-argent">Transfert d'argent</option>
+                        <option value="location-appartements-meubles">Location des appartements meublés</option>
                         <option value="pharmacie">Pharmacie</option>
-                        <option value="station-service">Station service</option>
-                        <option value="supermarche">Supermarché</option>
-                        <option value="autre">Autre</option>
+                        <option value="hotel">Hôtel</option>
+                        <option value="autre">Autres</option>
                       </select>
                     </div>
 
