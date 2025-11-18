@@ -352,8 +352,8 @@ class MerchantService {
 
   // Mise à jour complète d'une candidature
   async updateApplication(applicationId, formData) {
-    // For updates, use JSON instead of FormData to avoid Laravel PUT+FormData issues
-    return this.updateApplicationJSON(applicationId, formData)
+    // For updates, use FormData to support file uploads
+    return this.updateApplicationFormData(applicationId, formData)
   }
 
   // Version JSON de la mise à jour (plus fiable avec Laravel PUT)
@@ -391,10 +391,10 @@ class MerchantService {
       region: formData.region || null,
       city: formData.city || null,
       usage_type: formData.usageType || null,
-      has_cfe: formData.hasCfe ? 1 : 0,
+      has_cfe: formData.hasCFE ? 1 : 0,
       cfe_number: formData.cfeNumber || null,
       cfe_expiry_date: formData.cfeExpiryDate || null,
-      has_nif: formData.hasNif ? 1 : 0,
+      has_nif: formData.hasNIF ? 1 : 0,
       nif_number: formData.nifNumber || null,
       
       // Localisation
@@ -484,14 +484,14 @@ class MerchantService {
     if (formData.usageType) {
       submitData.append('usage_type', formData.usageType)
     }
-    submitData.append('has_cfe', formData.hasCfe ? '1' : '0')
+    submitData.append('has_cfe', formData.hasCFE ? '1' : '0')
     if (formData.cfeNumber && formData.cfeNumber.trim()) {
       submitData.append('cfe_number', formData.cfeNumber.trim())
     }
     if (formData.cfeExpiryDate) {
       submitData.append('cfe_expiry_date', formData.cfeExpiryDate)
     }
-    submitData.append('has_nif', formData.hasNif ? '1' : '0')
+    submitData.append('has_nif', formData.hasNIF ? '1' : '0')
     if (formData.nifNumber && formData.nifNumber.trim()) {
       submitData.append('nif_number', formData.nifNumber.trim())
     }
@@ -519,10 +519,19 @@ class MerchantService {
     // Documents - Individual fields (matching backend expectations)
     if (formData.documents) {
       // Helper function to extract file from object or return direct file
+      // Only return files that need to be uploaded (skip already uploaded documents)
       const getFile = (fileObj) => {
         if (!fileObj) return null
+        
+        // Skip already uploaded documents (they have uploaded: true property)
+        if (fileObj.uploaded === true) return null
+        
+        // Direct File check
         if (fileObj instanceof File) return fileObj
+        
+        // Check for wrapped file in 'file' property (most common case from FileUpload component)
         if (fileObj.file instanceof File) return fileObj.file
+        
         return null
       }
       
