@@ -155,21 +155,40 @@ class UserManagementController extends Controller
         $accessCheck = $this->checkAdminAccess($request);
         if ($accessCheck) return $accessCheck;
 
-        $request->validate([
-            'new_password' => 'string|min:6|max:255'
-        ]);
+        try {
+            $request->validate([
+                'new_password' => 'nullable|string|min:6|max:255'
+            ]);
 
-        $newPassword = $request->get('new_password', 'password');
-        $user->resetPassword($newPassword);
+            $newPassword = $request->get('new_password', 'password');
+            $user->resetPassword($newPassword);
 
-        return response()->json([
-            'message' => 'Mot de passe réinitialisé avec succès',
-            'data' => [
+            return response()->json([
+                'message' => 'Mot de passe réinitialisé avec succès',
+                'success' => true,
+                'data' => [
+                    'user_id' => $user->id,
+                    'user_name' => $user->first_name . ' ' . $user->last_name,
+                    'new_password' => $newPassword,
+                    'must_change_password' => true
+                ]
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Erreur de validation',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Error resetting password', [
                 'user_id' => $user->id,
-                'new_password' => $newPassword,
-                'must_change_password' => true
-            ]
-        ]);
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'message' => 'Erreur lors de la réinitialisation du mot de passe',
+                'errors' => ['server' => [$e->getMessage()]]
+            ], 500);
+        }
     }
 
     /**
@@ -181,16 +200,38 @@ class UserManagementController extends Controller
         $accessCheck = $this->checkAdminAccess($request);
         if ($accessCheck) return $accessCheck;
 
-        $user->is_blocked = !$user->is_blocked;
-        $user->save();
+        try {
+            // Empêcher de bloquer son propre compte
+            if ($user->id === $request->user()->id) {
+                return response()->json([
+                    'message' => 'Action non autorisée',
+                    'errors' => ['permission' => ['Vous ne pouvez pas bloquer votre propre compte']]
+                ], 403);
+            }
 
-        return response()->json([
-            'message' => $user->is_blocked ? 'Utilisateur bloqué' : 'Utilisateur débloqué',
-            'data' => [
+            $user->is_blocked = !$user->is_blocked;
+            $user->save();
+
+            return response()->json([
+                'message' => $user->is_blocked ? 'Utilisateur bloqué avec succès' : 'Utilisateur débloqué avec succès',
+                'success' => true,
+                'data' => [
+                    'user_id' => $user->id,
+                    'user_name' => $user->first_name . ' ' . $user->last_name,
+                    'is_blocked' => $user->is_blocked
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error toggling user block status', [
                 'user_id' => $user->id,
-                'is_blocked' => $user->is_blocked
-            ]
-        ]);
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'message' => 'Erreur lors du changement de statut',
+                'errors' => ['server' => [$e->getMessage()]]
+            ], 500);
+        }
     }
 
     /**
@@ -202,16 +243,38 @@ class UserManagementController extends Controller
         $accessCheck = $this->checkAdminAccess($request);
         if ($accessCheck) return $accessCheck;
 
-        $user->is_active = !$user->is_active;
-        $user->save();
+        try {
+            // Empêcher de désactiver son propre compte
+            if ($user->id === $request->user()->id) {
+                return response()->json([
+                    'message' => 'Action non autorisée',
+                    'errors' => ['permission' => ['Vous ne pouvez pas désactiver votre propre compte']]
+                ], 403);
+            }
 
-        return response()->json([
-            'message' => $user->is_active ? 'Utilisateur activé' : 'Utilisateur désactivé',
-            'data' => [
+            $user->is_active = !$user->is_active;
+            $user->save();
+
+            return response()->json([
+                'message' => $user->is_active ? 'Utilisateur activé avec succès' : 'Utilisateur désactivé avec succès',
+                'success' => true,
+                'data' => [
+                    'user_id' => $user->id,
+                    'user_name' => $user->first_name . ' ' . $user->last_name,
+                    'is_active' => $user->is_active
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error toggling user active status', [
                 'user_id' => $user->id,
-                'is_active' => $user->is_active
-            ]
-        ]);
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'message' => 'Erreur lors du changement de statut',
+                'errors' => ['server' => [$e->getMessage()]]
+            ], 500);
+        }
     }
 
     /**

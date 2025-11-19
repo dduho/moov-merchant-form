@@ -556,14 +556,30 @@ export default {
     const toggleBlock = async (user) => {
       try {
         await userStore.toggleUserBlock(user.id)
+        
+        const action = user.is_blocked ? 'débloqué' : 'bloqué'
         notificationStore.success(
-          user.is_blocked ? 'Utilisateur débloqué' : 'Utilisateur bloqué',
-          `${user.first_name} ${user.last_name} a été ${user.is_blocked ? 'débloqué' : 'bloqué'}.`
+          `Utilisateur ${action}`,
+          `${user.first_name} ${user.last_name} a été ${action} avec succès.`
         )
       } catch (error) {
+        console.error('Error toggling block:', error)
+        
+        let errorMessage = 'Une erreur est survenue lors du changement de statut'
+        
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message
+        } else if (error.response?.data?.errors) {
+          const errors = error.response.data.errors
+          const firstError = Object.values(errors)[0]
+          if (firstError && firstError[0]) {
+            errorMessage = firstError[0]
+          }
+        }
+        
         notificationStore.error(
           'Erreur',
-          'Une erreur est survenue lors du changement de statut'
+          errorMessage
         )
       }
     }
@@ -571,14 +587,30 @@ export default {
     const toggleActive = async (user) => {
       try {
         await userStore.toggleUserActive(user.id)
+        
+        const action = user.is_active ? 'désactivé' : 'activé'
         notificationStore.success(
-          user.is_active ? 'Utilisateur désactivé' : 'Utilisateur activé',
-          `${user.first_name} ${user.last_name} a été ${user.is_active ? 'désactivé' : 'activé'}.`
+          `Utilisateur ${action}`,
+          `${user.first_name} ${user.last_name} a été ${action} avec succès.`
         )
       } catch (error) {
+        console.error('Error toggling active:', error)
+        
+        let errorMessage = 'Une erreur est survenue lors du changement de statut'
+        
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message
+        } else if (error.response?.data?.errors) {
+          const errors = error.response.data.errors
+          const firstError = Object.values(errors)[0]
+          if (firstError && firstError[0]) {
+            errorMessage = firstError[0]
+          }
+        }
+        
         notificationStore.error(
           'Erreur',
-          'Une erreur est survenue lors du changement de statut'
+          errorMessage
         )
       }
     }

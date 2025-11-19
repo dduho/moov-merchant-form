@@ -58,48 +58,81 @@ class AuthController extends Controller
     {
         // Vérifier que l'utilisateur courant est un admin (si connecté)
         if (Auth::check() && !Auth::user()->hasRole('admin')) {
-            return response()->json(['message' => 'Action non autorisée'], 403);
+            return response()->json([
+                'message' => 'Accès refusé',
+                'errors' => ['permission' => ['Vous devez être administrateur pour créer un utilisateur']]
+            ], 403);
         }
 
         // Si pas connecté, on refuse l'inscription (création réservée aux admins)
         if (!Auth::check()) {
-            return response()->json(['message' => 'Vous devez être connecté en tant qu\'admin pour créer un utilisateur'], 401);
+            return response()->json([
+                'message' => 'Non authentifié',
+                'errors' => ['auth' => ['Vous devez être connecté en tant qu\'admin pour créer un utilisateur']]
+            ], 401);
         }
 
-        $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'phone' => 'required|string|unique:users',
-            'username' => 'required|string|unique:users|min:4',
-            'password' => 'required|string|min:6',
-            'role_slug' => ['required', Rule::in(['admin', 'commercial'])],
-        ]);
-
-        $user = User::create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'username' => $request->username,
-            'password' => Hash::make($request->password),
-            'is_active' => true,
-            'must_change_password' => true
-        ]);
-
-        // Assigner le rôle
-        $role = Role::where('slug', $request->role_slug)->first();
-        $user->roles()->attach($role->id);
-
-        // Si c'est un commercial, appliquer les objectifs globaux
-        if ($request->role_slug === 'commercial') {
-            $user->applyGlobalObjectives();
+        try {
+            $request->validate([
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users',
+                'phone' => 'required|string|unique:users',
+                'username' => 'required|string|unique:users|min:4',
+                'password' => 'required|string|min:6',
+                'role_slug' => ['required', Rule::in(['admin', 'commercial'])],
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Erreur de validation des données',
+                'errors' => $e->errors()
+            ], 422);
         }
 
-        return response()->json([
-            'message' => 'Utilisateur créé avec succès',
-            'user' => $user
-        ], 201);
+        try {
+            $user = User::create([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'username' => $request->username,
+                'password' => Hash::make($request->password),
+                'is_active' => true,
+                'must_change_password' => true
+            ]);
+
+            // Assigner le rôle
+            $role = Role::where('slug', $request->role_slug)->first();
+            if (!$role) {
+                return response()->json([
+                    'message' => 'Erreur de création',
+                    'errors' => ['role' => ["Le rôle '{$request->role_slug}' n'existe pas"]]
+                ], 400);
+            }
+            
+            $user->roles()->attach($role->id);
+
+            // Si c'est un commercial, appliquer les objectifs globaux
+            if ($request->role_slug === 'commercial') {
+                $user->applyGlobalObjectives();
+            }
+
+            return response()->json([
+                'message' => 'Utilisateur créé avec succès',
+                'user' => $user->load('roles'),
+                'success' => true
+            ], 201);
+        } catch (\Exception $e) {
+            \Log::error('Error creating user', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'message' => 'Erreur lors de la création de l\'utilisateur',
+                'errors' => ['server' => [$e->getMessage()]]
+            ], 500);
+        }
     }
 
     public function logout(Request $request)

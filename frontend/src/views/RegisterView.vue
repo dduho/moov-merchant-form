@@ -45,7 +45,13 @@ const v$ = useVuelidate(rules, form)
 
 const handleSubmit = async () => {
   const isValid = await v$.value.$validate()
-  if (!isValid) return
+  if (!isValid) {
+    notificationStore.error(
+      'Formulaire invalide',
+      'Veuillez corriger les erreurs dans le formulaire avant de continuer.'
+    )
+    return
+  }
 
   try {
     const response = await authStore.register(form)
@@ -53,7 +59,7 @@ const handleSubmit = async () => {
     // Afficher la notification de succès
     notificationStore.success(
       'Utilisateur créé avec succès',
-      `L'utilisateur ${form.first_name} ${form.last_name} a été créé avec le rôle ${form.role_slug}.`
+      `${form.first_name} ${form.last_name} a été créé avec le rôle ${form.role_slug === 'admin' ? 'Administrateur' : 'Commercial'}. L'utilisateur devra changer son mot de passe lors de sa première connexion.`
     )
     
     // Réinitialiser le formulaire
@@ -65,15 +71,39 @@ const handleSubmit = async () => {
     // Rediriger après un court délai pour que l'utilisateur voie la notification
     setTimeout(() => {
       router.push('/dashboard')
-    }, 1500)
+    }, 2000)
     
   } catch (error) {
     console.error('Erreur de création:', error)
     
+    // Construire un message d'erreur détaillé
+    let errorMessage = 'Une erreur est survenue lors de la création de l\'utilisateur.'
+    
+    if (error.response?.data?.errors) {
+      const errors = error.response.data.errors
+      const errorMessages = []
+      
+      if (errors.email) errorMessages.push('Email: ' + errors.email[0])
+      if (errors.phone) errorMessages.push('Téléphone: ' + errors.phone[0])
+      if (errors.username) errorMessages.push('Nom d\'utilisateur: ' + errors.username[0])
+      if (errors.password) errorMessages.push('Mot de passe: ' + errors.password[0])
+      if (errors.first_name) errorMessages.push('Prénom: ' + errors.first_name[0])
+      if (errors.last_name) errorMessages.push('Nom: ' + errors.last_name[0])
+      if (errors.role_slug) errorMessages.push('Rôle: ' + errors.role_slug[0])
+      
+      if (errorMessages.length > 0) {
+        errorMessage = errorMessages.join(' • ')
+      }
+    } else if (error.response?.data?.message) {
+      errorMessage = error.response.data.message
+    } else if (authStore.error) {
+      errorMessage = authStore.error
+    }
+    
     // Afficher la notification d'erreur
     notificationStore.error(
       'Erreur de création',
-      authStore.error || 'Une erreur est survenue lors de la création de l\'utilisateur.'
+      errorMessage
     )
   }
 }

@@ -164,23 +164,39 @@ export default {
       try {
         isLoading.value = true
 
-        await userStore.resetUserPassword(props.user.id, {
-          default_password: defaultPassword.value,
-          force_password_change: forcePasswordChange.value,
-          send_email: sendEmailNotification.value
-        })
+        await userStore.resetUserPassword(props.user.id, defaultPassword.value)
 
         notificationStore.success(
           'Mot de passe réinitialisé',
-          `Le mot de passe de ${props.user.first_name} ${props.user.last_name} a été réinitialisé avec succès.`
+          `Le mot de passe de ${props.user.first_name} ${props.user.last_name} a été réinitialisé avec succès. Nouveau mot de passe : ${defaultPassword.value}`
         )
 
         emit('success')
       } catch (error) {
         console.error('Error resetting password:', error)
+        
+        let errorMessage = 'Une erreur est survenue lors de la réinitialisation du mot de passe'
+        
+        if (error.response?.data?.errors) {
+          const errors = error.response.data.errors
+          const errorMessages = []
+          
+          Object.keys(errors).forEach(key => {
+            if (errors[key] && errors[key][0]) {
+              errorMessages.push(errors[key][0])
+            }
+          })
+          
+          if (errorMessages.length > 0) {
+            errorMessage = errorMessages.join(' • ')
+          }
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message
+        }
+        
         notificationStore.error(
-          'Erreur',
-          error.response?.data?.message || 'Une erreur est survenue lors de la réinitialisation du mot de passe'
+          'Erreur de réinitialisation',
+          errorMessage
         )
       } finally {
         isLoading.value = false
