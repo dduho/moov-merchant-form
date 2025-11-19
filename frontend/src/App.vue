@@ -67,8 +67,8 @@ const handleLogout = async () => {
                 <img src="/logo.png" alt="Moov Money Logo" class="w-12 h-12 object-contain">
               </div>
               <div class="hidden sm:block">
-                <h1 class="text-lg font-bold text-gray-900 group-hover:text-orange-600 transition-colors">Moov Money</h1>
-                <p class="text-xs text-gray-500 font-medium">Recrutement Marchand</p>
+                <h1 class="text-lg font-bold text-gray-900 dark:text-white group-hover:text-orange-600 transition-colors">Moov Money</h1>
+                <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">Recrutement Marchand</p>
               </div>
             </router-link>
           </div>
