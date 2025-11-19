@@ -79,6 +79,7 @@
 import { ref, onMounted, watch, nextTick } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { getCurrentPosition, getAccuracyLevel, formatAccuracy } from '../utils/geolocation'
 
 export default {
   name: 'LocationPicker',
@@ -159,12 +160,7 @@ export default {
       }
     }
     
-    const getCurrentLocation = () => {
-      if (!navigator.geolocation) {
-        alert('La géolocalisation n\'est pas supportée par votre navigateur')
-        return
-      }
-      
+    const getCurrentLocation = async () => {
       // Vérifier si on est en HTTPS ou localhost
       const isSecureContext = window.isSecureContext || location.hostname === 'localhost' || location.hostname === '127.0.0.1'
       
@@ -175,33 +171,44 @@ export default {
       
       isGettingLocation.value = true
       
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude, accuracy } = position.coords
-          setLocation(latitude, longitude, accuracy)
-          isGettingLocation.value = false
-        },
-        (error) => {
-          console.error('Erreur géolocalisation:', error)
-          let message = 'Impossible d\'obtenir votre position.'
-          
-          if (error.code === 1) {
-            message = '⚠️ Accès à la localisation refusé.\n\nSi vous êtes en HTTP (non sécurisé), la géolocalisation est bloquée par le navigateur.\n\nVeuillez utiliser la saisie manuelle des coordonnées ou cliquer sur la carte.'
-          } else if (error.code === 2) {
-            message = 'Position non disponible. Veuillez réessayer.'
-          } else if (error.code === 3) {
-            message = 'Délai d\'attente dépassé. Veuillez réessayer.'
-          }
-          
-          alert(message)
-          isGettingLocation.value = false
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 300000
+      try {
+        // Utiliser le nouveau service avec retry automatique
+        const position = await getCurrentPosition(3) // Max 3 tentatives
+        
+        const { latitude, longitude, accuracy } = position.coords
+        setLocation(latitude, longitude, accuracy)
+        
+        // Vibration de succès (si supporté)
+        if (navigator.vibrate) {
+          navigator.vibrate(200)
         }
-      )
+        
+        // Message selon la précision
+        const accuracyLevel = getAccuracyLevel(accuracy)
+        if (accuracyLevel === 'poor') {
+          alert(`⚠️ Position obtenue avec une précision faible (${formatAccuracy(accuracy)}).\n\nVous pouvez ajuster manuellement la position si nécessaire.`)
+        } else if (position.fromCache) {
+          alert(`ℹ️ Position récupérée depuis le cache.\nPrécision: ${formatAccuracy(accuracy)}`)
+        }
+        
+      } catch (error) {
+        console.error('Erreur géolocalisation:', error)
+        let message = 'Impossible d\'obtenir votre position.'
+        
+        if (error.code === 1) {
+          message = '⚠️ Accès à la localisation refusé.\n\nVeuillez autoriser l\'accès à votre position ou utiliser la saisie manuelle.'
+        } else if (error.code === 2) {
+          message = '⚠️ Position non disponible.\n\nAssurez-vous que le GPS est activé et réessayez.'
+        } else if (error.code === 3) {
+          message = '⏱️ Délai d\'attente dépassé.\n\nLe GPS met du temps à répondre. Veuillez réessayer.'
+        } else if (error.message?.includes('non supportée')) {
+          message = error.message
+        }
+        
+        alert(message)
+      } finally {
+        isGettingLocation.value = false
+      }
     }
     
     const setManualLocation = () => {

@@ -80,13 +80,36 @@ export default {
         return
       }
       
-      // Compression des images
+      // Compression des images avec qualité adaptative selon la connexion
       if (file.type.startsWith('image/')) {
+        // Détecter le type de connexion
+        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection
+        const connectionType = connection?.effectiveType || '4g'
+        
+        // Qualité adaptative selon la connexion
+        const qualityMap = {
+          'slow-2g': 0.6,
+          '2g': 0.65,
+          '3g': 0.75,
+          '4g': 0.85,
+          'wifi': 0.9
+        }
+        
+        const quality = qualityMap[connectionType] || 0.8
+        
+        console.log(`[FileUpload] Connexion: ${connectionType}, Qualité: ${quality}`)
+        
         new Compressor(file, {
-          quality: 0.8,
-          maxWidth: 1200,
-          maxHeight: 1200,
+          quality,
+          maxWidth: 1920,
+          maxHeight: 1920,
+          // Ne pas convertir en WebP - le backend n'accepte que JPG/PNG/PDF
+          // convertSize: 500000,
+          // convertTypes: ['image/png', 'image/jpeg'],
+          // mimeType: file.size > 500000 ? 'image/webp' : undefined,
           success: (compressedFile) => {
+            const compressionRatio = ((file.size - compressedFile.size) / file.size * 100).toFixed(0)
+            console.log(`[FileUpload] Compression: ${(file.size / 1024).toFixed(0)}KB → ${(compressedFile.size / 1024).toFixed(0)}KB (-${compressionRatio}%)`)
             processFile(compressedFile)
           },
           error: (error) => {

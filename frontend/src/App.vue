@@ -94,8 +94,9 @@ const handleLogout = async () => {
             <div class="relative user-menu">
               <button
                 @click.stop="userMenuOpen = !userMenuOpen"
-                class="h-10 px-3 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 text-gray-700 font-medium flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow"
+                class="px-3 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 text-gray-700 font-medium flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow"
                 :class="{ 'bg-gray-100 border-gray-300': userMenuOpen }"
+                style="min-height: 44px;"
               >
                 <div class="flex items-center space-x-2">
                   <div class="w-6 h-6 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">

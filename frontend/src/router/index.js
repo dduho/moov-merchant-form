@@ -1,16 +1,20 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+
+// Eager loading pour la page d'accueil (première visite)
 import HomeView from '../views/HomeView.vue'
-import MerchantForm from '../views/MerchantForm.vue'
-import FormSuccess from '../views/FormSuccess.vue'
-import Dashboard from '../views/Dashboard.vue'
-import LoginView from '../views/LoginView.vue'
-import RegisterView from '../views/RegisterView.vue'
-import ChangePasswordRequired from '../views/ChangePasswordRequired.vue'
-import ApplicationDetails from '../views/ApplicationDetails.vue'
-import NotificationPage from '../views/NotificationPage.vue'
-import UserManagement from '../views/UserManagement.vue'
-import ObjectiveManagement from '../views/ObjectiveManagement.vue'
+
+// Lazy loading pour toutes les autres routes
+const MerchantForm = () => import('../views/MerchantForm.vue')
+const FormSuccess = () => import('../views/FormSuccess.vue')
+const Dashboard = () => import('../views/Dashboard.vue')
+const LoginView = () => import('../views/LoginView.vue')
+const RegisterView = () => import('../views/RegisterView.vue')
+const ChangePasswordRequired = () => import('../views/ChangePasswordRequired.vue')
+const ApplicationDetails = () => import('../views/ApplicationDetails.vue')
+const NotificationPage = () => import('../views/NotificationPage.vue')
+const UserManagement = () => import('../views/UserManagement.vue')
+const ObjectiveManagement = () => import('../views/ObjectiveManagement.vue')
 
 const routes = [
   {

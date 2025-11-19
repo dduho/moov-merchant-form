@@ -99,7 +99,10 @@
                       <label class="form-label">Nom *</label>
                       <input v-model="formData.lastName" type="text" 
                         class="form-input h-12" :class="{ 'border-red-500': errors.lastName }"
-                        placeholder="Nom de famille" autocomplete="family-name" required>
+                        placeholder="Nom de famille" 
+                        autocomplete="family-name" 
+                        inputmode="text"
+                        required>
                       <p v-if="errors.lastName" class="mt-1 text-sm text-red-600">{{ errors.lastName }}</p>
                     </div>
 
@@ -107,7 +110,10 @@
                       <label class="form-label">Prénom(s) *</label>
                       <input v-model="formData.firstName" type="text" 
                         class="form-input h-12" :class="{ 'border-red-500': errors.firstName }"
-                        placeholder="Prénom(s)" autocomplete="given-name" required>
+                        placeholder="Prénom(s)" 
+                        autocomplete="given-name" 
+                        inputmode="text"
+                        required>
                       <p v-if="errors.firstName" class="mt-1 text-sm text-red-600">{{ errors.firstName }}</p>
                     </div>
 
@@ -123,7 +129,10 @@
                       <label class="form-label">Lieu de naissance *</label>
                       <input v-model="formData.birthPlace" type="text" 
                         class="form-input h-12" :class="{ 'border-red-500': errors.birthPlace }"
-                        placeholder="Ville, Pays" required>
+                        placeholder="Ville, Pays" 
+                        autocomplete="off" 
+                        inputmode="text"
+                        required>
                       <p v-if="errors.birthPlace" class="mt-1 text-sm text-red-600">{{ errors.birthPlace }}</p>
                     </div>
 
@@ -184,7 +193,9 @@
                       <label class="form-label">Email</label>
                       <input v-model="formData.email" type="email" 
                         class="form-input h-12" :class="{ 'border-red-500': errors.email }"
-                        placeholder="email@exemple.com" autocomplete="email">
+                        placeholder="email@exemple.com" 
+                        autocomplete="email"
+                        inputmode="email">
                       <p v-if="errors.email" class="mt-1 text-sm text-red-600">{{ errors.email }}</p>
                     </div>
 
@@ -294,6 +305,8 @@
                           class="form-input h-12"
                           :class="{ 'border-red-500': errors.anidNumber }"
                           placeholder="Numéro ANID"
+                          autocomplete="off"
+                          inputmode="numeric"
                           :maxlength="maxLengths.anidNumber"
                           @input="limitInput('anidNumber', $event)"
                           @keydown="handleKeydown('anidNumber', $event)"
@@ -1588,10 +1601,14 @@ export default {
 /* Boutons */
 .btn-primary {
   @apply transition active:scale-[.99];
+  min-height: 44px;
+  min-width: 44px;
 }
 
 .btn-secondary {
   @apply bg-white text-gray-700 hover:bg-gray-50;
+  min-height: 44px;
+  min-width: 44px;
 }
 
 @media (max-width: 768px) {
