@@ -296,7 +296,7 @@ const handleLogout = async () => {
     </main>
 
     <!-- Footer moderne -->
-    <footer class="bg-gray-50 border-t border-gray-200 mt-auto">
+    <footer class="bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="py-8">
           <div class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
@@ -306,17 +306,17 @@ const handleLogout = async () => {
                 <img src="/logo.png" alt="Moov Money Logo" class="w-12 h-12 object-contain">
               </div>
               <div>
-                <h3 class="text-sm font-semibold text-gray-900">Moov Money</h3>
-                <p class="text-xs text-gray-500">Recrutement Marchand</p>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Moov Money</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Recrutement Marchand</p>
               </div>
             </div>
             
             <!-- Copyright et crédit -->
             <div class="text-center md:text-right">
-              <p class="text-sm text-gray-600">
+              <p class="text-sm text-gray-600 dark:text-gray-300">
                 &copy; {{ currentYear }} Moov Money Togo. Tous droits réservés.
               </p>
-              <p class="text-xs text-gray-500 mt-1">
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Crafted with <span class="text-red-500">❤️</span> by David D.
               </p>
             </div>
