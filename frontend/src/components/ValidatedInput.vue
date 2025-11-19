@@ -22,7 +22,7 @@
         :disabled="disabled"
         :class="inputClasses"
         class="form-input h-12 w-full"
-        @input="handleInput"
+        @change="handleInput"
         @blur="handleBlur"
         @focus="handleFocus"
       >
@@ -204,10 +204,13 @@ const inputId = computed(() => `input-${props.fieldName}`)
 
 // Synchroniser avec v-model et valider si déjà rempli
 watch(() => props.modelValue, (newVal) => {
-  localValue.value = newVal
-  // Si la valeur est remplie (données chargées), valider
-  if (newVal && props.validationFn) {
-    validateField(props.fieldName, newVal, props.validationFn, 0)
+  // Éviter les boucles infinies en vérifiant si la valeur a réellement changé
+  if (localValue.value !== newVal) {
+    localValue.value = newVal
+    // Si la valeur est remplie (données chargées), valider
+    if (newVal && props.validationFn) {
+      validateField(props.fieldName, newVal, props.validationFn, 0)
+    }
   }
 })
 
