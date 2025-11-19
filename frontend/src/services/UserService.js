@@ -2,7 +2,8 @@ import axios from 'axios'
 
 class UserService {
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || '/api'
+    const apiBaseUrl = import.meta.env.VITE_API_URL || ''
+    this.baseURL = apiBaseUrl ? `${apiBaseUrl}/api` : '/api'
     
     this.client = axios.create({
       baseURL: this.baseURL,
@@ -68,6 +69,12 @@ class UserService {
       new_password: newPassword,
       new_password_confirmation: confirmPassword
     })
+    return response.data
+  }
+
+  // Mettre à jour un utilisateur (admin uniquement)
+  async updateUser(userId, userData) {
+    const response = await this.client.put(`/users/${userId}`, userData)
     return response.data
   }
 }

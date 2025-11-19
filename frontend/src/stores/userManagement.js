@@ -142,6 +142,23 @@ export const useUserManagementStore = defineStore('userManagement', () => {
     }
   }
 
+  const updateUser = async (userId, userData) => {
+    try {
+      const response = await UserService.updateUser(userId, userData)
+      
+      // Mettre à jour l'utilisateur dans la liste
+      const userIndex = users.value.findIndex(u => u.id === userId)
+      if (userIndex !== -1) {
+        users.value[userIndex] = { ...users.value[userIndex], ...response.data }
+      }
+      
+      return response
+    } catch (err) {
+      error.value = err.message || 'Erreur lors de la mise à jour de l\'utilisateur'
+      throw err
+    }
+  }
+
   const getUserStats = async (userId) => {
     try {
       return await UserService.getUserStats(userId)
@@ -201,6 +218,7 @@ export const useUserManagementStore = defineStore('userManagement', () => {
     toggleUserBlock,
     toggleUserActive,
     fetchUserStats,
+    updateUser,
     getUserStats,
     fetchCommercials,
     updateFilters,

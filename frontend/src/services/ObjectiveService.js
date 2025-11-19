@@ -2,7 +2,8 @@ import axios from 'axios'
 
 class ObjectiveService {
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || '/api'
+    const apiBaseUrl = import.meta.env.VITE_API_URL || ''
+    this.baseURL = apiBaseUrl ? `${apiBaseUrl}/api` : '/api'
     
     this.client = axios.create({
       baseURL: this.baseURL,

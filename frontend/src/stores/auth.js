@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 const AUTH_API_BASE = '/api/auth'
 
 export const useAuthStore = defineStore('auth', {
@@ -72,8 +73,10 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true
       this.error = null
       try {
-        // Obtenir le CSRF cookie - utiliser l'origine de la fenêtre (sera HTTPS si la page l'est)
-        await axios.get(`${window.location.origin}/sanctum/csrf-cookie`, { withCredentials: true })
+        // Obtenir le CSRF cookie depuis le backend (sans /api dans le chemin)
+        const baseUrl = API_BASE_URL ? API_BASE_URL.replace('/api', '') : ''
+        const csrfUrl = baseUrl ? `${baseUrl}/sanctum/csrf-cookie` : '/sanctum/csrf-cookie'
+        await axios.get(csrfUrl, { withCredentials: true })
         
         // Faire la requête de login
         const { data } = await axios.post(`${AUTH_API_BASE}/login`, {

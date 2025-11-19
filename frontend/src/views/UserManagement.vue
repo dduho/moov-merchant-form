@@ -249,6 +249,15 @@
                       <i class="fas fa-chart-bar"></i>
                     </button>
 
+                    <!-- Edit User -->
+                    <button
+                      @click="editUser(user)"
+                      class="text-indigo-600 hover:text-indigo-900 p-1 text-xs sm:text-sm"
+                      title="Modifier l'utilisateur"
+                    >
+                      <i class="fas fa-edit"></i>
+                    </button>
+
                     <!-- Reset Password -->
                     <button
                       @click="resetPassword(user)"
@@ -392,6 +401,13 @@
       @close="showResetPasswordModal = false"
       @success="handlePasswordReset"
     />
+
+    <EditUserModal
+      :show="showEditModal"
+      :user="selectedEditUser"
+      @close="showEditModal = false"
+      @success="handleUserUpdated"
+    />
   </div>
 </template>
 
@@ -401,12 +417,14 @@ import { useUserManagementStore } from '../stores/userManagement'
 import { useNotificationStore } from '../stores/notifications'
 import UserStatsModal from '../components/UserStatsModal.vue'
 import ResetPasswordModal from '../components/ResetPasswordModal.vue'
+import EditUserModal from '../components/EditUserModal.vue'
 
 export default {
   name: 'UserManagement',
   components: {
     UserStatsModal,
-    ResetPasswordModal
+    ResetPasswordModal,
+    EditUserModal
   },
   setup() {
     const userStore = useUserManagementStore()
@@ -415,7 +433,9 @@ export default {
     // State
     const showStatsModal = ref(false)
     const showResetPasswordModal = ref(false)
+    const showEditModal = ref(false)
     const selectedUser = ref(null)
+    const selectedEditUser = ref(null)
 
     // Computed
     const users = computed(() => userStore.users)
@@ -543,6 +563,17 @@ export default {
       showStatsModal.value = true
     }
 
+    const editUser = (user) => {
+      selectedEditUser.value = user
+      showEditModal.value = true
+    }
+
+    const handleUserUpdated = () => {
+      showEditModal.value = false
+      selectedEditUser.value = null
+      loadUsers(pagination.value.current_page)
+    }
+
     const resetPassword = (user) => {
       selectedUser.value = user
       showResetPasswordModal.value = true
@@ -634,7 +665,9 @@ export default {
       filters,
       showStatsModal,
       showResetPasswordModal,
+      showEditModal,
       selectedUser,
+      selectedEditUser,
 
       // Methods
       loadUsers,
@@ -651,6 +684,8 @@ export default {
       getProgressPercentage,
       getPageNumbers,
       viewUserStats,
+      editUser,
+      handleUserUpdated,
       resetPassword,
       handlePasswordReset,
       toggleBlock,

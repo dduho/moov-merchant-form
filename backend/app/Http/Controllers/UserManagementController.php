@@ -278,6 +278,110 @@ class UserManagementController extends Controller
     }
 
     /**
+     * Mettre à jour un utilisateur
+     */
+    public function update(Request $request, User $user)
+    {
+        // Check admin access
+        $accessCheck = $this->checkAdminAccess($request);
+        if ($accessCheck) return $accessCheck;
+
+        try {
+            // Validation des données
+            $validated = $request->validate([
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email,' . $user->id,
+                'phone' => 'required|string|max:20|unique:users,phone,' . $user->id,
+                'username' => 'required|string|max:255|unique:users,username,' . $user->id,
+                'role_slug' => 'required|exists:roles,slug'
+            ]);
+
+            // Empêcher de modifier son propre rôle
+            if ($user->id === $request->user()->id && $user->roles->first()->slug !== $validated['role_slug']) {
+                return response()->json([
+                    'message' => 'Action non autorisée',
+                    'errors' => ['permission' => ['Vous ne pouvez pas modifier votre propre rôle']]
+                ], 403);
+            }
+
+            // Mettre à jour les informations de l'utilisateur
+            $user->first_name = $validated['first_name'];
+            $user->last_name = $validated['last_name'];
+            $user->email = $validated['email'];
+            $user->phone = $validated['phone'];
+            $user->username = $validated['username'];
+            $user->save();
+
+            // Mettre à jour le rôle si nécessaire
+            if ($user->roles->first()->slug !== $validated['role_slug']) {
+                $user->roles()->sync([\App\Models\Role::where('slug', $validated['role_slug'])->first()->id]);
+            }
+
+            return response()->json([
+                'message' => 'Utilisateur mis à jour avec succès',
+                'success' => true,
+                'data' => $user->load('roles')
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Erreur de validation',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Error updating user', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'message' => 'Erreur lors de la mise à jour de l\'utilisateur',
+                'errors' => ['server' => [$e->getMessage()]]
+            ], 500);
+        }
+    }
+
+    /**
+    {
+        // Check admin access
+        $accessCheck = $this->checkAdminAccess($request);
+        if ($accessCheck) return $accessCheck;
+
+        try {
+            // Empêcher de désactiver son propre compte
+            if ($user->id === $request->user()->id) {
+                return response()->json([
+                    'message' => 'Action non autorisée',
+                    'errors' => ['permission' => ['Vous ne pouvez pas désactiver votre propre compte']]
+                ], 403);
+            }
+
+            $user->is_active = !$user->is_active;
+            $user->save();
+
+            return response()->json([
+                'message' => $user->is_active ? 'Utilisateur activé avec succès' : 'Utilisateur désactivé avec succès',
+                'success' => true,
+                'data' => [
+                    'user_id' => $user->id,
+                    'user_name' => $user->first_name . ' ' . $user->last_name,
+                    'is_active' => $user->is_active
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error toggling user active status', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'message' => 'Erreur lors du changement de statut',
+                'errors' => ['server' => [$e->getMessage()]]
+            ], 500);
+        }
+    }
+
+    /**
      * Obtenir les statistiques détaillées d'un utilisateur
      */
     public function userStats(Request $request, User $user)
