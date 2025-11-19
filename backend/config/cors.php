@@ -16,6 +16,7 @@ return [
         'http://10.80.7.160:3001', // Autre IP réseau
         'http://10.80.16.51', // IP serveur de production
         'http://10.80.16.51:80',
+        'https://merch.moov-africa.tg', // Domaine de production
     ],
     'allowed_origins_patterns' => [
         '/^http:\/\/.*:3000$/', // Pattern pour accepter toutes les IPs sur le port 3000
