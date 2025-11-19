@@ -67,7 +67,7 @@
         <div class="progress-bar mb-2">
           <div class="progress-fill" :style="`width: ${progress}%`"></div>
         </div>
-        <div class="flex justify-between text-[11px] sm:text-xs text-gray-500">
+        <div class="flex justify-between text-[11px] sm:text-xs text-gray-500 dark:text-gray-400">
           <span>Étape {{ currentStep }} sur {{ totalSteps }}</span>
           <span>{{ Math.round(progress) }}% complété</span>
         </div>
@@ -292,7 +292,7 @@
                     <label class="flex items-center space-x-2">
                       <input v-model="formData.hasAnidCard" type="checkbox"
                         class="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500">
-                      <span class="text-sm font-medium text-gray-700">Je possède une carte ANID</span>
+                      <span class="text-sm font-medium text-gray-700 dark:text-gray-200">Je possède une carte ANID</span>
                     </label>
                   </div>
 
@@ -463,13 +463,13 @@
                       <label class="flex items-center space-x-2">
                         <input v-model="formData.hasCFE" type="checkbox"
                           class="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500">
-                        <span class="text-sm font-medium text-gray-700">Je possède une carte CFE</span>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-200">Je possède une carte CFE</span>
                       </label>
 
                       <label class="flex items-center space-x-2">
                         <input v-model="formData.hasNIF" type="checkbox"
                           class="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500">
-                        <span class="text-sm font-medium text-gray-700">Je possède un numéro NIF</span>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-200">Je possède un numéro NIF</span>
                       </label>
                     </div>
 
@@ -1657,7 +1657,7 @@ export default {
 
 /* Inputs & Selects */
 .form-input {
-  @apply w-full rounded-xl border px-4 py-2 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50;
+  @apply w-full rounded-xl border px-4 py-2 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder:text-gray-400;
 }
 
 .form-select {
@@ -1666,11 +1666,11 @@ export default {
 
 /* Typo & sections */
 .section-title {
-  @apply text-base sm:text-lg font-semibold mb-3 sm:mb-4;
+  @apply text-base sm:text-lg font-semibold mb-3 sm:mb-4 dark:text-white;
 }
 
 .form-label {
-  @apply block mb-1 text-sm font-medium text-gray-700;
+  @apply block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200;
 }
 
 .form-group {
@@ -1685,7 +1685,7 @@ export default {
 }
 
 .btn-secondary {
-  @apply bg-white text-gray-700 hover:bg-gray-50;
+  @apply bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600;
   min-height: 44px;
   min-width: 44px;
 }
