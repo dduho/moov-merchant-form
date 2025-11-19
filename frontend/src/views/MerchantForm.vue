@@ -1922,22 +1922,22 @@ export default {
           }
         }
         
-        // Gestion des gestes swipe pour la navigation
-        const swipe = useSwipe(stage, {
-          onSwipeLeft: () => {
-            if (currentStep.value < totalSteps.value) {
-              nextStep();
-            }
-          },
-          onSwipeRight: () => {
-            if (currentStep.value > 1) {
-              prevStep();
-            }
-          },
-          threshold: 50,
-          velocity: 0.3
-        });
-        cleanupSwipe = swipe.cleanup
+        // Gestion des gestes swipe pour la navigation - DÉSACTIVÉ
+        // const swipe = useSwipe(stage, {
+        //   onSwipeLeft: () => {
+        //     if (currentStep.value < totalSteps.value) {
+        //       nextStep();
+        //     }
+        //   },
+        //   onSwipeRight: () => {
+        //     if (currentStep.value > 1) {
+        //       prevStep();
+        //     }
+        //   },
+        //   threshold: 50,
+        //   velocity: 0.3
+        // });
+        // cleanupSwipe = swipe.cleanup
           
         // Configuration de la mise en page
         await setStageHeightToCurrent();
