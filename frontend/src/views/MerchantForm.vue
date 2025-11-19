@@ -13,7 +13,7 @@
       
       <!-- Skeleton Loader pour le mode édition -->
       <div v-if="isLoadingApplication" class="space-y-6">
-        <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6">
           <div class="animate-pulse">
             <div class="h-4 bg-gray-200 rounded-full mb-4"></div>
             <div class="flex justify-between">
@@ -23,7 +23,7 @@
           </div>
         </div>
         
-        <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
           <div class="animate-pulse space-y-6">
             <div class="space-y-2">
               <div class="h-6 bg-gray-200 rounded w-3/4"></div>
@@ -63,7 +63,7 @@
       <!-- Formulaire normal -->
       <div v-else>
       <!-- Barre de progression -->
-      <div class="mb-8 bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+      <div class="mb-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6">
         <div class="progress-bar mb-2">
           <div class="progress-fill" :style="`width: ${progress}%`"></div>
         </div>
@@ -73,7 +73,7 @@
         </div>
       </div>
 
-      <form @submit.prevent="submitForm" class="bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
+      <form @submit.prevent="submitForm" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
         <!-- Zone animée avec auto-height -->
         <div ref="stage" class="stage relative overflow-visible"
           :style="{ minHeight: stageHeight }">
@@ -644,7 +644,7 @@
       </form>
 
       <!-- Indicateur de sauvegarde automatique -->
-      <div v-if="autoSaveStatus" class="fixed right-4 bottom-20 sm:bottom-4 bg-white rounded-lg shadow-lg p-3 z-50">
+      <div v-if="autoSaveStatus" class="fixed right-4 bottom-20 sm:bottom-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3 z-50">
         <div class="flex items-center space-x-2 text-sm">
           <i class="fas fa-save text-green-500"></i>
         </div>
@@ -676,9 +676,9 @@
     </div>
 
     <!-- Barre sticky mobile -->
-    <nav class="sm:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t">
+    <nav class="sm:hidden fixed inset-x-0 bottom-0 z-40 bg-white dark:bg-gray-800 border-t dark:border-gray-700">
       <div class="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3 pb-[max(env(safe-area-inset-bottom),8px)]">
-        <button class="h-12 rounded-xl border flex-1 font-medium disabled:opacity-50" :disabled="currentStep === 1"
+        <button class="h-12 rounded-xl border dark:border-gray-600 dark:text-white flex-1 font-medium disabled:opacity-50" :disabled="currentStep === 1"
           type="button" @click="prevStep">
           <i class="fas fa-arrow-left mr-2"></i>Précédent
         </button>
