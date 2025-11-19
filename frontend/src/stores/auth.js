@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 
+const AUTH_API_BASE = '/api/auth'
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: JSON.parse(localStorage.getItem('auth_user')) || null,
@@ -47,7 +49,7 @@ export const useAuthStore = defineStore('auth', {
       // Si on a un utilisateur en localStorage, vérifier s'il est toujours connecté
       if (this.user) {
         try {
-          const { data } = await axios.get('/auth/me')
+          const { data } = await axios.get(`${AUTH_API_BASE}/me`)
           this.setUser(data)
         } catch (error) {
           console.error('Session expirée:', error)
@@ -75,7 +77,7 @@ export const useAuthStore = defineStore('auth', {
         await axios.get(`${baseUrl}/sanctum/csrf-cookie`, { withCredentials: true })
         
         // Faire la requête de login
-        const { data } = await axios.post('/auth/login', {
+        const { data } = await axios.post(`${AUTH_API_BASE}/login`, {
           username,
           password
         })
@@ -101,7 +103,7 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true
       this.error = null
       try {
-        const { data } = await axios.post('/auth/register', userData)
+        const { data } = await axios.post(`${AUTH_API_BASE}/register`, userData)
         return data
       } catch (error) {
         this.error = error.response?.data?.message || 'Une erreur est survenue'
@@ -114,7 +116,7 @@ export const useAuthStore = defineStore('auth', {
     async logout() {
       this.loading = true
       try {
-        await axios.post('/auth/logout')
+        await axios.post(`${AUTH_API_BASE}/logout`)
         this.clearUser()
       } catch (error) {
         console.error('Erreur lors de la déconnexion:', error)
@@ -128,7 +130,7 @@ export const useAuthStore = defineStore('auth', {
     async fetchUser() {
       this.loading = true
       try {
-        const { data } = await axios.get('/auth/me')
+        const { data } = await axios.get(`${AUTH_API_BASE}/me`)
         this.setUser(data)
       } catch (error) {
         this.error = error.response?.data?.message || 'Une erreur est survenue'
@@ -146,7 +148,7 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true
       this.error = null
       try {
-        const { data } = await axios.put('/auth/profile', profileData)
+        const { data } = await axios.put(`${AUTH_API_BASE}/profile`, profileData)
         this.setUser(data.user)
         return data
       } catch (error) {
