@@ -126,12 +126,42 @@ const router = createRouter({
   routes
 })
 
+// Prefetch des routes probables selon le contexte
+const prefetchRoutes = {
+  'Home': ['MerchantForm', 'Login'],
+  'Login': ['Dashboard', 'ChangePasswordRequired'],
+  'MerchantForm': ['FormSuccess', 'Dashboard'],
+  'Dashboard': ['ApplicationDetails', 'NotificationPage', 'MerchantForm'],
+  'ApplicationDetails': ['Dashboard', 'MerchantForm']
+}
+
+// Fonction pour prefetch une route
+const prefetchRoute = (routeName) => {
+  const route = routes.find(r => r.name === routeName)
+  if (route && typeof route.component === 'function') {
+    // Précharger le composant sans bloquer
+    route.component().catch(() => {
+      // Ignorer les erreurs de préchargement
+    })
+  }
+}
+
 // Navigation guards
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
   
   // Mettre à jour le titre de la page
   document.title = `${to.meta.title} - Moov Money`
+
+  // Prefetch des routes probables après cette navigation
+  if (prefetchRoutes[to.name]) {
+    // Attendre que la navigation soit terminée
+    setTimeout(() => {
+      prefetchRoutes[to.name].forEach(routeName => {
+        prefetchRoute(routeName)
+      })
+    }, 1000) // 1 seconde après le chargement de la page
+  }
 
   // Si la route requiert un invité (non connecté)
   if (to.meta.requiresGuest && authStore.isAuthenticated) {

@@ -1,19 +1,19 @@
 <template>
-  <div>
-    <input
-      type="text"
-      :value="displayValue"
-      @input="handleInput"
-      @keydown="handleKeydown"
-      class="form-input h-12"
-      :placeholder="placeholder"
-      :class="{ 'border-red-500': !!error }"
-      v-bind="$attrs"
-    />
-    <p v-if="error" class="mt-1 text-sm text-red-600">
-      {{ error }}
-    </p>
-  </div>
+  <input
+    type="text"
+    :value="displayValue"
+    @input="handleInput"
+    @keydown="handleKeydown"
+    style="border-width: 2px !important;"
+    class="form-input h-12"
+    :placeholder="placeholder"
+    :class="{
+      'border-red-600 dark:border-red-500': hasError,
+      'border-green-600 dark:border-green-500': isValid,
+      'border-gray-300 dark:border-gray-600': !hasError && !isValid
+    }"
+    v-bind="$attrs"
+  />
 </template>
 
 <script>
@@ -30,6 +30,14 @@ export default {
       type: String,
       required: true,
       validator: value => ['cni', 'passport', 'elector', 'residence', 'driving_license', 'foreign_id'].includes(value)
+    },
+    hasError: {
+      type: Boolean,
+      default: false
+    },
+    isValid: {
+      type: Boolean,
+      default: false
     }
   },
   emits: ['update:modelValue'],

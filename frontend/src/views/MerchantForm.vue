@@ -62,7 +62,7 @@
 
       <!-- Formulaire normal -->
       <div v-else>
-      <!-- Barre de progression -->
+      <!-- Barre de progression avec validation -->
       <div class="mb-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6">
         <div class="progress-bar mb-2">
           <div class="progress-fill" :style="`width: ${progress}%`"></div>
@@ -71,6 +71,34 @@
           <span>Étape {{ currentStep }} sur {{ totalSteps }}</span>
           <span>{{ Math.round(progress) }}% complété</span>
         </div>
+        <!-- Indicateur de validation temps réel -->
+        <!-- <div v-if="currentStep === 1" class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-medium" :class="{
+              'text-gray-500 dark:text-gray-400': completionScore < 50,
+              'text-orange-500': completionScore >= 50 && completionScore < 75,
+              'text-blue-500': completionScore >= 75 && completionScore < 100,
+              'text-green-500': completionScore === 100
+            }">
+              Validation : {{ completionScore }}%
+            </span>
+            <span class="text-xs text-gray-500 dark:text-gray-400">
+              {{ validationStats.valid }}/{{ validationStats.valid + validationStats.invalid + validationStats.idle }} champs valides
+            </span>
+          </div>
+          <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+            <div 
+              class="h-1.5 rounded-full transition-all duration-500"
+              :class="{
+                'bg-gray-400': completionScore < 50,
+                'bg-orange-500': completionScore >= 50 && completionScore < 75,
+                'bg-blue-500': completionScore >= 75 && completionScore < 100,
+                'bg-green-500': completionScore === 100
+              }"
+              :style="`width: ${completionScore}%`"
+            ></div>
+          </div>
+        </div> -->
       </div>
 
       <form @submit.prevent="submitForm" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
@@ -95,116 +123,191 @@
                   </h2>
 
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                    <div class="form-group">
-                      <label class="form-label">Nom *</label>
-                      <input v-model="formData.lastName" type="text" 
-                        class="form-input h-12" :class="{ 'border-red-500': errors.lastName }"
-                        placeholder="Nom de famille" 
-                        autocomplete="family-name" 
-                        inputmode="text"
-                        required>
-                      <p v-if="errors.lastName" class="mt-1 text-sm text-red-600">{{ errors.lastName }}</p>
-                    </div>
+                    <ValidatedInput
+                      ref="lastNameInput"
+                      v-model="formData.lastName"
+                      field-name="lastName"
+                      label="Nom *"
+                      type="text"
+                      placeholder="Nom de famille"
+                      autocomplete="family-name"
+                      inputmode="text"
+                      :validation-fn="validateRequired"
+                      :validate-on-input="true"
+                      :error="errors.lastName || ''"
+                      @validation-change="(state) => state.isValid && delete errors.lastName"
+                    />
 
-                    <div class="form-group">
-                      <label class="form-label">Prénom(s) *</label>
-                      <input v-model="formData.firstName" type="text" 
-                        class="form-input h-12" :class="{ 'border-red-500': errors.firstName }"
-                        placeholder="Prénom(s)" 
-                        autocomplete="given-name" 
-                        inputmode="text"
-                        required>
-                      <p v-if="errors.firstName" class="mt-1 text-sm text-red-600">{{ errors.firstName }}</p>
-                    </div>
+                    <ValidatedInput
+                      ref="firstNameInput"
+                      v-model="formData.firstName"
+                      field-name="firstName"
+                      label="Prénom(s) *"
+                      type="text"
+                      placeholder="Prénom(s)"
+                      autocomplete="given-name"
+                      inputmode="text"
+                      :validation-fn="validateRequired"
+                      :validate-on-input="true"
+                      :error="errors.firstName || ''"
+                      @validation-change="(state) => state.isValid && delete errors.firstName"
+                    />
 
-                    <div class="form-group">
-                      <label class="form-label">Date de naissance *</label>
-                      <input v-model="formData.birthDate" type="date" 
-                        class="form-input h-12" :class="{ 'border-red-500': errors.birthDate }"
-                        autocomplete="bday" required>
-                      <p v-if="errors.birthDate" class="mt-1 text-sm text-red-600">{{ errors.birthDate }}</p>
-                    </div>
+                    <ValidatedInput
+                      ref="birthDateInput"
+                      v-model="formData.birthDate"
+                      field-name="birthDate"
+                      label="Date de naissance *"
+                      type="date"
+                      autocomplete="bday"
+                      :validation-fn="validateMinAge"
+                      :validate-on-input="true"
+                      :error="errors.birthDate || ''"
+                      @validation-change="(state) => state.isValid && delete errors.birthDate"
+                    />
 
-                    <div class="form-group">
-                      <label class="form-label">Lieu de naissance *</label>
-                      <input v-model="formData.birthPlace" type="text" 
-                        class="form-input h-12" :class="{ 'border-red-500': errors.birthPlace }"
-                        placeholder="Ville, Pays" 
-                        autocomplete="off" 
-                        inputmode="text"
-                        required>
-                      <p v-if="errors.birthPlace" class="mt-1 text-sm text-red-600">{{ errors.birthPlace }}</p>
-                    </div>
+                    <ValidatedInput
+                      ref="birthPlaceInput"
+                      v-model="formData.birthPlace"
+                      field-name="birthPlace"
+                      label="Lieu de naissance *"
+                      type="text"
+                      placeholder="Ville, Pays"
+                      autocomplete="off"
+                      inputmode="text"
+                      :validation-fn="validateRequired"
+                      :validate-on-input="true"
+                      :error="errors.birthPlace || ''"
+                      @validation-change="(state) => state.isValid && delete errors.birthPlace"
+                    />
 
-                    <div class="form-group">
-                      <label class="form-label">Genre *</label>
-                      <select v-model="formData.gender" 
-                        class="form-input h-12" :class="{ 'border-red-500': errors.gender }"
-                        required>
-                        <option value="">Sélectionnez</option>
-                        <option value="M">Masculin</option>
-                        <option value="F">Féminin</option>
-                      </select>
-                      <p v-if="errors.gender" class="mt-1 text-sm text-red-600">{{ errors.gender }}</p>
-                    </div>
+                    <ValidatedInput
+                      ref="genderInput"
+                      v-model="formData.gender"
+                      field-name="gender"
+                      label="Genre *"
+                      type="select"
+                      :validation-fn="validateRequired"
+                      :validate-on-input="true"
+                      :error="errors.gender || ''"
+                      @validation-change="(state) => state.isValid && delete errors.gender"
+                      required
+                    >
+                      <option value="">Sélectionnez</option>
+                      <option value="M">Masculin</option>
+                      <option value="F">Féminin</option>
+                    </ValidatedInput>
 
-                    <div class="form-group">
-                      <label class="form-label">Nationalité *</label>
+                    <div class="form-group relative">
+                      <label class="form-label flex items-center justify-between">
+                        <span>Nationalité *</span>
+                        <i v-if="formData.nationality && !errors.nationality" class="fas fa-check-circle text-green-500 text-sm"></i>
+                        <i v-else-if="errors.nationality" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
+                      </label>
                       <div class="relative">
                         <input 
                           v-model="formData.nationality" 
                           type="text" 
-                          class="form-input h-12" 
-                          :class="{ 'border-red-500': errors.nationality }"
+                          style="border-width: 2px !important;"
+                          class="form-input h-12 w-full rounded-xl px-4 py-2 pr-12 focus:outline-none focus:ring-2 focus:ring-orange-500/50 dark:bg-gray-700 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all duration-200" 
+                          :class="{
+                            'border-red-600 dark:border-red-500 focus:border-red-600': errors.nationality,
+                            'border-green-600 dark:border-green-500 focus:border-green-600': formData.nationality && !errors.nationality,
+                            'border-gray-300 dark:border-gray-600 focus:border-orange-500': !formData.nationality && !errors.nationality
+                          }"
                           placeholder="Tapez ou sélectionnez votre nationalité"
                           @input="filterNationalities"
                           @focus="showNationalitySuggestions = true"
-                          @blur="hideNationalitySuggestions"
+                          @blur="hideNationalitySuggestions; validateNationality()"
                           autocomplete="off"
                           required
                         />
+                        <!-- Icône de validation -->
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <i v-if="formData.nationality && !errors.nationality" class="fas fa-check-circle text-green-500 text-lg"></i>
+                          <i v-else-if="errors.nationality" class="fas fa-exclamation-circle text-red-500 text-lg"></i>
+                        </div>
                         <!-- Liste des suggestions -->
                         <div 
                           v-if="showNationalitySuggestions && filteredNationalities.length > 0"
-                          class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto"
+                          class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto"
                         >
                           <div 
                             v-for="nationality in filteredNationalities" 
                             :key="nationality"
-                            class="px-4 py-2 cursor-pointer hover:bg-gray-100 transition-colors"
+                            class="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors dark:text-white"
                             @mousedown="selectNationality(nationality)"
                           >
                             {{ nationality }}
                           </div>
                         </div>
                       </div>
-                      <p v-if="errors.nationality" class="mt-1 text-sm text-red-600">{{ errors.nationality }}</p>
+                      <p v-if="errors.nationality" class="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center space-x-1">
+                        <i class="fas fa-exclamation-circle text-xs"></i>
+                        <span>{{ errors.nationality }}</span>
+                      </p>
                     </div>
 
-                    <div class="form-group">
-                      <label class="form-label">Téléphone personnel *</label>
-                      <PhoneInput v-model="formData.personalPhone" 
-                        :class="{ 'border-red-500': errors.personalPhone }"
-                        autocomplete="tel" required />
-                      <p v-if="errors.personalPhone" class="mt-1 text-sm text-red-600">{{ errors.personalPhone }}</p>
+                    <div class="form-group relative">
+                      <label class="form-label flex items-center justify-between">
+                        <span>Téléphone personnel *</span>
+                        <i v-if="formData.personalPhone && !errors.personalPhone" class="fas fa-check-circle text-green-500 text-sm"></i>
+                        <i v-else-if="errors.personalPhone" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
+                      </label>
+                      <div class="relative">
+                        <PhoneInput v-model="formData.personalPhone" 
+                          style="border-width: 2px !important;"
+                          class="rounded-xl focus-within:ring-2 focus-within:ring-orange-500/50 transition-all duration-200"
+                          :class="{
+                            'border-red-600 dark:border-red-500': errors.personalPhone,
+                            'border-green-600 dark:border-green-500': formData.personalPhone && !errors.personalPhone,
+                            'border-gray-300 dark:border-gray-600': !formData.personalPhone && !errors.personalPhone
+                          }"
+                          @blur="validatePhone"
+                          autocomplete="tel" required />
+                        <!-- Icône de validation -->
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <i v-if="formData.personalPhone && !errors.personalPhone" class="fas fa-check-circle text-green-500 text-lg"></i>
+                          <i v-else-if="errors.personalPhone" class="fas fa-exclamation-circle text-red-500 text-lg"></i>
+                        </div>
+                      </div>
+                      <p v-if="errors.personalPhone" class="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center space-x-1">
+                        <i class="fas fa-exclamation-circle text-xs"></i>
+                        <span>{{ errors.personalPhone }}</span>
+                      </p>
                     </div>
 
-                    <div class="form-group">
-                      <label class="form-label">Email</label>
-                      <input v-model="formData.email" type="email" 
-                        class="form-input h-12" :class="{ 'border-red-500': errors.email }"
-                        placeholder="email@exemple.com" 
-                        autocomplete="email"
-                        inputmode="email">
-                      <p v-if="errors.email" class="mt-1 text-sm text-red-600">{{ errors.email }}</p>
-                    </div>
+                    <ValidatedInput
+                      ref="emailInput"
+                      v-model="formData.email"
+                      field-name="email"
+                      label="Email"
+                      type="email"
+                      placeholder="email@exemple.com"
+                      autocomplete="email"
+                      inputmode="email"
+                      :validation-fn="validateEmail"
+                      :validate-on-input="true"
+                      :error="errors.email || ''"
+                      @validation-change="(state) => state.isValid && delete errors.email"
+                    />
 
-                    <div class="form-group md:col-span-2">
-                      <label class="form-label">Adresse complète *</label>
-                      <textarea v-model="formData.address" 
-                        class="form-input min-h-[100px]" :class="{ 'border-red-500': errors.address }"
-                        placeholder="Adresse détaillée" autocomplete="street-address" required></textarea>
-                      <p v-if="errors.address" class="mt-1 text-sm text-red-600">{{ errors.address }}</p>
+                    <div class="md:col-span-2">
+                      <ValidatedInput
+                        ref="addressInput"
+                        v-model="formData.address"
+                        field-name="address"
+                        label="Adresse complète *"
+                        type="textarea"
+                        placeholder="Adresse détaillée"
+                        autocomplete="street-address"
+                        :validation-fn="validateRequired"
+                        :validate-on-input="true"
+                        :error="errors.address || ''"
+                        @validation-change="(state) => state.isValid && delete errors.address"
+                        :rows="4"
+                        required
+                      />
                     </div>
 
 
@@ -223,12 +326,19 @@
                   <!-- Type et numéro de pièce -->
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-6">
                     <div class="form-group">
-                      <label class="form-label">
-                        Type de pièce d'identité <span v-if="!formData.hasAnidCard">*</span>
+                      <label class="form-label flex items-center justify-between">
+                        <span>Type de pièce d'identité <span v-if="!formData.hasAnidCard">*</span></span>
+                        <i v-if="formData.idType && !errors.idType" class="fas fa-check-circle text-green-500 text-sm"></i>
+                        <i v-else-if="errors.idType" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
                       </label>
                       <select v-model="formData.idType" 
+                        style="border-width: 2px !important;"
                         class="form-input h-12" 
-                        :class="{ 'border-red-500': errors.idType }"
+                        :class="{
+                          'border-red-600 dark:border-red-500': errors.idType,
+                          'border-green-600 dark:border-green-500': formData.idType && !errors.idType,
+                          'border-gray-300 dark:border-gray-600': !formData.idType && !errors.idType
+                        }"
                         :required="!formData.hasAnidCard">
                         <option value="">Sélectionnez</option>
                         <option value="cni">Carte Nationale d'Identité</option>
@@ -238,18 +348,21 @@
                         <option value="driving_license">Permis de conduire</option>
                         <option value="foreign_id">Carte d'identité étrangère</option>
                       </select>
-                      <p v-if="errors.idType" class="mt-1 text-sm text-red-600">{{ errors.idType }}</p>
+                      <p v-if="errors.idType" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.idType }}</p>
                     </div>
 
                     <div class="form-group">
-                      <label class="form-label">
-                        Numéro de pièce <span v-if="!formData.hasAnidCard">*</span>
+                      <label class="form-label flex items-center justify-between">
+                        <span>Numéro de pièce <span v-if="!formData.hasAnidCard">*</span></span>
+                        <i v-if="formData.idNumber && !errors.idNumber" class="fas fa-check-circle text-green-500 text-sm"></i>
+                        <i v-else-if="errors.idNumber" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
                       </label>
                       <IdNumberInput 
                         v-if="formData.idType"
                         v-model="formData.idNumber"
                         :id-type="formData.idType"
-                        :class="{ 'border-red-500': errors.idNumber }"
+                        :has-error="!!errors.idNumber"
+                        :is-valid="!!formData.idNumber && !errors.idNumber"
                         :required="!formData.hasAnidCard"
                       />
                       <input v-else
@@ -259,19 +372,26 @@
                         placeholder="Sélectionnez d'abord le type de pièce"
                         disabled
                       >
-                      <p v-if="errors.idNumber" class="mt-1 text-sm text-red-600">{{ errors.idNumber }}</p>
+                      <p v-if="errors.idNumber" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.idNumber }}</p>
                     </div>
 
                     <div class="form-group">
-                      <label class="form-label">
-                        Date d'expiration <span v-if="!formData.hasAnidCard">*</span>
+                      <label class="form-label flex items-center justify-between">
+                        <span>Date d'expiration <span v-if="!formData.hasAnidCard">*</span></span>
+                        <i v-if="formData.idExpiryDate && !errors.idExpiryDate" class="fas fa-check-circle text-green-500 text-sm"></i>
+                        <i v-else-if="errors.idExpiryDate" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
                       </label>
                       <input v-model="formData.idExpiryDate" 
                         type="date" 
+                        style="border-width: 2px !important;"
                         class="form-input h-12" 
-                        :class="{ 'border-red-500': errors.idExpiryDate }"
+                        :class="{
+                          'border-red-600 dark:border-red-500': errors.idExpiryDate,
+                          'border-green-600 dark:border-green-500': formData.idExpiryDate && !errors.idExpiryDate,
+                          'border-gray-300 dark:border-gray-600': !formData.idExpiryDate && !errors.idExpiryDate
+                        }"
                         :required="!formData.hasAnidCard">
-                      <p v-if="errors.idExpiryDate" class="mt-1 text-sm text-red-600">{{ errors.idExpiryDate }}</p>
+                      <p v-if="errors.idExpiryDate" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.idExpiryDate }}</p>
                     </div>
                   </div>
 
@@ -343,17 +463,37 @@
 
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">
                     <div class="form-group">
-                      <label class="form-label">Nom commercial *</label>
-                      <input v-model="formData.businessName" type="text" class="form-input h-12 uppercase"
-                        :class="{ 'border-red-500': errors.businessName }"
+                      <label class="form-label flex items-center justify-between">
+                        <span>Nom commercial *</span>
+                        <i v-if="formData.businessName && !errors.businessName" class="fas fa-check-circle text-green-500 text-sm"></i>
+                        <i v-else-if="errors.businessName" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
+                      </label>
+                      <input v-model="formData.businessName" type="text" 
+                        style="border-width: 2px !important;"
+                        class="form-input h-12 uppercase"
+                        :class="{
+                          'border-red-600 dark:border-red-500': errors.businessName,
+                          'border-green-600 dark:border-green-500': formData.businessName && !errors.businessName,
+                          'border-gray-300 dark:border-gray-600': !formData.businessName && !errors.businessName
+                        }"
                         placeholder="Nom du commerce" required>
-                      <p v-if="errors.businessName" class="mt-1 text-sm text-red-600">{{ errors.businessName }}</p>
+                      <p v-if="errors.businessName" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.businessName }}</p>
                     </div>
 
                     <div class="form-group">
-                      <label class="form-label">Type d'activité *</label>
-                      <select v-model="formData.businessType" class="form-input h-12" 
-                        :class="{ 'border-red-500': errors.businessType }"
+                      <label class="form-label flex items-center justify-between">
+                        <span>Type d'activité *</span>
+                        <i v-if="formData.businessType && !errors.businessType" class="fas fa-check-circle text-green-500 text-sm"></i>
+                        <i v-else-if="errors.businessType" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
+                      </label>
+                      <select v-model="formData.businessType" 
+                        style="border-width: 2px !important;"
+                        class="form-input h-12" 
+                        :class="{
+                          'border-red-600 dark:border-red-500': errors.businessType,
+                          'border-green-600 dark:border-green-500': formData.businessType && !errors.businessType,
+                          'border-gray-300 dark:border-gray-600': !formData.businessType && !errors.businessType
+                        }"
                         required>
                         <option value="">Sélectionnez</option>
                         <option value="boulangerie">Boulangerie</option>
@@ -388,17 +528,38 @@
                     </div>
 
                     <div class="form-group md:col-span-2">
-                      <label class="form-label">Adresse du commerce *</label>
+                      <label class="form-label flex items-center justify-between">
+                        <span>Adresse du commerce *</span>
+                        <i v-if="formData.businessAddress && !errors.businessAddress" class="fas fa-check-circle text-green-500 text-sm"></i>
+                        <i v-else-if="errors.businessAddress" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
+                      </label>
                       <textarea v-model="formData.businessAddress" 
-                        class="form-input min-h-[100px]" :class="{ 'border-red-500': errors.businessAddress }"
+                        style="border-width: 2px !important;"
+                        class="form-input min-h-[100px]" 
+                        :class="{
+                          'border-red-600 dark:border-red-500': errors.businessAddress,
+                          'border-green-600 dark:border-green-500': formData.businessAddress && !errors.businessAddress,
+                          'border-gray-300 dark:border-gray-600': !formData.businessAddress && !errors.businessAddress
+                        }"
                         placeholder="Adresse où se situe votre commerce" required></textarea>
-                      <p v-if="errors.businessAddress" class="mt-1 text-sm text-red-600">{{ errors.businessAddress }}</p>
+                      <p v-if="errors.businessAddress" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.businessAddress }}</p>
                     </div>
 
                     <div class="form-group">
-                      <label class="form-label">Région *</label>
+                      <label class="form-label flex items-center justify-between">
+                        <span>Région *</span>
+                        <i v-if="formData.region && !errors.region" class="fas fa-check-circle text-green-500 text-sm"></i>
+                        <i v-else-if="errors.region" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
+                      </label>
                       <select v-model="formData.region" 
-                        class="form-input h-12" :class="{ 'border-red-500': errors.region }" required>
+                        style="border-width: 2px !important;"
+                        class="form-input h-12" 
+                        :class="{
+                          'border-red-600 dark:border-red-500': errors.region,
+                          'border-green-600 dark:border-green-500': formData.region && !errors.region,
+                          'border-gray-300 dark:border-gray-600': !formData.region && !errors.region
+                        }" 
+                        required>
                         <option value="">Sélectionnez votre région</option>
                         <option value="Maritime">Maritime</option>
                         <option value="Plateaux">Plateaux</option>
@@ -406,17 +567,26 @@
                         <option value="Kara">Kara</option>
                         <option value="Savanes">Savanes</option>
                       </select>
-                      <p v-if="errors.region" class="mt-1 text-sm text-red-600">{{ errors.region }}</p>
+                      <p v-if="errors.region" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.region }}</p>
                     </div>
 
                     <div class="form-group">
-                      <label class="form-label">Ville/Village *</label>
+                      <label class="form-label flex items-center justify-between">
+                        <span>Ville/Village *</span>
+                        <i v-if="formData.city && !errors.city" class="fas fa-check-circle text-green-500 text-sm"></i>
+                        <i v-else-if="errors.city" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
+                      </label>
                       <div class="relative">
                         <input 
                           v-model="formData.city" 
                           type="text" 
+                          style="border-width: 2px !important;"
                           class="form-input h-12" 
-                          :class="{ 'border-red-500': errors.city }"
+                          :class="{
+                            'border-red-600 dark:border-red-500': errors.city,
+                            'border-green-600 dark:border-green-500': formData.city && !errors.city,
+                            'border-gray-300 dark:border-gray-600': !formData.city && !errors.city
+                          }"
                           placeholder="Tapez votre ville ou village"
                           @input="filterCities"
                           @focus="showCitySuggestions = true"
@@ -443,9 +613,19 @@
                     </div>
 
                     <div class="form-group md:col-span-2">
-                      <label class="form-label">Type d'utilisation *</label>
-                      <select v-model="formData.usageType" class="form-input h-12" 
-                        :class="{ 'border-red-500': errors.usageType }"
+                      <label class="form-label flex items-center justify-between">
+                        <span>Type d'utilisation *</span>
+                        <i v-if="formData.usageType && !errors.usageType" class="fas fa-check-circle text-green-500 text-sm"></i>
+                        <i v-else-if="errors.usageType" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
+                      </label>
+                      <select v-model="formData.usageType" 
+                        style="border-width: 2px !important;"
+                        class="form-input h-12" 
+                        :class="{
+                          'border-red-600 dark:border-red-500': errors.usageType,
+                          'border-green-600 dark:border-green-500': formData.usageType && !errors.usageType,
+                          'border-gray-300 dark:border-gray-600': !formData.usageType && !errors.usageType
+                        }"
                         required>
                         <option value="">Sélectionnez le type d'utilisation</option>
                         <option value="TRADER">TRADER - Commerçant simple</option>
@@ -453,7 +633,7 @@
                         <option value="TRADERWNIF">TRADERWNIF - Commerçant sans NIF</option>
                         <option value="CORP">CORP - Entreprise/Corporation</option>
                       </select>
-                      <p v-if="errors.usageType" class="mt-1 text-sm text-red-600">{{ errors.usageType }}</p>
+                      <p v-if="errors.usageType" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.usageType }}</p>
                     </div>
                   </div>
 
@@ -475,35 +655,65 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                       <div v-if="formData.hasCFE" class="form-group">
-                        <label class="form-label">Numéro CFE *</label>
+                        <label class="form-label flex items-center justify-between">
+                          <span>Numéro CFE *</span>
+                          <i v-if="formData.cfeNumber && !errors.cfeNumber" class="fas fa-check-circle text-green-500 text-sm"></i>
+                          <i v-else-if="errors.cfeNumber" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
+                        </label>
                         <input v-model="formData.cfeNumber" type="text" 
-                          class="form-input h-12" :class="{ 'border-red-500': errors.cfeNumber }"
+                          style="border-width: 2px !important;"
+                          class="form-input h-12" 
+                          :class="{
+                            'border-red-600 dark:border-red-500': errors.cfeNumber,
+                            'border-green-600 dark:border-green-500': formData.cfeNumber && !errors.cfeNumber,
+                            'border-gray-300 dark:border-gray-600': !formData.cfeNumber && !errors.cfeNumber
+                          }"
                           placeholder="Numéro CFE" 
                           :maxlength="maxLengths.cfeNumber"
                           @input="limitInput('cfeNumber', $event)"
                           @keydown="handleKeydown('cfeNumber', $event)"
                           required>
-                        <p v-if="errors.cfeNumber" class="mt-1 text-sm text-red-600">{{ errors.cfeNumber }}</p>
+                        <p v-if="errors.cfeNumber" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.cfeNumber }}</p>
                       </div>
 
                       <div v-if="formData.hasCFE" class="form-group">
-                        <label class="form-label">Date d'expiration CFE *</label>
+                        <label class="form-label flex items-center justify-between">
+                          <span>Date d'expiration CFE *</span>
+                          <i v-if="formData.cfeExpiryDate && !errors.cfeExpiryDate" class="fas fa-check-circle text-green-500 text-sm"></i>
+                          <i v-else-if="errors.cfeExpiryDate" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
+                        </label>
                         <input v-model="formData.cfeExpiryDate" type="date" 
-                          class="form-input h-12" :class="{ 'border-red-500': errors.cfeExpiryDate }"
+                          style="border-width: 2px !important;"
+                          class="form-input h-12" 
+                          :class="{
+                            'border-red-600 dark:border-red-500': errors.cfeExpiryDate,
+                            'border-green-600 dark:border-green-500': formData.cfeExpiryDate && !errors.cfeExpiryDate,
+                            'border-gray-300 dark:border-gray-600': !formData.cfeExpiryDate && !errors.cfeExpiryDate
+                          }"
                           required>
-                        <p v-if="errors.cfeExpiryDate" class="mt-1 text-sm text-red-600">{{ errors.cfeExpiryDate }}</p>
+                        <p v-if="errors.cfeExpiryDate" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.cfeExpiryDate }}</p>
                       </div>
 
                       <div v-if="formData.hasNIF" class="form-group">
-                        <label class="form-label">Numéro NIF *</label>
+                        <label class="form-label flex items-center justify-between">
+                          <span>Numéro NIF *</span>
+                          <i v-if="formData.nifNumber && !errors.nifNumber" class="fas fa-check-circle text-green-500 text-sm"></i>
+                          <i v-else-if="errors.nifNumber" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
+                        </label>
                         <input v-model="formData.nifNumber" type="text" 
-                          class="form-input h-12" :class="{ 'border-red-500': errors.nifNumber }"
+                          style="border-width: 2px !important;"
+                          class="form-input h-12" 
+                          :class="{
+                            'border-red-600 dark:border-red-500': errors.nifNumber,
+                            'border-green-600 dark:border-green-500': formData.nifNumber && !errors.nifNumber,
+                            'border-gray-300 dark:border-gray-600': !formData.nifNumber && !errors.nifNumber
+                          }"
                           placeholder="Numéro NIF" 
                           :maxlength="maxLengths.nifNumber"
                           @input="limitInput('nifNumber', $event)"
                           @keydown="handleKeydown('nifNumber', $event)"
                           required>
-                        <p v-if="errors.nifNumber" class="mt-1 text-sm text-red-600">{{ errors.nifNumber }}</p>
+                        <p v-if="errors.nifNumber" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.nifNumber }}</p>
                       </div>
                     </div>
 
@@ -598,14 +808,36 @@
                   </h2>
 
                   <div class="mb-6">
-                    <SignaturePad @signature-saved="handleSignatureSaved" :current-signature="formData.signature" />
+                    <div class="relative">
+                      <SignaturePad 
+                        @signature-saved="handleSignatureSaved" 
+                        :current-signature="formData.signature" 
+                      />
+                      <div v-if="errors.signature" class="flex items-center mt-2 text-sm text-red-600 dark:text-red-400">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        {{ errors.signature }}
+                      </div>
+                      <div v-else-if="formData.signature" class="flex items-center mt-2 text-sm text-green-600 dark:text-green-400">
+                        <i class="fas fa-check-circle mr-1"></i>
+                        Signature enregistrée
+                      </div>
+                    </div>
                   </div>
 
                   <div class="form-group">
-                    <label class="flex items-center space-x-2">
+                    <label class="flex items-center space-x-2"
+                      :class="{
+                        'text-red-600 dark:text-red-400': errors.acceptTerms,
+                        'text-green-600 dark:text-green-400': formData.acceptTerms && !errors.acceptTerms
+                      }">
                       <input v-model="formData.acceptTerms" type="checkbox"
-                        class="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500" required>
-                      <span class="text-sm text-gray-700">
+                        class="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                        :class="{
+                          'border-red-500': errors.acceptTerms,
+                          'border-green-500': formData.acceptTerms && !errors.acceptTerms
+                        }" 
+                        required>
+                      <span class="text-sm">
                         J'accepte les <a href="#" class="text-orange-600 underline">termes et conditions</a>
                         de Moov Money et certifie l'exactitude des informations fournies.
                       </span>
@@ -702,19 +934,32 @@
 </template>
 
 <script>
-import { ref, computed, watch, onMounted, nextTick, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, nextTick, onBeforeUnmount, defineAsyncComponent } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useMerchantStore } from '../stores/merchant'
 import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notifications'
 import MerchantService from '../services/MerchantService'
 import FileUpload from '../components/FileUpload.vue'
-import LocationPicker from '../components/LocationPicker.vue'
-import SignaturePad from '../components/SignaturePad.vue'
 import PhoneInput from '../components/PhoneInput.vue'
 import IdNumberInput from '../components/IdNumberInput.vue'
+import ValidatedInput from '../components/ValidatedInput.vue'
 import { useSwipe } from '../composables/useSwipe'
 import { useHaptic } from '../composables/useHaptic'
+import { useValidation } from '../composables/useValidation'
+
+// Lazy loading des composants lourds
+const LocationPicker = defineAsyncComponent({
+  loader: () => import('../components/LocationPicker.vue'),
+  delay: 200,
+  timeout: 10000
+})
+
+const SignaturePad = defineAsyncComponent({
+  loader: () => import('../components/SignaturePad.vue'),
+  delay: 200,
+  timeout: 10000
+})
 
 export default {
   name: 'MerchantForm',
@@ -723,7 +968,8 @@ export default {
     LocationPicker,
     SignaturePad,
     PhoneInput,
-    IdNumberInput
+    IdNumberInput,
+    ValidatedInput
   },
   setup() {
     // Services et Stores
@@ -733,10 +979,65 @@ export default {
     const authStore = useAuthStore();
     const notificationStore = useNotificationStore();
 
+    // Composables
+    const haptic = useHaptic();
+    const validationComposable = useValidation();
+    const { 
+      completionScore,
+      validationStats
+    } = validationComposable;
+
+    // Wrapper validators pour compatibilité ValidatedInput (retourne {valid, message})
+    const validateRequired = (value) => {
+      if (!value || (typeof value === 'string' && value.trim() === '')) {
+        return { valid: false, message: "Ce champ est requis" }
+      }
+      return { valid: true, message: '' }
+    }
+
+    const validateMinAge = (value, minAge = 18) => {
+      if (!value) return { valid: false, message: "Date de naissance requise" }
+      
+      const birthDate = new Date(value)
+      if (isNaN(birthDate.getTime())) return { valid: false, message: "Format de date invalide" }
+      
+      const today = new Date()
+      let age = today.getFullYear() - birthDate.getFullYear()
+      const monthDiff = today.getMonth() - birthDate.getMonth()
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--
+      }
+      
+      if (age < minAge) {
+        return { valid: false, message: `Âge minimum requis: ${minAge} ans` }
+      }
+      
+      return { valid: true, message: '' }
+    }
+
+    // Validateur email local (retourne {valid, message})
+    const validateEmail = (value) => {
+      if (!value) return { valid: true, message: '' } // Optionnel
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      return emailRegex.test(value) 
+        ? { valid: true, message: '' }
+        : { valid: false, message: "Format d'email invalide" }
+    }
+
     // État de l'authentification
     const isCommercial = computed(() => authStore.isCommercial);
     const userInfo = computed(() => authStore.user);
     
+    // Refs pour les ValidatedInput (Step 1)
+    const lastNameInput = ref(null);
+    const firstNameInput = ref(null);
+    const birthDateInput = ref(null);
+    const birthPlaceInput = ref(null);
+    const genderInput = ref(null);
+    const emailInput = ref(null);
+    const addressInput = ref(null);
+
     // États du formulaire
     const currentStep = ref(1);
     const totalSteps = ref(5);
@@ -762,9 +1063,6 @@ export default {
     // État de la mise en page
     const stage = ref(null);
     const stageHeight = ref('auto');
-
-    // Composables mobiles
-    const haptic = useHaptic();
 
     // Create a default form data structure
     const defaultFormData = {
@@ -1069,11 +1367,7 @@ export default {
       return validationErrors
     }
 
-    const validateEmail = (email) => {
-      if (!email) return true // Optional field
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      return emailRegex.test(email)
-    }
+    // validateEmail is now imported from useValidation composable
 
     const validateBirthDate = (date) => {
       if (!date) return false
@@ -1083,6 +1377,8 @@ export default {
       minDate.setFullYear(today.getFullYear() - 18)
       return birthDate <= minDate
     }
+
+    // validateEmail is defined at the top of setup() for ValidatedInput compatibility
 
     const validateIdExpiryDate = (date) => {
       if (!date) return false
@@ -1095,17 +1391,59 @@ export default {
       errors.value = {}
       
       if (step === 1) {
-        // Validate personal information
-        if (!formData.value.lastName) errors.value.lastName = 'Champ obligatoire'
-        if (!formData.value.firstName) errors.value.firstName = 'Champ obligatoire'
-        if (!formData.value.birthDate) errors.value.birthDate = 'Champ obligatoire'
-        else if (!validateBirthDate(formData.value.birthDate)) errors.value.birthDate = 'Vous devez avoir au moins 18 ans'
-        if (!formData.value.birthPlace) errors.value.birthPlace = 'Champ obligatoire'
-        if (!formData.value.gender) errors.value.gender = 'Champ obligatoire'
-        if (!formData.value.nationality) errors.value.nationality = 'Champ obligatoire'
-        if (!formData.value.personalPhone) errors.value.personalPhone = 'Champ obligatoire'
-        if (formData.value.email && !validateEmail(formData.value.email)) errors.value.email = 'Format email invalide'
-        if (!formData.value.address) errors.value.address = 'Champ obligatoire'
+        // Forcer la validation de tous les ValidatedInput
+        lastNameInput.value?.forceValidate()
+        firstNameInput.value?.forceValidate()
+        birthDateInput.value?.forceValidate()
+        birthPlaceInput.value?.forceValidate()
+        genderInput.value?.forceValidate()
+        emailInput.value?.forceValidate()
+        addressInput.value?.forceValidate()
+
+        // Valider et remplir errors.value pour chaque champ
+        if (!formData.value.lastName || !formData.value.lastName.trim()) {
+          errors.value.lastName = 'Champ obligatoire'
+        }
+
+        if (!formData.value.firstName || !formData.value.firstName.trim()) {
+          errors.value.firstName = 'Champ obligatoire'
+        }
+
+        if (!formData.value.birthDate) {
+          errors.value.birthDate = 'Champ obligatoire'
+        } else {
+          const result = validateMinAge(formData.value.birthDate, 18)
+          if (!result.valid) errors.value.birthDate = result.message
+        }
+
+        if (!formData.value.birthPlace || !formData.value.birthPlace.trim()) {
+          errors.value.birthPlace = 'Champ obligatoire'
+        }
+
+        if (!formData.value.gender) {
+          errors.value.gender = 'Champ obligatoire'
+        }
+        
+        if (!formData.value.nationality) {
+          errors.value.nationality = 'Champ obligatoire'
+        }
+        
+        if (!formData.value.personalPhone) {
+          errors.value.personalPhone = 'Champ obligatoire'
+        }
+        
+        // Email validation (optionnel)
+        if (formData.value.email) {
+          const result = validateEmail(formData.value.email)
+          if (!result.valid) errors.value.email = result.message
+        }
+
+        if (!formData.value.address || !formData.value.address.trim()) {
+          errors.value.address = 'Champ obligatoire'
+        }
+
+        console.log('ERRORS STEP 1:', errors.value)
+        console.log('FORM DATA:', formData.value)
       }
       else if (step === 2) {
         // Validate ID documents
@@ -1153,6 +1491,17 @@ export default {
         // Validation conditionnelle NIF
         if (formData.value.hasNIF) {
           if (!formData.value.nifNumber) errors.value.nifNumber = 'Numéro NIF obligatoire'
+        }
+      }
+      else if (step === 5) {
+        // Validation de la signature numérique
+        if (!formData.value.signature) {
+          errors.value.signature = 'La signature électronique est obligatoire'
+        }
+        
+        // Validation des termes et conditions
+        if (!formData.value.acceptTerms) {
+          errors.value.acceptTerms = 'Vous devez accepter les termes et conditions'
         }
       }
 
@@ -1253,6 +1602,10 @@ export default {
     // Gestion de la signature
     const handleSignatureSaved = (signature) => {
       formData.value.signature = signature
+      // Effacer l'erreur de signature si elle existe
+      if (errors.value.signature) {
+        delete errors.value.signature
+      }
       autoSave()
     }
 
@@ -1304,6 +1657,18 @@ export default {
       setTimeout(() => {
         showNationalitySuggestions.value = false
       }, 200)
+    }
+
+    const validateNationality = () => {
+      if (formData.value.nationality && formData.value.nationality.trim()) {
+        delete errors.value.nationality
+      }
+    }
+
+    const validatePhone = () => {
+      if (formData.value.personalPhone && formData.value.personalPhone.trim()) {
+        delete errors.value.personalPhone
+      }
     }
 
     // Sauvegarde automatique
@@ -1607,6 +1972,8 @@ export default {
       filterNationalities,
       selectNationality,
       hideNationalitySuggestions,
+      validateNationality,
+      validatePhone,
       nationalities,
       filteredNationalities,
       showNationalitySuggestions,
@@ -1632,7 +1999,15 @@ export default {
       // Add input limitation functions
       maxLengths,
       limitInput,
-      handleKeydown
+      handleKeydown,
+      // Add haptic feedback
+      haptic,
+      // Add validation
+      completionScore,
+      validationStats,
+      validateRequired,
+      validateMinAge,
+      validateEmail
     }
   }
 }
@@ -1670,7 +2045,7 @@ export default {
 }
 
 .form-label {
-  @apply block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200;
+  @apply mb-1 text-sm font-medium text-gray-700 dark:text-gray-200;
 }
 
 .form-group {

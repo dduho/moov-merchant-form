@@ -15,6 +15,7 @@ export default defineConfig({
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api/],
         runtimeCaching: [
+          // API calls - Network First avec fallback cache
           {
             urlPattern: /^https?:\/\/.*\/api\/.*/i,
             handler: 'NetworkFirst',
@@ -30,6 +31,7 @@ export default defineConfig({
               }
             }
           },
+          // Images - Cache First pour performance
           {
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
             handler: 'CacheFirst',
@@ -41,6 +43,7 @@ export default defineConfig({
               }
             }
           },
+          // Fonts - Cache First (changent rarement)
           {
             urlPattern: /\.(?:woff|woff2|ttf|eot)$/,
             handler: 'CacheFirst',
@@ -49,6 +52,30 @@ export default defineConfig({
               expiration: {
                 maxEntries: 30,
                 maxAgeSeconds: 365 * 24 * 60 * 60 // 1 an
+              }
+            }
+          },
+          // CSS et JS - Stale While Revalidate (affiche cache puis met à jour)
+          {
+            urlPattern: /\.(?:js|css)$/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'static-resources',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 7 * 24 * 60 * 60 // 7 jours
+              }
+            }
+          },
+          // CDN externes - Stale While Revalidate
+          {
+            urlPattern: /^https?:\/\/(cdn|fonts|cdnjs)\..*/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'cdn-cache',
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 30 * 24 * 60 * 60 // 30 jours
               }
             }
           }
