@@ -70,8 +70,9 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true
       this.error = null
       try {
-        // Obtenir le CSRF cookie
-        await axios.get('/sanctum/csrf-cookie')
+        // Obtenir le CSRF cookie - utiliser l'URL complète du domaine
+        const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || window.location.origin
+        await axios.get(`${baseUrl}/sanctum/csrf-cookie`, { withCredentials: true })
         
         // Faire la requête de login
         const { data } = await axios.post('/auth/login', {

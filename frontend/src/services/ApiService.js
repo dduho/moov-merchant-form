@@ -1,11 +1,11 @@
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 class ApiService {
     constructor() {
         this.client = axios.create({
-            baseURL: API_URL,
+            baseURL: API_URL + '/api',
             withCredentials: true, // Important pour les cookies de session
             headers: {
                 'Content-Type': 'application/json',
