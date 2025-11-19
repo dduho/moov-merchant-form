@@ -678,7 +678,7 @@
     <!-- Barre sticky mobile -->
     <nav class="sm:hidden fixed inset-x-0 bottom-0 z-40 bg-white dark:bg-gray-800 border-t dark:border-gray-700">
       <div class="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3 pb-[max(env(safe-area-inset-bottom),8px)]">
-        <button class="h-12 rounded-xl border dark:border-gray-600 dark:text-white flex-1 font-medium disabled:opacity-50" :disabled="currentStep === 1"
+        <button class="h-12 rounded-xl border dark:border-gray-600 dark:text-gray-200 flex-1 font-medium disabled:opacity-50" :disabled="currentStep === 1"
           type="button" @click="prevStep">
           <i class="fas fa-arrow-left mr-2"></i>Précédent
         </button>
