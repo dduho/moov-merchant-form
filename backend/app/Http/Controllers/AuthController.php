@@ -56,9 +56,14 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        // Vérifier que l'utilisateur courant est un admin
-        if (!Auth::user()->hasRole('admin')) {
+        // Vérifier que l'utilisateur courant est un admin (si connecté)
+        if (Auth::check() && !Auth::user()->hasRole('admin')) {
             return response()->json(['message' => 'Action non autorisée'], 403);
+        }
+
+        // Si pas connecté, on refuse l'inscription (création réservée aux admins)
+        if (!Auth::check()) {
+            return response()->json(['message' => 'Vous devez être connecté en tant qu\'admin pour créer un utilisateur'], 401);
         }
 
         $request->validate([
