@@ -345,12 +345,16 @@
                     <div class="form-group">
                       <label class="form-label">Nom commercial *</label>
                       <input v-model="formData.businessName" type="text" class="form-input h-12 uppercase"
-                        placeholder="Nom de votre commerce" required>
+                        :class="{ 'border-red-500': errors.businessName }"
+                        placeholder="Nom du commerce" required>
+                      <p v-if="errors.businessName" class="mt-1 text-sm text-red-600">{{ errors.businessName }}</p>
                     </div>
 
                     <div class="form-group">
                       <label class="form-label">Type d'activité *</label>
-                      <select v-model="formData.businessType" class="form-input h-12" required>
+                      <select v-model="formData.businessType" class="form-input h-12" 
+                        :class="{ 'border-red-500': errors.businessType }"
+                        required>
                         <option value="">Sélectionnez</option>
                         <option value="boulangerie">Boulangerie</option>
                         <option value="entrepreneuriat">Entrepreneuriat</option>
@@ -380,6 +384,7 @@
                         <option value="hotel">Hôtel</option>
                         <option value="autre">Autres</option>
                       </select>
+                      <p v-if="errors.businessType" class="mt-1 text-sm text-red-600">{{ errors.businessType }}</p>
                     </div>
 
                     <div class="form-group md:col-span-2">
@@ -439,13 +444,16 @@
 
                     <div class="form-group md:col-span-2">
                       <label class="form-label">Type d'utilisation *</label>
-                      <select v-model="formData.usageType" class="form-input h-12" required>
+                      <select v-model="formData.usageType" class="form-input h-12" 
+                        :class="{ 'border-red-500': errors.usageType }"
+                        required>
                         <option value="">Sélectionnez le type d'utilisation</option>
                         <option value="TRADER">TRADER - Commerçant simple</option>
                         <option value="MERC">MERC - Marchand avec TPE</option>
                         <option value="TRADERWNIF">TRADERWNIF - Commerçant sans NIF</option>
                         <option value="CORP">CORP - Entreprise/Corporation</option>
                       </select>
+                      <p v-if="errors.usageType" class="mt-1 text-sm text-red-600">{{ errors.usageType }}</p>
                     </div>
                   </div>
 
@@ -625,7 +633,8 @@
             </button>
 
             <button v-if="currentStep === totalSteps" type="submit"
-              class="h-12 px-6 rounded-xl text-white font-semibold bg-[#EC6707] btn-primary" :disabled="isSubmitting">
+              class="h-12 px-6 rounded-xl text-white font-semibold bg-[#EC6707] btn-primary" :disabled="isSubmitting"
+              @click="haptic.medium()">
               <i v-if="isSubmitting" class="fas fa-spinner fa-spin mr-2"></i>
               <i v-else class="fas fa-paper-plane mr-2"></i>
               {{ isSubmitting ? 'Envoi...' : 'Envoyer la demande' }}
@@ -643,7 +652,7 @@
 
       <!-- Bouton pour vider le formulaire (flottant) -->
       <div class="fixed left-4 bottom-32 sm:bottom-20 z-50">
-        <button @click="clearForm" type="button"
+        <button @click="clearForm(); haptic.medium()" type="button"
           class="bg-red-600 hover:bg-red-700 text-white rounded-full hover:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 ease-in-out group flex items-center justify-center overflow-hidden min-w-[3.5rem] h-14 hover:pl-4 hover:pr-6"
           title="Vider tous les champs du formulaire">
           <i class="fas fa-trash text-lg group-hover:scale-110 transition-all duration-500 ease-in-out flex-shrink-0 group-hover:mr-3"></i>
@@ -704,6 +713,8 @@ import LocationPicker from '../components/LocationPicker.vue'
 import SignaturePad from '../components/SignaturePad.vue'
 import PhoneInput from '../components/PhoneInput.vue'
 import IdNumberInput from '../components/IdNumberInput.vue'
+import { useSwipe } from '../composables/useSwipe'
+import { useHaptic } from '../composables/useHaptic'
 
 export default {
   name: 'MerchantForm',
@@ -751,6 +762,9 @@ export default {
     // État de la mise en page
     const stage = ref(null);
     const stageHeight = ref('auto');
+
+    // Composables mobiles
+    const haptic = useHaptic();
 
     // Create a default form data structure
     const defaultFormData = {
@@ -1145,14 +1159,39 @@ export default {
       return Object.keys(errors.value).length === 0
     }
 
+    // Fonction pour scroller vers la première erreur avec animation smooth garantie
+    const scrollToFirstError = () => {
+      nextTick(() => {
+        const firstErrorField = document.querySelector('.border-red-500')
+        if (firstErrorField) {
+          const elementPosition = firstErrorField.getBoundingClientRect().top
+          const offsetPosition = elementPosition + window.pageYOffset - (window.innerHeight / 2 - firstErrorField.offsetHeight / 2)
+          
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          })
+          
+          // Focus sur le champ après l'animation
+          setTimeout(() => {
+            firstErrorField.focus()
+          }, 500)
+        }
+      })
+    }
+
     // Navigation entre étapes
     const nextStep = async () => {
       if (currentStep.value < totalSteps.value) {
         if (validateStep(currentStep.value)) {
+          haptic.light(); // Vibration légère pour feedback
           direction.value = 1
           currentStep.value++
           setStageHeightToCurrent()
         } else {
+          haptic.error(); // Pattern d'erreur pour les champs invalides
+          // Scroller vers la première erreur
+          scrollToFirstError()
           // Afficher une notification pour les erreurs de validation
           const errorCount = Object.keys(errors.value).length
           notificationStore.warning(
@@ -1165,6 +1204,7 @@ export default {
 
     const prevStep = async () => {
       if (currentStep.value > 1) {
+        haptic.light(); // Vibration légère pour feedback
         direction.value = -1
         currentStep.value--
         setStageHeightToCurrent()
@@ -1321,7 +1361,7 @@ export default {
           )
         } else {
           // Mode création : utiliser submitApplication
-          await merchantStore.submitApplication(dataToSubmit)
+          const response = await merchantStore.submitApplication(dataToSubmit)
           
           // Vider le formulaire après soumission réussie
           formData.value = { ...defaultFormData }
@@ -1333,8 +1373,14 @@ export default {
             'Candidature envoyée !',
             'Votre demande a été soumise avec succès'
           )
+          
+          // Rediriger vers la page de succès avec l'ID de l'application
+          if (response && response.data && response.data.id) {
+            router.push({ name: 'FormSuccess', query: { applicationId: response.data.id } })
+          } else {
+            router.push('/success')
+          }
         }
-        router.push('/success')
       } catch (error) {
         console.error('Erreur lors de l\'envoi:', error)
         
@@ -1442,6 +1488,16 @@ export default {
     // Sauvegarde automatique lors des changements
     watch(formData, autoSave, { deep: true })
 
+    // Watcher pour nettoyer les erreurs dès qu'un champ est modifié
+    watch(formData, (newFormData) => {
+      // Parcourir chaque champ et supprimer l'erreur si le champ a une valeur
+      Object.keys(errors.value).forEach(fieldName => {
+        if (newFormData[fieldName] || (newFormData.documents && newFormData.documents[fieldName])) {
+          delete errors.value[fieldName]
+        }
+      })
+    }, { deep: true })
+
     // Watcher pour vider les champs quand le type de pièce change
     watch(() => formData.value.idType, (newIdType, oldIdType) => {
       // Vider les champs seulement si le type a vraiment changé et qu'il y avait une valeur précédente
@@ -1455,6 +1511,15 @@ export default {
         // Recalculer la hauteur au cas où les erreurs auraient été supprimées
         nextTick(() => setStageHeightToCurrent());
       }
+    })
+
+    // Variable pour stocker la fonction cleanup du swipe
+    let cleanupSwipe = null
+
+    // Cleanup avant démontage
+    onBeforeUnmount(() => {
+      if (cleanupSwipe) cleanupSwipe()
+      window.removeEventListener('resize', setStageHeightToCurrent)
     })
 
     // Initialisation du formulaire
@@ -1491,6 +1556,23 @@ export default {
             }
           }
         }
+        
+        // Gestion des gestes swipe pour la navigation
+        const swipe = useSwipe(stage, {
+          onSwipeLeft: () => {
+            if (currentStep.value < totalSteps.value) {
+              nextStep();
+            }
+          },
+          onSwipeRight: () => {
+            if (currentStep.value > 1) {
+              prevStep();
+            }
+          },
+          threshold: 50,
+          velocity: 0.3
+        });
+        cleanupSwipe = swipe.cleanup
           
         // Configuration de la mise en page
         await setStageHeightToCurrent();
@@ -1498,10 +1580,7 @@ export default {
       } catch (error) {
         console.error('Erreur lors de l\'initialisation du formulaire:', error);
       }
-        })
-        onBeforeUnmount(() => {
-          window.removeEventListener('resize', setStageHeightToCurrent)
-        })
+    })
 
     return {
       currentStep,

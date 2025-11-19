@@ -8,7 +8,7 @@
     
     <!-- Aperçu du fichier -->
     <div v-if="previewUrl" class="relative">
-      <img v-if="isImage" :src="previewUrl" alt="Aperçu" class="max-w-full h-48 object-cover mx-auto rounded-lg">
+      <img v-if="isImage" v-lazy="previewUrl" alt="Aperçu" class="max-w-full h-48 object-cover mx-auto rounded-lg">
       <div v-else class="flex items-center justify-center h-48 bg-gray-100 rounded-lg">
         <i class="fas fa-file-alt text-4xl text-gray-400"></i>
         <p class="ml-2 text-gray-600">{{ currentFile?.name }}</p>
@@ -37,30 +37,33 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, watch, computed } from 'vue'
 import Compressor from 'compressorjs'
+import { vLazy } from '../composables/useLazyImage'
+import { useNotification } from '../composables/useNotification'
 
-export default {
-  name: 'FileUpload',
-  props: {
-    accept: {
-      type: String,
-      default: 'image/*'
-    },
-    currentFile: {
-      type: Object,
-      default: null
-    },
-    label: {
-      type: String,
-      default: ''
-    }
+const props = defineProps({
+  accept: {
+    type: String,
+    default: 'image/*'
   },
-  emits: ['file-uploaded'],
-  setup(props, { emit }) {
-    const fileInput = ref(null)
-    const previewUrl = ref('')
+  currentFile: {
+    type: Object,
+    default: null
+  },
+  label: {
+    type: String,
+    default: ''
+  }
+})
+
+const emit = defineEmits(['file-uploaded'])
+
+const { error } = useNotification()
+
+const fileInput = ref(null)
+const previewUrl = ref('')
     
     const isImage = computed(() => {
       if (!props.currentFile) return false
@@ -74,9 +77,10 @@ export default {
       const file = event.target.files[0]
       if (!file) return
       
-      // Vérification de la taille (5MB max)
+      // Validation de la taille du fichier
       if (file.size > 5 * 1024 * 1024) {
-        alert('Le fichier est trop volumineux. Taille maximum: 5MB')
+        error('Le fichier est trop volumineux. Taille maximum: 5MB', 5000)
+        fileInput.value.value = ''
         return
       }
       
@@ -165,14 +169,4 @@ export default {
         previewUrl.value = ''
       }
     }, { immediate: true })
-    
-    return {
-      fileInput,
-      previewUrl,
-      isImage,
-      handleFileSelect,
-      removeFile
-    }
-  }
-}
 </script>

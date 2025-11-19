@@ -82,7 +82,7 @@
     <!-- Aperçu du fichier capturé -->
     <div v-if="previewUrl && !showCamera" class="relative bg-gray-50 rounded-xl p-4">
       <img 
-        :src="previewUrl" 
+        v-lazy="previewUrl" 
         alt="Aperçu" 
         class="w-full h-auto rounded-lg shadow-md mb-3">
       
@@ -124,30 +124,33 @@
   </div>
 </template>
 
-<script>
-import { ref, computed } from 'vue'
+<script setup>
+import { ref, computed, onBeforeUnmount } from 'vue'
 import Compressor from 'compressorjs'
+import { vLazy } from '../composables/useLazyImage'
+import { useNotification } from '../composables/useNotification'
 
-export default {
-  name: 'CameraCapture',
-  props: {
-    accept: {
-      type: String,
-      default: 'image/*'
-    },
-    label: {
-      type: String,
-      default: ''
-    },
-    maxSize: {
-      type: Number,
-      default: 5 * 1024 * 1024 // 5MB
-    }
+const props = defineProps({
+  accept: {
+    type: String,
+    default: 'image/*'
   },
-  emits: ['file-captured'],
-  setup(props, { emit }) {
-    const cameraInput = ref(null)
-    const fileInput = ref(null)
+  label: {
+    type: String,
+    default: ''
+  },
+  maxSize: {
+    type: Number,
+    default: 5 * 1024 * 1024 // 5MB
+  }
+})
+
+const emit = defineEmits(['file-captured'])
+
+const { error } = useNotification()
+
+const cameraInput = ref(null)
+const fileInput = ref(null)
     const videoElement = ref(null)
     const previewUrl = ref('')
     const currentFile = ref(null)
@@ -243,7 +246,7 @@ export default {
     const processFile = (file) => {
       // Vérifier la taille
       if (file.size > props.maxSize) {
-        alert(`Le fichier est trop volumineux. Taille maximum: ${formatFileSize(props.maxSize)}`)
+        error(`Le fichier est trop volumineux. Taille maximum: ${formatFileSize(props.maxSize)}`, 5000)
         return
       }
 
@@ -315,28 +318,10 @@ export default {
       if (fileInput.value) fileInput.value.value = ''
       emit('file-captured', null)
     }
-
-    return {
-      cameraInput,
-      fileInput,
-      videoElement,
-      previewUrl,
-      currentFile,
-      showCamera,
-      hasFlash,
-      flashEnabled,
-      compressionRatio,
-      openCamera,
-      toggleFlash,
-      closeCamera,
-      capturePhoto,
-      handleCameraCapture,
-      handleFileSelect,
-      removeFile,
-      formatFileSize
-    }
-  }
-}
+    
+    onBeforeUnmount(() => {
+      closeCamera()
+    })
 </script>
 
 <style scoped>

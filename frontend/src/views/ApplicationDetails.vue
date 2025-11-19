@@ -645,7 +645,7 @@
             </template>
           </div>
 
-          <div v-if="canEdit" class="bg-white rounded-2xl shadow-sm p-6 print-card">
+          <div v-if="canEdit" class="bg-white rounded-2xl shadow-sm p-6 print-card print-hide-on-print">
             <template v-if="loading">
               <!-- Skeleton pour Notes administrateur -->
               <div class="w-36 h-6 bg-gray-200 rounded animate-pulse mb-6"></div>

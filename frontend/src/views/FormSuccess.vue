@@ -51,12 +51,20 @@
         
         <!-- Boutons d'action -->
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <router-link 
+            v-if="applicationId" 
+            :to="`/applications/${applicationId}`" 
+            class="btn-primary">
+            <i class="fas fa-eye mr-2"></i>
+            Voir ma candidature
+          </router-link>
+          
           <router-link to="/formulaire" class="btn-secondary">
             <i class="fas fa-plus mr-2"></i>
             Nouvelle candidature
           </router-link>
           
-          <a href="tel:+22899990111" class="btn-primary">
+          <a href="tel:+22899990111" class="btn-secondary">
             <i class="fas fa-phone mr-2"></i>
             Nous contacter
           </a>
@@ -76,26 +84,23 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 
-export default {
-  name: 'FormSuccess',
-  setup() {
-    const applicationRef = ref('')
-    
-    onMounted(() => {
-      // Générer une référence de demande
-      const timestamp = new Date().getTime()
-      const random = Math.random().toString(36).substr(2, 5).toUpperCase()
-      applicationRef.value = `MM${timestamp.toString().slice(-6)}${random}`
-    })
-    
-    return {
-      applicationRef
-    }
-  }
-}
+const route = useRoute()
+const applicationRef = ref('')
+const applicationId = ref(null)
+
+onMounted(() => {
+  // Récupérer l'ID de l'application depuis la query
+  applicationId.value = route.query.applicationId
+  
+  // Générer une référence de demande
+  const timestamp = new Date().getTime()
+  const random = Math.random().toString(36).substr(2, 5).toUpperCase()
+  applicationRef.value = `MM${timestamp.toString().slice(-6)}${random}`
+})
 </script>
 
 <style scoped>

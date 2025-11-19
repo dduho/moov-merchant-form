@@ -75,27 +75,29 @@
   </div>
 </template>
 
-<script>
-import { ref, onMounted, watch, nextTick } from 'vue'
+<script setup>
+import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { useNotification } from '../composables/useNotification'
 import { getCurrentPosition, getAccuracyLevel, formatAccuracy } from '../utils/geolocation'
 
-export default {
-  name: 'LocationPicker',
-  props: {
-    initialLocation: {
-      type: Object,
-      default: null
-    }
-  },
-  emits: ['location-selected'],
-  setup(props, { emit }) {
-    const mapContainer = ref(null)
-    const showMap = ref(false)
-    const isGettingLocation = ref(false)
-    const location = ref(props.initialLocation)
-    const manualLat = ref(props.initialLocation?.lat || '')
+const props = defineProps({
+  initialLocation: {
+    type: Object,
+    default: null
+  }
+})
+
+const emit = defineEmits(['location-selected'])
+
+const { warning, info, error } = useNotification()
+
+const mapContainer = ref(null)
+const showMap = ref(false)
+const isGettingLocation = ref(false)
+const location = ref(props.initialLocation)
+const manualLat = ref(props.initialLocation?.lat || '')
     const manualLng = ref(props.initialLocation?.lng || '')
     
     let map = null
@@ -165,7 +167,7 @@ export default {
       const isSecureContext = window.isSecureContext || location.hostname === 'localhost' || location.hostname === '127.0.0.1'
       
       if (!isSecureContext) {
-        alert('⚠️ La géolocalisation nécessite une connexion sécurisée (HTTPS).\n\nVeuillez utiliser la saisie manuelle des coordonnées ou cliquer sur la carte pour définir votre position.')
+        warning('La géolocalisation nécessite une connexion sécurisée (HTTPS). Veuillez utiliser la saisie manuelle des coordonnées ou cliquer sur la carte.', 6000)
         return
       }
       
@@ -186,9 +188,9 @@ export default {
         // Message selon la précision
         const accuracyLevel = getAccuracyLevel(accuracy)
         if (accuracyLevel === 'poor') {
-          alert(`⚠️ Position obtenue avec une précision faible (${formatAccuracy(accuracy)}).\n\nVous pouvez ajuster manuellement la position si nécessaire.`)
+          warning(`Position obtenue avec une précision faible (${formatAccuracy(accuracy)}). Vous pouvez ajuster manuellement la position si nécessaire.`, 5000)
         } else if (position.fromCache) {
-          alert(`ℹ️ Position récupérée depuis le cache.\nPrécision: ${formatAccuracy(accuracy)}`)
+          info(`Position récupérée depuis le cache. Précision: ${formatAccuracy(accuracy)}`, 4000)
         }
         
       } catch (error) {
@@ -205,7 +207,7 @@ export default {
           message = error.message
         }
         
-        alert(message)
+        error(message, 5000)
       } finally {
         isGettingLocation.value = false
       }
@@ -213,7 +215,7 @@ export default {
     
     const setManualLocation = () => {
       if (!manualLat.value || !manualLng.value) {
-        alert('Veuillez saisir la latitude et la longitude')
+        warning('Veuillez saisir la latitude et la longitude')
         return
       }
       setLocation(manualLat.value, manualLng.value)
@@ -247,19 +249,6 @@ export default {
         manualLng.value = props.initialLocation.lng
       }
     })
-    
-    return {
-      mapContainer,
-      showMap,
-      isGettingLocation,
-      location,
-      manualLat,
-      manualLng,
-      getCurrentLocation,
-      setManualLocation
-    }
-  }
-}
 </script>
 
 <style>

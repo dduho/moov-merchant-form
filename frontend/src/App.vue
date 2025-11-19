@@ -3,11 +3,17 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useAuthStore } from './stores/auth'
 import NotificationContainer from './components/NotificationContainer.vue'
 import NotificationBell from './components/NotificationBell.vue'
+import { useDarkMode } from './composables/useDarkMode'
+import { useHaptic } from './composables/useHaptic'
 
 const authStore = useAuthStore()
 const userMenuOpen = ref(false)
 const isOnline = ref(navigator.onLine)
 const currentYear = new Date().getFullYear()
+
+// Mode sombre
+const { isDark, toggle: toggleDarkMode } = useDarkMode()
+const haptic = useHaptic()
 
 // Gestionnaires de connexion
 const updateOnlineStatus = () => {
@@ -49,9 +55,9 @@ const handleLogout = async () => {
 </script>
 
 <template>
-  <div id="app" class="min-h-screen flex flex-col">
+  <div id="app" class="min-h-screen flex flex-col dark:bg-dark-bg-primary transition-colors duration-300">
     <!-- Header moderne et responsive -->
-    <header class="bg-white/95 backdrop-blur-sm shadow-sm border-b py-2 border-gray-100 sticky top-0 z-40 flex-shrink-0">
+    <header class="bg-white dark:bg-dark-bg-secondary shadow-sm border-b py-2 border-gray-100 dark:border-dark-border sticky top-0 z-40 flex-shrink-0 transition-colors duration-300">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
           <!-- Logo et branding -->
@@ -199,6 +205,25 @@ const handleLogout = async () => {
 
                     <!-- Séparateur -->
                     <div class="border-t border-gray-100 my-1"></div>
+
+                    <!-- Mode sombre -->
+                    <button
+                      @click="toggleDarkMode(); haptic.light()"
+                      class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors group"
+                    >
+                      <div class="w-8 h-8 rounded-lg bg-gray-100 group-hover:bg-orange-100 flex items-center justify-center mr-3 transition-colors">
+                        <svg v-if="isDark" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p class="font-medium">{{ isDark ? 'Mode clair' : 'Mode sombre' }}</p>
+                        <p class="text-xs text-gray-500 group-hover:text-orange-600">Changer le thème</p>
+                      </div>
+                    </button>
 
                     <!-- Déconnexion -->
                     <button

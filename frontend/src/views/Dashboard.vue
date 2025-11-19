@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen p-4 sm:p-6">
+  <div ref="dashboardContainer" class="min-h-screen p-4 sm:p-6">
     <!-- Content Container -->
     <div class="space-y-8">
       <!-- Header -->
@@ -70,21 +70,12 @@
       <!-- KPIs -->
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <template v-if="loading">
-          <div v-for="i in 4" :key="'kpi-skeleton-'+i" class="bg-white rounded-2xl shadow-sm p-6">
-            <div class="flex items-center justify-between mb-4">
-              <div class="w-12 h-12 bg-gray-200 rounded-xl animate-pulse"></div>
-              <div class="w-16 h-6 bg-gray-200 rounded-full animate-pulse"></div>
-            </div>
-            <div class="space-y-2">
-              <div class="h-8 bg-gray-200 rounded w-24 animate-pulse"></div>
-              <div class="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
-            </div>
-          </div>
+          <SkeletonLoader v-for="i in 4" :key="'kpi-skeleton-'+i" variant="card" />
         </template>
         
         <template v-else>
           <!-- Candidatures -->
-          <div class="bg-white rounded-2xl shadow-sm p-6">
+          <div class="bg-white rounded-2xl shadow-sm p-6" @click="haptic.selection()">
             <div class="flex items-center justify-between mb-4">
               <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                 <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -485,7 +476,7 @@
               <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Dernières candidatures</h3>
               <p class="text-xs sm:text-sm text-gray-500 mt-1">Toutes les candidatures avec filtres et recherche</p>
             </div>
-            <div class="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
+            <div class="flex items-center space-x-2 sm:space-x-3">
               <!-- Bouton Export Excel -->
               <button @click="exportToExcel" 
                       :disabled="excelExportLoading"
@@ -496,14 +487,15 @@
                 <svg v-else class="w-5 h-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                {{ excelExportLoading ? 'Export...' : 'Export XLSX' }}
+                <span class="hidden sm:inline">{{ excelExportLoading ? 'Export...' : 'Export XLSX' }}</span>
+                <span class="sm:hidden">{{ excelExportLoading ? '...' : 'XLSX' }}</span>
               </button>
 
               <!-- Bouton Export SP - Visible seulement pour les administrateurs -->
               <button v-if="authStore.isAdmin"
                       @click="exportToSP" 
                       :disabled="exportLoading"
-                      class="flex items-center px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                      class="hidden sm:flex items-center px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg v-if="!exportLoading" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
@@ -517,7 +509,7 @@
               <button v-if="authStore.isAdmin"
                       @click="exportToSPUpdate"
                       :disabled="updateExportLoading"
-                      class="flex items-center px-4 py-2 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                      class="hidden sm:flex items-center px-4 py-2 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg v-if="!updateExportLoading" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
@@ -526,7 +518,7 @@
                 </svg>
                 {{ updateExportLoading ? 'Export...' : 'Update SP' }}
               </button>
-              <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+              <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
                 <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
@@ -663,8 +655,9 @@
 
               <!-- Liste des candidatures -->
               <div v-if="recentApplications.length > 0">
-                <div v-for="app in recentApplications" :key="app.id" 
-                     class="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors">
+                <div v-for="(app, index) in recentApplications" :key="app.id" 
+                     class="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors"
+                     :class="{ 'border-b border-gray-200': index < recentApplications.length - 1 }">
                   <div class="flex items-center space-x-3 sm:space-x-4 min-w-0">
                     <!-- Checkbox pour sélectionner cette candidature (désactivée si non approuvée) -->
                     <div class="relative flex-shrink-0">
@@ -769,7 +762,7 @@
 </template>
 
 <script>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import ApiService from '../services/ApiService'
 import MerchantService from '../services/MerchantService'
 import Chart from 'chart.js/auto'
@@ -778,12 +771,16 @@ import ObjectiveWidget from '../components/ObjectiveWidget.vue'
 import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notifications'
 import * as XLSX from 'xlsx'
+import SkeletonLoader from '../components/SkeletonLoader.vue'
+import { usePullToRefresh } from '../composables/usePullToRefresh'
+import { useHaptic } from '../composables/useHaptic'
 
 export default {
   name: 'Dashboard',
   components: {
     PaginationControls,
-    ObjectiveWidget
+    ObjectiveWidget,
+    SkeletonLoader
   },
   setup() {
     const authStore = useAuthStore()
@@ -831,6 +828,10 @@ export default {
       has_next: false,
       has_prev: false
     })
+    
+    // Composables mobiles
+    const haptic = useHaptic()
+    const dashboardContainer = ref(null)
     
     // Utilisateurs filtrés (uniquement ceux avec des candidatures soumises > 0)
     const filteredUserStats = computed(() => {
@@ -1068,6 +1069,7 @@ export default {
     }
     
     const refreshData = () => {
+      haptic.light()
       loadData()
     }
 
@@ -1869,6 +1871,14 @@ export default {
       return pages
     }
     
+    // Variable pour stocker la fonction cleanup
+    let cleanupPullToRefresh = null
+    
+    // Cleanup avant démontage
+    onBeforeUnmount(() => {
+      if (cleanupPullToRefresh) cleanupPullToRefresh()
+    })
+    
     onMounted(() => {
       loadData()
       loadApplications() // Charger les candidatures séparément
@@ -1877,6 +1887,14 @@ export default {
       if (authStore.isAdmin) {
         loadUsers() // Chargement par défaut (5 utilisateurs)
       }
+      
+      // Pull-to-refresh pour mobile
+      const pullToRefresh = usePullToRefresh(dashboardContainer, async () => {
+        await loadData()
+        await loadApplications()
+        haptic.success()
+      })
+      cleanupPullToRefresh = pullToRefresh.cleanup
     })
     
     return {
@@ -1932,7 +1950,10 @@ export default {
       loadUserStatsPage,
       debouncedUserStatsSearch,
       clearUserSearch,
-      getPaginationPages
+      getPaginationPages,
+      // Composables mobiles
+      haptic,
+      dashboardContainer
     }
   }
 }

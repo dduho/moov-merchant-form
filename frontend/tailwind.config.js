@@ -5,6 +5,7 @@ export default {
     "./index.html",
     "./src/**/*.{vue,js,ts,jsx,tsx}",
   ],
+  darkMode: 'class', // Active le mode sombre avec la classe 'dark'
   theme: {
     extend: {
       colors: {
@@ -32,6 +33,20 @@ export default {
           700: '#334155',
           800: '#1e293b',
           900: '#0f172a'
+        },
+        // Couleurs pour le mode sombre
+        dark: {
+          bg: {
+            primary: '#0f172a',
+            secondary: '#1e293b',
+            tertiary: '#334155'
+          },
+          text: {
+            primary: '#f1f5f9',
+            secondary: '#cbd5e1',
+            muted: '#94a3b8'
+          },
+          border: '#334155'
         }
       },
       fontFamily: {
@@ -39,7 +54,8 @@ export default {
       },
       boxShadow: {
         'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
-        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+        'dark': '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)'
       },
       minHeight: {
         'touch': '44px',  // Apple HIG minimum touch target
