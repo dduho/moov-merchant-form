@@ -14,10 +14,13 @@ return [
         'http://10.80.3.159:3001',
         'http://10.80.3.159:5173',
         'http://10.80.7.160:3001', // Autre IP réseau
+        'http://10.80.16.51', // IP serveur de production
+        'http://10.80.16.51:80',
     ],
     'allowed_origins_patterns' => [
         '/^http:\/\/.*:3000$/', // Pattern pour accepter toutes les IPs sur le port 3000
-        '/^http:\/\/.*:5173$/' // Pattern pour accepter toutes les IPs sur le port 5173
+        '/^http:\/\/.*:5173$/', // Pattern pour accepter toutes les IPs sur le port 5173
+        '/^http:\/\/10\.80\.16\.51(:\d+)?$/', // Pattern pour le serveur de production
     ],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
