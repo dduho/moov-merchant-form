@@ -838,7 +838,7 @@
                         }" 
                         required>
                       <span class="text-sm">
-                        J'accepte les <a href="#" class="text-orange-600 underline">termes et conditions</a>
+                        J'accepte les <a href="#" @click.prevent="showTermsModal = true" class="text-orange-600 underline hover:text-orange-700">termes et conditions</a>
                         de Moov Money et certifie l'exactitude des informations fournies.
                       </span>
                     </label>
@@ -930,6 +930,43 @@
     </nav>
     
     </div> <!-- Fin du formulaire normal -->
+    
+    <!-- Modale Termes et Conditions -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="showTermsModal" class="fixed inset-0 z-[9999] overflow-y-auto" @click="showTermsModal = false">
+          <div class="flex min-h-screen items-center justify-center p-4">
+            <div class="fixed inset-0 bg-black/50 transition-opacity"></div>
+            
+            <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden" @click.stop>
+              <!-- Header -->
+              <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                  <i class="fas fa-file-contract text-orange-600 mr-2"></i>
+                  Conditions Générales d'Affiliation
+                </h3>
+                <button @click="showTermsModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                  <i class="fas fa-times text-xl"></i>
+                </button>
+              </div>
+              
+              <!-- Contenu -->
+              <div class="px-6 py-6 overflow-y-auto max-h-[calc(85vh-120px)] prose prose-sm dark:prose-invert max-w-none">
+                <div class="space-y-6 text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{{ termsAndConditions }}</div>
+              </div>
+              
+              <!-- Footer -->
+              <div class="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-4">
+                <button @click="showTermsModal = false" class="w-full h-12 rounded-xl bg-orange-600 text-white font-semibold hover:bg-orange-700 transition-colors">
+                  <i class="fas fa-check mr-2"></i>
+                  J'ai lu les conditions
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -1045,6 +1082,177 @@ export default {
     const autoSaveStatus = ref('');
     const direction = ref(1);
     const errors = ref({});
+    const showTermsModal = ref(false);
+
+    // Contenu des conditions générales
+    const termsAndConditions = `DEFINITIONS :
+
+MARCHAND / ACCEPTEUR :
+
+Désigne une entreprise/société fournisseur de biens et/ou services auprès de qui les abonnés peuvent faire des paiements de leurs achats via Mobile Money
+
+OBJET :
+
+Les présentes Conditions Générales d'affiliation Régissent les relations entre MOOV AFRICA TOGO, les banques partenaires et les marchands affiliés
+
+CONDITIONS D'AFFILIATION :
+
+Les Conditions ci-après sont requises pour l'affiliation au service :
+
+• Etre immatriculé au Registre du Commerce et du Crédit Mobilier en qualité d'entreprise individuelle ou de société ;
+
+• Disposer d'une pièce d'identité en cours de validité pour les entrepreneurs ;
+
+• Disposer d'un téléphone portable ;
+
+• Ouvrir un compte Mobile Money ;
+
+• Accepter sans restriction ni conditions les présentes Conditions Générales.
+
+Le Marchand-Accepteur s'assure de l'adéquation du service à ses propres besoins ainsi que de la possibilité et de l'opportunité pour lui d'utiliser le service.
+
+Le Marchand-Accepteur déclare avoir été informé des risques inhérents au service plus particulièrement en termes de :
+
+• Performance dans la transmission des messages, d'information sur la transaction et d'exécution d'instruction.
+
+• Mise à jour différée de l'ensemble des informations sur les transactions effectuées.
+
+Le Marchand-Accepteur vérifie, avant toute transaction à effectuer, que le numéro de téléphone mobile qu'il a transmis est effectivement son numéro Mobile Money.
+
+MOOV AFRICA TOGO et les banques partenaires déclinent toute responsabilité en cas d'erreur commise par le client et le Marchand-Accepteur sur la personne et/ou le numéro de téléphone portable du Marchand-Accepteur, qu'elle ait ou non pour conséquences l'échec de la transaction exclusive.
+
+PRINCIPE DE FONCTIONNEMENT :
+
+Pour réaliser les opérations du service Mobile Money, MOOV AFRICA TOGO et les banques partenaires sont amenés à émettre de la monnaie électronique et à ouvrir un porte-monnaie virtuel pour l'utilisateur.
+
+Le compte Mobile Money ouvert au nom du Marchand-Accepteur auprès de MOOV AFRICA TOGO reçoit les paiements émis directement par ses clients eux-mêmes titulaires d'un compte Mobile Money.
+
+Pour effectuer un paiement, le client utilise son téléphone pour accéder au service et effectuer le paiement vers le numéro que lui communique le marchand.
+
+Le marchand reçoit le montant du transfert en prenant soin de vérifier que le montant reçu correspondant au montant des achats effectués par le client.
+
+Le Marchand-Accepteur peut retirer en espèces les paiements reçus sur son compte.
+
+Pour se faire, il se rend en agence pour procéder au retrait.
+
+L'AFFILIATION :
+
+L'affiliation au service Mobile Money nécessite l'acceptation des présentes Conditions Générales
+
+L'utilisation n'est autorisée que si les conditions générales d'affiliation ci-dessus énoncées sont remplies.
+
+La souscription d'un abonnement ouvre droit à la mise en oeuvre de procédures sécurisées d'identification de l'utilisateur. Un code personnel est communiqué à l'utilisateur et garantit l'authenticité de ses interventions à distance. Tout particulièrement, le code garantit que l'utilisateur est l'auteur des ordres qui seront transmis au service à partir de son téléphone portable.
+
+La souscription donne droit à l'utilisateur, dans les conditions et limites du service d'effectuer les transactions financières du service.
+
+En cas de perte du téléphone ou d'oubli de son code personnel, l'utilisateur peut modifier le code. Il devra pour ce faire, prendre contact avec les services de MOOV AFRICA TOGO par tout moyen laissant trace écrite et lui demander l'attribution d'un nouveau code. Dans l'intervalle entre l'alerte donnée à MOOV AFRICA TOGO et les banques partenaires par appel du service clientèle et l'attribution d'un nouvel identifiant, l'utilisateur ne peut effectuer de transactions financières.
+
+La procédure de souscription au partenariat marchand au service Mobile Money se déroule selon les étapes suivantes :
+
+• Identification du marchand ;
+
+• Adhésion aux CGUS
+
+• La validation du formulaire de souscription
+
+• Activation et remise de kit Marchand (Sim Mobile Money configurée, formation, guide d'usage, PLV).
+
+ENTREES EN VIGUEUR :
+
+Le contrat entre en vigueur à l'égard du Marchand Accepteur à la date de sa signature des présentes. Toutes fois, le Marchand affilié ne pourra accepter de paiements via le service Mobile Money que lorsqu'il aura validé son abonnement, conformément à la procédure décrite ci-dessus.
+
+DUREE :
+
+Les parties conviennent que l'affiliation est souscrite pour une durée de 12 mois.
+
+DROIT DE RETRACTATION :
+
+Le Marchand Accepteur dispose d'un droit de rétractation qu'il peut exercer dans un délai de dix (10) jours calendaires à compter de l'acceptation des Conditions Générales sans avoir à justifier le motif ni à supporter de pénalités. Le droit de rétractation peut s'exercer par un simple écrit remis par porteur contre décharge à MOOV AFRICA TOGO et la banque partenaire.
+
+MISE EN EXECUTION IMMEDIATE :
+
+Sans préjudice de son droit de rétractation l'utilisateur autorise expressément, en acceptant les présentes Conditions Générales, leur mise en exécution immédiate.
+
+CONFIDENTIALITE :
+
+MOOV AFRICA TOGO et les banques partenaires offrent au marchand un service sécurisé en lui fournissant un code personnel.
+
+Le Marchand-Accepteur s'engage à respecter et à faire respecter l'ensemble des obligations de sécurité mises à sa charge. Il s'engage notamment à conserver son code personnel sous son contrôle exclusif et à modifier ledit code régulièrement.
+
+Le Marchand-Accepteur prend tout particulièrement soin de ne pas sauvegarder son code personnel dans les mémoires de son téléphone portable ou sur d'autres supports susceptibles d'être manipulés ou consultés par d'autres personnes. Il prend les dispositions pour détruire les messages électroniques dans lesquels figurera son code.
+
+Le Marchand-Accepteur est entièrement responsable de la conservation et de l'usage de son code personnel. Il supporte les conséquences d'une divulgation ou d'une usurpation du code. Toute utilisation du code de l'utilisateur sera réputée faite par ce dernier, sauf lorsque ce dernier aura, au préalable, fait savoir au service clientèle de MOOV AFRICA TOGO et aux banques partenaires que la confidentialité de son code est compromise.
+
+MOOV AFRICA TOGO et les Banques partenaires, pourront à tout moment et sans préavis, suspendre le service en cas de compromission supposée ou avérée de la confidentialité du service.
+
+Elles pourront aussi, dans les mêmes conditions, fermer l'accès d'un utilisateur au service en cas de comportement répréhensible ou de manquement à ses obligations contractuelles, ou de la survenance d'une cause de résiliation du contrat.
+
+RÉSILIATION :
+
+En cas de manquement par l'une des parties aux obligations du contrat, non réparé dans un délai de trente (30) jours à compter de l'envoi d'une lettre recommandée avec avis de réception ou d'une lettre simple portée contre décharge notifiant le manquement en cause, l'autre partie pourra, à l'issue du délai des trente (30) jours, résilier de plein droit le contrat sans préjudice de toute voie de droit. Le Marchand-Accepteur pourra plus alors utiliser le service Mobile Money.
+
+Le contrat pourra sera résilié immédiatement et de plein droit par MOOV AFRICA TOGO et les banques partenaires en cas d'incident de paiement.
+
+Est considéré comme incident de paiement le fait pour un Marchand-Accepteur de contester la réception d'un paiement effectué par son client en exécution d'une transaction financière régulièrement autorisée par le Marchand-Accepteur selon les procédures prévues.
+
+Le contrat pourra être résilié par MOOV AFRICA TOGO et les banques partenaires notamment en cas de fermeture du service. Dans ce cas, l'abonné aura droit au remboursement de la part du prix éventuel de son abonnement couvrant la période d'abonnement déjà payé durant laquelle le service ne sera pas assuré.
+
+Le contrat peut être résilié à la demande du Marchand-Accepteur, qui n'aura, dans ce cas, droit à aucune indemnité ou à aucun remboursement d'aucune sorte. La demande de remboursement de l'utilisateur ou des unités non encore utilisées sera satisfaite dans un délai de quarante-huit (48) heures à compter de la réception de la demande.
+
+SUSPENSION DU SERVICE :
+
+D'une manière générale, le Marchand-Accepteur reconnait que la disponibilité du service ne saurait s'étendre de manière absolue, et qu'un certain nombre de défaillances, peuvent intervenir indépendamment de la volonté de MOOV AFRICA TOGO et la banque partenaire.
+
+Le Marchand-Accepteur est informé que le service est peut-être momentanément inaccessible. Dans ce cas MOOV AFRICA TOGO et la Banque partenaire en informeront le Marchand-Accepteur par tout moyen, notamment par SMS. Toute nouvelle condition de délivrance du service entrera en vigueur à la date précisée par MOOV AFRICA TOGO et la Banque partenaire dans la notification adressée à l'utilisateur.
+
+Le Marchand-Accepteur disposera du délai stipulé dans la notification pour accepter les modifications ou résilier le contrat, selon la procédure mentionnée dans ladite notification.
+
+Si le Marchand-Accepteur ne procède pas à la résiliation expresse du contrat dans le délai indiqué, il sera considéré comme ayant accepté les modifications.
+
+Le Marchand-Accepteur s'engage à alerter immédiatement MOOV AFRICA TOGO et la Banque partenaire en appelant le service clientèle en cas de perte ou de vol de son téléphone portable, ainsi que si la confidentialité de son code personnel est compromise ou s'il y a un risque qu'elle le soit. Dans ces hypothèses, MOOV AFRICA TOGO et la banque partenaire suspendront l'accès du Marchand-Accepteur au service dès son appel.
+
+Dans les cas de suspension du service énoncé ci-dessus, le service n'est rétabli qu'une fois que l'utilisateur le demande, après avoir mis à jour les informations le concernant par appel du Service Clientèle.
+
+FORCE MAJEURE :
+
+MOOV AFRICA TOGO et les banques partenaires ne pourront être tenues pour responsables de tout cas de force majeure rendant impossible l'exécution de leurs obligations, soit partiellement, soit en totalité.
+
+La force majeure inclut ici, et de façon non limitative, le dysfonctionnement ou l'interruption totale ou partielle des réseaux de communications électroniques ou indépendants, la grève de tout ou d'une partie du personnel de MOOV AFRICA TOGO et des Banques partenaires ou de l'un de leurs partenaires techniques.
+
+La force majeure suspend l'exécution des obligations des parties. En conséquence, le service Mobile Money sera suspendu. Si la durée de la force majeure entraîne la suspension du service pendant une durée supérieure à trois (03) mois, les présentes Conditions Générales seront résiliées de plein droit, sans indemnisation au profit du Marchand-Accepteur.
+
+MODIFICATION DU SERVICE :
+
+Les parties conviennent que MOOV AFRICA TOGO et la Banque partenaire se réservent le droit de modifier à tout moment, pour des raisons notamment techniques, financières et/ou de sécurité, les conditions de délivrance du service.
+
+RESPONSABILITE DE L'UTILISATEUR :
+
+Le Marchand-Accepteur est seul responsable des préjudices financiers qui pourraient être causés par l'utilisation abusive de son téléphone portable et de son code personnel. Il est seul responsable en cas d'erreur commise par lui dans la transmission des coordonnées au destinataire. Il reconnait en outre que MOOV AFRICA TOGO et les banques partenaires ne sont pas habilitées à vérifier que l'identité du destinataire désigné correspond effectivement à la personne indiquée.
+
+Le Marchand-Accepteur est responsable de toutes les conséquences qui résulteraient d'une erreur de transmission ou de manipulation de sa part.
+
+RESPONSABILITE DE MOOV AFRICA TOGO ET DES BANQUES PARTENAIRES :
+
+Si la responsabilité de MOOV AFRICA TOGO et des banques partenaires était retenue dans l'exécution de leurs obligations, le Marchand-Accepteur ne pourrait prétendre à d'autres réparations que le remboursement du prix de son abonnement annuel et des coûts inhérents aux transactions financières litigieuses, dans la limite de 100.000 FCFA.
+
+MOOV AFRICA TOGO et les banques partenaires ne sont pas responsables des éventuels litiges, plaintes contestations et autres différends qui pourraient survenir entre le Marchand-Accepteur et un utilisateur. MOOV AFRICA TOGO et les banques partenaires n'assument aucune responsabilité en ce qui concerne le transport des informations.
+
+MOOV AFRICA TOGO et les banques partenaires ne sont pas responsables des conséquences dommageables liées à l'utilisation frauduleuse suite à la perte ou au vol du téléphone portable du Marchand-Accepteur. Elles ne sont pas responsables des pertes subies par le Marchand-Accepteur du fait de l'utilisation de son compte bancaire par toute autre personne que lui, résultant d'une utilisation abusive de son code personnel.
+
+MOOV AFRICA TOGO et les banques partenaires ne sont pas responsables pour tout dommage indirect y compris notamment les pertes de profits, de clientèle, ou de toute autre perte de biens incorporels susceptibles de survenir, déroulant de la fourniture ou de l'utilisation du service et/ou de l'impossibilité d'accéder ou d'utiliser le service.
+
+REMBOURSEMENT :
+
+Le Marchand-Accepteur a la possibilité, pendant la période de validité du service, d'exiger le remboursement de la valeur nominale en francs CFA des unités de monnaies électroniques non encore utilisées soit par virement, remise d'espèces ou par chèques.
+
+LOI APPLICABLE :
+
+Le présent service est soumis au droit togolais.
+
+ATTRIBUTION DE JURIDICTION :
+
+Tout différend portant sur la validité, l'interprétation ou l'exécution des présentes Conditions Générales sera, faute d'être résolu à l'amiable dans un délai de trente (30) jours de sa survenance soumis à la compétence du Tribunal du Commerce de Lomé.`;
+
 
     // États pour l'édition
     const isEditMode = computed(() => !!route.params.id);
@@ -2007,7 +2215,10 @@ export default {
       validationStats,
       validateRequired,
       validateMinAge,
-      validateEmail
+      validateEmail,
+      // Terms modal
+      showTermsModal,
+      termsAndConditions
     }
   }
 }
@@ -2113,5 +2324,31 @@ export default {
   .form-select {
     height: 3rem;
   }
+}
+
+/* Animation de la modale */
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-active > div > div,
+.modal-leave-active > div > div {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.modal-enter-from > div > div {
+  transform: scale(0.95);
+  opacity: 0;
+}
+
+.modal-leave-to > div > div {
+  transform: scale(0.95);
+  opacity: 0;
 }
 </style>
