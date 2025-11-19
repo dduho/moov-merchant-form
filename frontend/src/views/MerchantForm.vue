@@ -1242,7 +1242,7 @@ export default {
               let documentUrl = doc.url || doc.file_path;
               // Si l'URL est relative, préfixer avec l'URL du backend
               if (documentUrl && documentUrl.startsWith('/storage/')) {
-                const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+                const baseURL = import.meta.env.VITE_API_URL || '/api';
                 const backendURL = baseURL.replace('/api', ''); // Enlever /api pour avoir l'URL de base
                 documentUrl = backendURL + documentUrl;
               }

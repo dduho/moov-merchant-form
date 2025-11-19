@@ -2,7 +2,7 @@ import axios from 'axios'
 
 class MerchantService {
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+    this.baseURL = import.meta.env.VITE_API_URL || '/api'
     
     this.client = axios.create({
       baseURL: this.baseURL,

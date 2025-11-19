@@ -57,7 +57,7 @@ axios.interceptors.response.use(
 )
 
 // Obtenir le CSRF token au démarrage
-const csrfUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '/sanctum/csrf-cookie') : 'http://localhost:8000/sanctum/csrf-cookie'
+const csrfUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '/sanctum/csrf-cookie') : `${window.location.origin}/sanctum/csrf-cookie`
 axios.get(csrfUrl).catch(error => {
   console.error('Erreur lors de l\'obtention du CSRF token:', error)
 })
