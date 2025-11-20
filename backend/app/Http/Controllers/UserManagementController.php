@@ -624,8 +624,24 @@ class UserManagementController extends Controller
         $data = [];
         $handle = fopen($file->getRealPath(), 'r');
         
+        // Détecter le séparateur automatiquement
+        $firstLine = fgets($handle);
+        rewind($handle);
+        
+        $delimiters = [',', ';', "\t"];
+        $delimiter = ',';
+        $maxCount = 0;
+        
+        foreach ($delimiters as $del) {
+            $count = substr_count($firstLine, $del);
+            if ($count > $maxCount) {
+                $maxCount = $count;
+                $delimiter = $del;
+            }
+        }
+        
         // Lire la première ligne (headers)
-        $headers = fgetcsv($handle, 0, ',');
+        $headers = fgetcsv($handle, 0, $delimiter);
         
         // Normaliser les headers (enlever BOM, espaces, etc.)
         $headers = array_map(function($header) {
@@ -633,7 +649,7 @@ class UserManagementController extends Controller
         }, $headers);
 
         // Lire les données
-        while (($row = fgetcsv($handle, 0, ',')) !== false) {
+        while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
             if (count($row) === count($headers)) {
                 $data[] = array_combine($headers, $row);
             }

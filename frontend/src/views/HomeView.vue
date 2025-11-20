@@ -89,7 +89,7 @@
       </button>
 
       <!-- Lien aide -->
-      <div class="text-center mt-6">
+      <div v-if="!authStore.isAuthenticated" class="text-center mt-6">
         <router-link to="/login" class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded text-sm transition-colors">
           <span class="font-semibold">Se connecter</span>
         </router-link>
