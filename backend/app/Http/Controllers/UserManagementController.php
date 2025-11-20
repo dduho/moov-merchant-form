@@ -511,10 +511,8 @@ class UserManagementController extends Controller
             $file = $request->file('file');
             $extension = $file->getClientOriginalExtension();
             
-            $users = [];
-            $errors = [];
-            $successCount = 0;
-            $errorCount = 0;
+            // Vérifier et créer les rôles si nécessaire
+            $this->ensureRolesExist();
 
             // Parse selon le type de fichier
             if ($extension === 'csv') {
@@ -568,6 +566,17 @@ class UserManagementController extends Controller
                         if ($validated['data']['role_slug'] === 'commercial') {
                             $user->applyGlobalObjectives();
                         }
+                    } else {
+                        // Si le rôle n'existe pas, ajouter une erreur
+                        $errors[] = [
+                            'line' => $lineNumber,
+                            'data' => $row,
+                            'errors' => ['role' => 'Le rôle spécifié n\'existe pas dans le système']
+                        ];
+                        $errorCount++;
+                        // Supprimer l'utilisateur créé sans rôle
+                        $user->delete();
+                        continue;
                     }
 
                     $users[] = $user;
@@ -745,5 +754,24 @@ class UserManagementController extends Controller
         return response($csv, 200)
             ->header('Content-Type', 'text/csv')
             ->header('Content-Disposition', 'attachment; filename="template_import_utilisateurs.csv"');
+    }
+
+    /**
+     * S'assurer que les rôles nécessaires existent dans la base de données
+     */
+    private function ensureRolesExist()
+    {
+        $requiredRoles = [
+            ['name' => 'Admin', 'slug' => 'admin'],
+            ['name' => 'Commercial', 'slug' => 'commercial'],
+            ['name' => 'Personnel', 'slug' => 'personnel'],
+        ];
+
+        foreach ($requiredRoles as $roleData) {
+            Role::firstOrCreate(
+                ['slug' => $roleData['slug']],
+                ['name' => $roleData['name']]
+            );
+        }
     }
 }
