@@ -32,9 +32,8 @@ class DashboardController extends Controller
             // Charger les rôles pour s'assurer qu'ils sont disponibles
             $user->load('roles');
             
-            // Vérifier avec le nom exact du rôle (Commercial avec majuscule)
-            if ($user->roles->contains('name', 'Commercial')) {
-                // Les commerciaux ne voient que leurs propres candidatures
+            // Les commerciaux et le personnel ne voient que leurs propres candidatures
+            if ($user->roles->contains('name', 'Commercial') || $user->roles->contains('name', 'Personnel')) {
                 $query->where('user_id', $user->id);
             }
         }
@@ -51,9 +50,9 @@ class DashboardController extends Controller
         $period = $request->get('period', 'all');
         $refresh = $request->boolean('refresh', false);
         
-        // Inclure l'ID utilisateur dans la clé de cache pour les commerciaux
+        // Inclure l'ID utilisateur dans la clé de cache pour les commerciaux et le personnel
         $user = $request->user();
-        $userKey = ($user && $user->roles->contains('name', 'commercial')) ? "_{$user->id}" : '';
+        $userKey = ($user && ($user->roles->contains('name', 'Commercial') || $user->roles->contains('name', 'Personnel'))) ? "_{$user->id}" : '';
         $cacheKey = "dashboard_stats_{$period}{$userKey}";
         $cacheDuration = 300; // 5 minutes
         

@@ -15,17 +15,22 @@ export const useAuthStore = defineStore('auth', {
     isAuthenticated: (state) => !!state.user,
     isAdmin: (state) => state.user?.roles?.includes('admin') ?? false,
     isCommercial: (state) => state.user?.roles?.includes('commercial') ?? false,
+    isPersonnel: (state) => state.user?.roles?.includes('personnel') ?? false,
+    canSubmitApplications: (state) => {
+      const roles = state.user?.roles || []
+      return roles.includes('commercial') || roles.includes('personnel')
+    },
     userFullName: (state) => state.user ? `${state.user.first_name} ${state.user.last_name}` : '',
     mustChangePassword: (state) => state.user?.must_change_password ?? false,
     
     // Permissions pour les candidatures
     canViewApplications: (state) => {
       const roles = state.user?.roles || []
-      return roles.includes('admin') || roles.includes('commercial')
+      return roles.includes('admin') || roles.includes('commercial') || roles.includes('personnel')
     },
     canEditApplications: (state) => {
       const roles = state.user?.roles || []
-      return roles.includes('admin') || roles.includes('commercial')
+      return roles.includes('admin') || roles.includes('commercial') || roles.includes('personnel')
     },
     canValidateApplications: (state) => {
       const roles = state.user?.roles || []

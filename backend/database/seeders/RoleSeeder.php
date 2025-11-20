@@ -20,6 +20,11 @@ class RoleSeeder extends Seeder
         ]);
 
         Role::create([
+            'name' => 'Personnel',
+            'slug' => 'personnel',
+        ]);
+
+        Role::create([
             'name' => 'Client',
             'slug' => 'client',
         ]);

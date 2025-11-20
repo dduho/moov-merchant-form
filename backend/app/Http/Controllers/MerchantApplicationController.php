@@ -30,10 +30,10 @@ class MerchantApplicationController extends Controller
     {
         $query = MerchantApplication::with('documents');
         
-        // Filtre par utilisateur pour les commerciaux
+        // Filtre par utilisateur pour les commerciaux et le personnel
         $user = $request->user();
-        if ($user && $user->roles->contains('name', 'Commercial')) {
-            // Les commerciaux ne voient que leurs propres candidatures
+        if ($user && ($user->roles->contains('name', 'Commercial') || $user->roles->contains('name', 'Personnel'))) {
+            // Les commerciaux et le personnel ne voient que leurs propres candidatures
             $query->where('user_id', $user->id);
         }
         // Les admins voient toutes les candidatures (pas de filtre supplémentaire)
@@ -240,10 +240,10 @@ class MerchantApplicationController extends Controller
     
     public function show(Request $request, MerchantApplication $merchantApplication): JsonResponse
     {
-        // Vérifier les permissions pour les commerciaux
+        // Vérifier les permissions pour les commerciaux et le personnel
         $user = $request->user();
-        if ($user && $user->roles->contains('name', 'Commercial')) {
-            // Les commerciaux ne peuvent voir que leurs propres candidatures
+        if ($user && ($user->roles->contains('name', 'Commercial') || $user->roles->contains('name', 'Personnel'))) {
+            // Les commerciaux et le personnel ne peuvent voir que leurs propres candidatures
             if ($merchantApplication->user_id !== $user->id) {
                 return response()->json([
                     'success' => false,
@@ -277,9 +277,9 @@ class MerchantApplicationController extends Controller
      */
     public function update(Request $request, MerchantApplication $merchantApplication): JsonResponse
     {
-        // Vérifier les permissions pour les commerciaux avec candidatures approuvées
+        // Vérifier les permissions pour les commerciaux et le personnel avec candidatures approuvées
         $user = $request->user();
-        if ($user && $user->roles->contains('slug', 'commercial') && 
+        if ($user && ($user->roles->contains('slug', 'commercial') || $user->roles->contains('slug', 'personnel')) && 
             !$user->roles->contains('slug', 'admin') &&
             in_array($merchantApplication->status, ['approved', 'exported_for_creation'])) {
             
@@ -361,16 +361,16 @@ class MerchantApplicationController extends Controller
                 ], 401);
             }
 
-            // Les commerciaux ne peuvent modifier que leurs propres candidatures
-            if ($user->roles->contains('slug', 'commercial') && $merchantApplication->user_id !== $user->id) {
+            // Les commerciaux et le personnel ne peuvent modifier que leurs propres candidatures
+            if (($user->roles->contains('slug', 'commercial') || $user->roles->contains('slug', 'personnel')) && $merchantApplication->user_id !== $user->id) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Vous ne pouvez modifier que vos propres candidatures'
                 ], 403);
             }
 
-            // Les commerciaux ne peuvent pas modifier les candidatures approuvées ou exportées
-            if ($user->roles->contains('slug', 'commercial') && 
+            // Les commerciaux et le personnel ne peuvent pas modifier les candidatures approuvées ou exportées
+            if (($user->roles->contains('slug', 'commercial') || $user->roles->contains('slug', 'personnel')) && 
                 !$user->roles->contains('slug', 'admin') &&
                 in_array($merchantApplication->status, ['approved', 'exported_for_creation'])) {
                 

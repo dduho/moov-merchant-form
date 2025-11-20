@@ -52,6 +52,7 @@
               <option value="">Tous les rôles</option>
               <option value="admin">Administrateur</option>
               <option value="commercial">Commercial</option>
+              <option value="personnel">Personnel</option>
             </select>
           </div>
 
@@ -461,9 +462,11 @@ export default {
     const getRoleColor = (roleSlug) => {
       switch (roleSlug) {
         case 'admin':
-          return 'bg-purple-100 text-purple-800'
+          return 'bg-red-100 text-red-800'
         case 'commercial':
           return 'bg-blue-100 text-blue-800'
+        case 'personnel':
+          return 'bg-green-100 text-green-800'
         default:
           return 'bg-gray-100 text-gray-800'
       }
@@ -472,9 +475,11 @@ export default {
     const getRoleIcon = (roleSlug) => {
       switch (roleSlug) {
         case 'admin':
-          return 'fas fa-crown'
+          return 'fas fa-shield-alt'
         case 'commercial':
-          return 'fas fa-handshake'
+          return 'fas fa-briefcase'
+        case 'personnel':
+          return 'fas fa-user-tie'
         default:
           return 'fas fa-user'
       }
@@ -486,6 +491,8 @@ export default {
           return 'Administrateur'
         case 'commercial':
           return 'Commercial'
+        case 'personnel':
+          return 'Personnel'
         default:
           return roleSlug
       }

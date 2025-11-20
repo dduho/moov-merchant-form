@@ -133,6 +133,7 @@
                 <option value="">Sélectionnez un rôle</option>
                 <option value="admin">Administrateur</option>
                 <option value="commercial">Commercial</option>
+                <option value="personnel">Personnel</option>
               </select>
               <p v-if="errors.role_slug" class="mt-1 text-sm text-red-600">{{ errors.role_slug }}</p>
             </div>

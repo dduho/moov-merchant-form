@@ -75,9 +75,10 @@ class UserManagementController extends Controller
 
         $users = $query->paginate($request->get('per_page', 10));
 
-        // Ajouter les statistiques pour chaque commercial
+        // Ajouter les statistiques pour chaque commercial et personnel
         $users->getCollection()->transform(function ($user) {
             try {
+                // Les commerciaux ont des objectifs, le personnel n'en a pas
                 if ($user->roles && $user->roles->contains('slug', 'commercial')) {
                     $currentMonth = date('Y-m-01');
                     $nextMonth = date('Y-m-01', strtotime('+1 month'));

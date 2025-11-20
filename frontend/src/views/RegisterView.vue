@@ -59,7 +59,7 @@ const handleSubmit = async () => {
     // Afficher la notification de succès
     notificationStore.success(
       'Utilisateur créé avec succès',
-      `${form.first_name} ${form.last_name} a été créé avec le rôle ${form.role_slug === 'admin' ? 'Administrateur' : 'Commercial'}. L'utilisateur devra changer son mot de passe lors de sa première connexion.`
+      `${form.first_name} ${form.last_name} a été créé avec le rôle ${form.role_slug === 'admin' ? 'Administrateur' : form.role_slug === 'commercial' ? 'Commercial' : 'Personnel'}. L'utilisateur devra changer son mot de passe lors de sa première connexion.`
     )
     
     // Réinitialiser le formulaire
@@ -286,6 +286,7 @@ const handleSubmit = async () => {
                 <option value="">Sélectionnez un rôle</option>
                 <option value="admin">Administrateur</option>
                 <option value="commercial">Commercial</option>
+                <option value="personnel">Personnel</option>
               </select>
               <p v-if="v$.role_slug.$error" class="mt-1 text-sm text-red-600">
                 {{ v$.role.$errors[0].$message }}

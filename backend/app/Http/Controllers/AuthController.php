@@ -80,7 +80,7 @@ class AuthController extends Controller
                 'phone' => 'required|string|unique:users',
                 'username' => 'required|string|unique:users|min:4',
                 'password' => 'required|string|min:6',
-                'role_slug' => ['required', Rule::in(['admin', 'commercial'])],
+                'role_slug' => ['required', Rule::in(['admin', 'commercial', 'personnel'])],
             ]);
         } catch (ValidationException $e) {
             return response()->json([
@@ -113,6 +113,7 @@ class AuthController extends Controller
             $user->roles()->attach($role->id);
 
             // Si c'est un commercial, appliquer les objectifs globaux
+            // Le personnel n'est PAS soumis aux objectifs
             if ($request->role_slug === 'commercial') {
                 $user->applyGlobalObjectives();
             }

@@ -724,11 +724,11 @@
                     </div>
                   </div>
 
-                  <!-- Section Commercial -->
+                  <!-- Section Soumissionnaire (Commercial ou Personnel) -->
                   <div class="border-t pt-6 mt-6">
                     <h3 class="text-base font-semibold mb-4 flex items-center">
                       <i class="fas fa-user-tie text-orange-500 mr-2"></i>
-                      Informations du Commercial
+                      Informations du Soumissionnaire
                     </h3>
                     
                     <!-- Note d'information si les champs ne sont pas modifiables -->
@@ -736,7 +736,7 @@
                       <div class="flex items-start">
                         <i class="fas fa-info-circle text-blue-500 mr-2 mt-0.5"></i>
                         <div class="text-sm text-blue-700">
-                          <strong>Information :</strong> Ces informations ne peuvent pas être modifiées car cette candidature est liée à un utilisateur commercial spécifique.
+                          <strong>Information :</strong> Ces informations ne peuvent pas être modifiées car cette candidature est liée à un utilisateur spécifique.
                         </div>
                       </div>
                     </div>
@@ -744,33 +744,33 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
                       <div class="form-group">
                         <label class="form-label">
-                          Nom du commercial <span v-if="isCommercial">*</span>
+                          Nom <span v-if="isCommercial || isPersonnel">*</span>
                         </label>
                         <input v-model="formData.commercialLastName" type="text" 
                           class="form-input h-12" :class="{ 'border-red-500': errors.commercialLastName }"
-                          placeholder="Nom" :required="isCommercial" :disabled="isCommercialInfoDisabled"
+                          placeholder="Nom" :required="isCommercial || isPersonnel" :disabled="isCommercialInfoDisabled"
                           :title="isCommercialInfoDisabled ? 'Non modifiable - Candidature liée à un utilisateur' : ''">
                         <p v-if="errors.commercialLastName" class="mt-1 text-sm text-red-600">{{ errors.commercialLastName }}</p>
                       </div>
 
                       <div class="form-group">
                         <label class="form-label">
-                          Prénoms du commercial <span v-if="isCommercial">*</span>
+                          Prénoms <span v-if="isCommercial || isPersonnel">*</span>
                         </label>
                         <input v-model="formData.commercialFirstName" type="text" 
                           class="form-input h-12" :class="{ 'border-red-500': errors.commercialFirstName }"
-                          placeholder="Prénoms" :required="isCommercial" :disabled="isCommercialInfoDisabled"
+                          placeholder="Prénoms" :required="isCommercial || isPersonnel" :disabled="isCommercialInfoDisabled"
                           :title="isCommercialInfoDisabled ? 'Non modifiable - Candidature liée à un utilisateur' : ''">
                         <p v-if="errors.commercialFirstName" class="mt-1 text-sm text-red-600">{{ errors.commercialFirstName }}</p>
                       </div>
 
                       <div class="form-group">
                         <label class="form-label">
-                          Téléphone du commercial <span v-if="isCommercial">*</span>
+                          Téléphone <span v-if="isCommercial || isPersonnel">*</span>
                         </label>
                         <PhoneInput v-model="formData.commercialPhone" 
                           :class="{ 'border-red-500': errors.commercialPhone }"
-                          :required="isCommercial" :disabled="isCommercialInfoDisabled"
+                          :required="isCommercial || isPersonnel" :disabled="isCommercialInfoDisabled"
                           :title="isCommercialInfoDisabled ? 'Non modifiable - Candidature liée à un utilisateur' : ''" />
                         <p v-if="errors.commercialPhone" class="mt-1 text-sm text-red-600">{{ errors.commercialPhone }}</p>
                       </div>
@@ -1064,6 +1064,8 @@ export default {
 
     // État de l'authentification
     const isCommercial = computed(() => authStore.isCommercial);
+    const isPersonnel = computed(() => authStore.isPersonnel);
+    const canSubmit = computed(() => authStore.canSubmitApplications);
     const userInfo = computed(() => authStore.user);
     
     // Refs pour les ValidatedInput (Step 1)
@@ -1305,7 +1307,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
       cfeExpiryDate: '',
       hasNIF: false,
       nifNumber: '',
-      // Informations du commercial
+      // Informations du soumissionnaire (commercial ou personnel)
       commercialLastName: '',
       commercialFirstName: '',
       commercialPhone: '',
@@ -1559,16 +1561,16 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
     const validateCommercialInfo = () => {
       const validationErrors = {}
       
-      if (isCommercial.value) {
-        // Commercial fields are required for commercial users
+      if (isCommercial.value || isPersonnel.value) {
+        // Commercial and personnel fields are required for commercial and personnel users
         if (!formData.value.commercialLastName) {
-          validationErrors.commercialLastName = 'Le nom du commercial est requis'
+          validationErrors.commercialLastName = 'Le nom est requis'
         }
         if (!formData.value.commercialFirstName) {
-          validationErrors.commercialFirstName = 'Le prénom du commercial est requis'
+          validationErrors.commercialFirstName = 'Le prénom est requis'
         }
         if (!formData.value.commercialPhone) {
-          validationErrors.commercialPhone = 'Le téléphone du commercial est requis'
+          validationErrors.commercialPhone = 'Le téléphone est requis'
         }
       }
       
@@ -1683,8 +1685,8 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
         if (!formData.value.usageType) errors.value.usageType = 'Champ obligatoire'
         // businessPhone is now optional, no validation needed
         
-        // Validate commercial info if user is commercial
-        if (isCommercial.value) {
+        // Validate commercial info if user is commercial or personnel
+        if (isCommercial.value || isPersonnel.value) {
           const commercialErrors = validateCommercialInfo()
           Object.assign(errors.value, commercialErrors)
         }
@@ -2115,8 +2117,8 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
             formData.value = { ...formData.value, ...savedData };
           }
           
-          // Remplir les champs commerciaux seulement s'ils sont vides et que c'est un commercial
-          if (isCommercial.value && userInfo.value && !isEditMode.value) {
+          // Remplir les champs commerciaux seulement s'ils sont vides et que c'est un commercial ou personnel
+          if ((isCommercial.value || isPersonnel.value) && userInfo.value && !isEditMode.value) {
             // Pré-remplir seulement les champs vides
             if (!formData.value.commercialLastName) {
               formData.value.commercialLastName = userInfo.value.last_name || '';

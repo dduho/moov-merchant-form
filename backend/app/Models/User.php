@@ -53,6 +53,16 @@ class User extends Authenticatable
         return $this->hasRole('commercial');
     }
 
+    public function isPersonnel()
+    {
+        return $this->hasRole('personnel');
+    }
+
+    public function canSubmitApplications()
+    {
+        return $this->hasRole('commercial') || $this->hasRole('personnel');
+    }
+
     public function getFullNameAttribute()
     {
         return "{$this->first_name} {$this->last_name}";
