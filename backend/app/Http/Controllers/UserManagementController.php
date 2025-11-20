@@ -628,7 +628,7 @@ class UserManagementController extends Controller
         $firstLine = fgets($handle);
         rewind($handle);
         
-        $delimiters = [',', ';', "\t"];
+        $delimiters = [',', ';', "\t", '|'];
         $delimiter = ',';
         $maxCount = 0;
         
