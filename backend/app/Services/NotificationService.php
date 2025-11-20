@@ -99,12 +99,12 @@ class NotificationService
                 );
             }
             
-            // Si la candidature a été créée par un commercial, lui envoyer aussi une confirmation
+            // Si la candidature a été créée par un commercial ou personnel, lui envoyer aussi une confirmation
             if ($application->user_id && $application->user) {
-                $commercial = $application->user;
-                if ($commercial->hasRole('commercial')) {
+                $submitter = $application->user;
+                if ($submitter->hasRole('commercial') || $submitter->hasRole('personnel')) {
                     $this->createNotification(
-                        $commercial,
+                        $submitter,
                         'application_submitted',
                         'Candidature soumise avec succès',
                         "Votre candidature #{$application->reference_number} pour {$application->full_name} a été soumise et est en cours de traitement.",
@@ -315,8 +315,8 @@ class NotificationService
             ->limit($limit)
             ->get();
             
-        // Filtrer les notifications pour les commerciaux
-        if ($user->hasRole('commercial') && !$user->hasRole('admin')) {
+        // Filtrer les notifications pour les commerciaux et personnel
+        if (($user->hasRole('commercial') || $user->hasRole('personnel')) && !$user->hasRole('admin')) {
             $notifications = $notifications->filter(function($notification) use ($user) {
                 return $this->isNotificationRelevantForCommercial($notification, $user);
             });
@@ -327,7 +327,7 @@ class NotificationService
 
     /**
      * Obtenir toutes les notifications d'un utilisateur
-     * Les commerciaux ne voient que leurs notifications personnelles
+     * Les commerciaux et personnel ne voient que leurs notifications personnelles
      */
     public function getAllNotifications(User $user, int $limit = 50)
     {
@@ -337,8 +337,8 @@ class NotificationService
             ->limit($limit)
             ->get();
             
-        // Filtrer les notifications pour les commerciaux
-        if ($user->hasRole('commercial') && !$user->hasRole('admin')) {
+        // Filtrer les notifications pour les commerciaux et personnel
+        if (($user->hasRole('commercial') || $user->hasRole('personnel')) && !$user->hasRole('admin')) {
             $notifications = $notifications->filter(function($notification) use ($user) {
                 return $this->isNotificationRelevantForCommercial($notification, $user);
             });
@@ -385,10 +385,10 @@ class NotificationService
         string $message,
         string $priority = 'normal'
     ): ?Notification {
-        // Vérifier que le commercial est bien le propriétaire de la candidature
-        if ($application->user_id !== $commercial->id || !$commercial->hasRole('commercial')) {
-            Log::warning('Tentative de notification incorrecte pour commercial', [
-                'commercial_id' => $commercial->id,
+        // Vérifier que l'utilisateur (commercial ou personnel) est bien le propriétaire de la candidature
+        if ($application->user_id !== $commercial->id || (!$commercial->hasRole('commercial') && !$commercial->hasRole('personnel'))) {
+            Log::warning('Tentative de notification incorrecte pour utilisateur', [
+                'user_id' => $commercial->id,
                 'application_id' => $application->id,
                 'application_user_id' => $application->user_id
             ]);
@@ -417,8 +417,8 @@ class NotificationService
     {
         $baseQuery = $user->notifications()->notExpired();
         
-        // Pour les commerciaux, filtrer les notifications
-        if ($user->hasRole('commercial') && !$user->hasRole('admin')) {
+        // Pour les commerciaux et personnel, filtrer les notifications
+        if (($user->hasRole('commercial') || $user->hasRole('personnel')) && !$user->hasRole('admin')) {
             $baseQuery->whereIn('type', [
                 'application_submitted',
                 'application_approved', 
@@ -467,7 +467,7 @@ class NotificationService
             'unread' => $unread,
             'read' => $read,
             'by_type' => $byType,
-            'user_role' => $user->hasRole('admin') ? 'admin' : 'commercial'
+            'user_role' => $user->hasRole('admin') ? 'admin' : ($user->hasRole('commercial') ? 'commercial' : ($user->hasRole('personnel') ? 'personnel' : 'user'))
         ];
     }
 

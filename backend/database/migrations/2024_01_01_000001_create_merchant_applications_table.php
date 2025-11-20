@@ -25,7 +25,7 @@ return new class extends Migration
             $table->text('address');
             
             // Documents d'identité
-            $table->enum('id_type', ['cni', 'passport', 'residence'])->nullable(); // NOUVEAU - Type de pièce
+            $table->enum('id_type', ['cni', 'passport', 'residence', 'elector', 'driving_license', 'foreign_id'])->nullable(); // Type de pièce d'identité
             $table->string('id_number', 50)->unique()->index();
             $table->date('id_expiry_date');
             $table->boolean('has_anid_card')->default(false)->index();

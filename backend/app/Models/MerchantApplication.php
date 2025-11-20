@@ -201,6 +201,9 @@ class MerchantApplication extends Model
                 'cni' => 'Carte Nationale d\'Identité',
                 'passport' => 'Passeport',
                 'residence' => 'Carte de séjour',
+                'elector' => 'Carte d\'électeur',
+                'driving_license' => 'Permis de conduire',
+                'foreign_id' => 'Carte d\'identité étrangère',
                 default => 'Non spécifié'
             }
         );
