@@ -166,26 +166,53 @@
                       @validation-change="(state) => state.isValid && delete errors.birthDate"
                     />
 
-                    <ValidatedInput
-                      ref="birthPlaceInput"
-                      v-model="formData.birthPlace"
-                      field-name="birthPlace"
-                      label="Lieu de naissance *"
-                      type="text"
-                      placeholder="Ville, Pays"
-                      autocomplete="off"
-                      inputmode="text"
-                      :validation-fn="validateRequired"
-                      :validate-on-input="true"
-                      :error="errors.birthPlace || ''"
-                      @validation-change="(state) => state.isValid && delete errors.birthPlace"
-                    />
+                    <div class="form-group relative">
+                      <label class="form-label flex items-center justify-between">
+                        <span>Lieu de naissance *</span>
+                        <i v-if="formData.birthPlace && !errors.birthPlace" class="fas fa-check-circle text-green-500 text-sm"></i>
+                        <i v-else-if="errors.birthPlace" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
+                      </label>
+                      <div class="relative">
+                        <input 
+                          v-model="formData.birthPlace" 
+                          type="text" 
+                          style="border-width: 2px !important;"
+                          class="form-input h-12 w-full rounded-xl px-4 py-2 pr-12 focus:outline-none focus:ring-2 focus:ring-orange-500/50 dark:bg-gray-700 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all duration-200" 
+                          :class="{
+                            'border-red-600 dark:border-red-500 focus:border-red-600': errors.birthPlace,
+                            'border-green-600 dark:border-green-500 focus:border-green-600': formData.birthPlace && !errors.birthPlace,
+                            'border-gray-300 dark:border-gray-600 focus:border-orange-500': !formData.birthPlace && !errors.birthPlace
+                          }"
+                          placeholder="Tapez ou sélectionnez votre lieu de naissance"
+                          @input="filterBirthPlaces"
+                          @keyup="filterBirthPlaces"
+                          @focus="showBirthPlaceSuggestions = true; filterBirthPlaces()"
+                          @blur="hideBirthPlaceSuggestions"
+                          autocomplete="off"
+                          required
+                        />
+                        <div 
+                          v-if="showBirthPlaceSuggestions && filteredBirthPlaces.length > 0"
+                          class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl shadow-lg max-h-60 overflow-y-auto"
+                        >
+                          <div 
+                            v-for="city in filteredBirthPlaces" 
+                            :key="city"
+                            @mousedown="selectBirthPlace(city)"
+                            class="px-4 py-2 hover:bg-orange-50 dark:hover:bg-gray-700 cursor-pointer transition-colors duration-150 dark:text-white"
+                          >
+                            {{ city }}
+                          </div>
+                        </div>
+                      </div>
+                      <p v-if="errors.birthPlace" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.birthPlace }}</p>
+                    </div>
 
                     <ValidatedInput
                       ref="genderInput"
                       v-model="formData.gender"
                       field-name="gender"
-                      label="Genre *"
+                      label="Genre "
                       type="select"
                       :validation-fn="validateRequired"
                       :validate-on-input="true"
@@ -217,7 +244,8 @@
                           }"
                           placeholder="Tapez ou sélectionnez votre nationalité"
                           @input="filterNationalities"
-                          @focus="showNationalitySuggestions = true"
+                          @keyup="filterNationalities"
+                          @focus="showNationalitySuggestions = true; filterNationalities()"
                           @blur="hideNationalitySuggestions; validateNationality()"
                           autocomplete="off"
                           required
@@ -297,7 +325,7 @@
                         ref="addressInput"
                         v-model="formData.address"
                         field-name="address"
-                        label="Adresse complète *"
+                        label="Adresse complète "
                         type="textarea"
                         placeholder="Adresse détaillée"
                         autocomplete="street-address"
@@ -541,6 +569,7 @@
                           'border-green-600 dark:border-green-500': formData.businessAddress && !errors.businessAddress,
                           'border-gray-300 dark:border-gray-600': !formData.businessAddress && !errors.businessAddress
                         }"
+                        @input="formData.locationDescription = formData.businessAddress"
                         placeholder="Adresse où se situe votre commerce" required></textarea>
                       <p v-if="errors.businessAddress" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.businessAddress }}</p>
                     </div>
@@ -589,7 +618,8 @@
                           }"
                           placeholder="Tapez votre ville ou village"
                           @input="filterCities"
-                          @focus="showCitySuggestions = true"
+                          @keyup="filterCities"
+                          @focus="showCitySuggestions = true; filterCities()"
                           @blur="hideCitySuggestions"
                           autocomplete="off"
                           required
@@ -597,12 +627,12 @@
                         <!-- Liste des suggestions -->
                         <div 
                           v-if="showCitySuggestions && filteredCities.length > 0"
-                          class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto"
+                          class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto"
                         >
                           <div 
                             v-for="city in filteredCities" 
                             :key="city"
-                            class="px-4 py-2 cursor-pointer hover:bg-gray-100 transition-colors"
+                            class="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors dark:text-white"
                             @mousedown="selectCity(city)"
                           >
                             {{ city }}
@@ -748,8 +778,8 @@
                         </label>
                         <input v-model="formData.commercialLastName" type="text" 
                           class="form-input h-12" :class="{ 'border-red-500': errors.commercialLastName }"
-                          placeholder="Nom" :required="isCommercial || isPersonnel" :disabled="isCommercialInfoDisabled"
-                          :title="isCommercialInfoDisabled ? 'Non modifiable - Candidature liée à un utilisateur' : ''">
+                          placeholder="Nom" :required="isCommercial || isPersonnel" :disabled="isSubmitterFieldsDisabled || isCommercialInfoDisabled"
+                          :title="(isSubmitterFieldsDisabled || isCommercialInfoDisabled) ? 'Non modifiable - Candidature liée à un utilisateur' : ''">
                         <p v-if="errors.commercialLastName" class="mt-1 text-sm text-red-600">{{ errors.commercialLastName }}</p>
                       </div>
 
@@ -759,8 +789,8 @@
                         </label>
                         <input v-model="formData.commercialFirstName" type="text" 
                           class="form-input h-12" :class="{ 'border-red-500': errors.commercialFirstName }"
-                          placeholder="Prénoms" :required="isCommercial || isPersonnel" :disabled="isCommercialInfoDisabled"
-                          :title="isCommercialInfoDisabled ? 'Non modifiable - Candidature liée à un utilisateur' : ''">
+                          placeholder="Prénoms" :required="isCommercial || isPersonnel" :disabled="isSubmitterFieldsDisabled || isCommercialInfoDisabled"
+                          :title="(isSubmitterFieldsDisabled || isCommercialInfoDisabled) ? 'Non modifiable - Candidature liée à un utilisateur' : ''">
                         <p v-if="errors.commercialFirstName" class="mt-1 text-sm text-red-600">{{ errors.commercialFirstName }}</p>
                       </div>
 
@@ -770,8 +800,8 @@
                         </label>
                         <PhoneInput v-model="formData.commercialPhone" 
                           :class="{ 'border-red-500': errors.commercialPhone }"
-                          :required="isCommercial || isPersonnel" :disabled="isCommercialInfoDisabled"
-                          :title="isCommercialInfoDisabled ? 'Non modifiable - Candidature liée à un utilisateur' : ''" />
+                          :required="isCommercial || isPersonnel" :disabled="isSubmitterFieldsDisabled || isCommercialInfoDisabled"
+                          :title="(isSubmitterFieldsDisabled || isCommercialInfoDisabled) ? 'Non modifiable - Candidature liée à un utilisateur' : ''" />
                         <p v-if="errors.commercialPhone" class="mt-1 text-sm text-red-600">{{ errors.commercialPhone }}</p>
                       </div>
                     </div>
@@ -951,8 +981,8 @@
               </div>
               
               <!-- Contenu -->
-              <div class="px-6 py-6 overflow-y-auto max-h-[calc(85vh-120px)] prose prose-sm dark:prose-invert max-w-none">
-                <div class="space-y-6 text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{{ termsAndConditions }}</div>
+              <div class="px-6 py-6 pb-8 overflow-y-auto max-h-[calc(85vh-120px)] prose prose-sm dark:prose-invert max-w-none">
+                <div class="space-y-6 text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap pb-6">{{ termsAndConditions }}</div>
               </div>
               
               <!-- Footer -->
@@ -975,7 +1005,7 @@ import { ref, computed, watch, onMounted, nextTick, onBeforeUnmount, defineAsync
 import { useRouter, useRoute } from 'vue-router'
 import { useMerchantStore } from '../stores/merchant'
 import { useAuthStore } from '../stores/auth'
-import { useNotificationStore } from '../stores/notifications'
+import { useNotification } from '../composables/useNotification'
 import MerchantService from '../services/MerchantService'
 import FileUpload from '../components/FileUpload.vue'
 import PhoneInput from '../components/PhoneInput.vue'
@@ -1014,7 +1044,7 @@ export default {
     const route = useRoute();
     const merchantStore = useMerchantStore();
     const authStore = useAuthStore();
-    const notificationStore = useNotificationStore();
+    const { success: notifySuccess, error: notifyError, warning: notifyWarning, info: notifyInfo } = useNotification();
 
     // Composables
     const haptic = useHaptic();
@@ -1063,6 +1093,7 @@ export default {
     }
 
     // État de l'authentification
+    const isAuthenticated = computed(() => authStore.isAuthenticated);
     const isCommercial = computed(() => authStore.isCommercial);
     const isPersonnel = computed(() => authStore.isPersonnel);
     const canSubmit = computed(() => authStore.canSubmitApplications);
@@ -1268,6 +1299,13 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
     // Détermine si les informations commerciales doivent être désactivées
     const isCommercialInfoDisabled = computed(() => {
       return isEditMode.value && applicationUserId.value !== null;
+    });
+
+    // Détermine si les champs du soumissionnaire doivent être en lecture seule
+    // - En mode création : désactivés si utilisateur connecté
+    // - En mode édition : toujours désactivés
+    const isSubmitterFieldsDisabled = computed(() => {
+      return isEditMode.value || (!isEditMode.value && isAuthenticated.value);
     });
 
     // État de la mise en page
@@ -1492,10 +1530,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
       } catch (error) {
         console.error('Error loading application:', error);
         loadingError.value = 'Erreur lors du chargement';
-        notificationStore.addNotification({
-          type: 'error',
-          message: 'Erreur lors du chargement de la candidature: ' + (error.message || error)
-        });
+        notifyError('Erreur lors du chargement de la candidature: ' + (error.message || error));
       } finally {
         isLoadingApplication.value = false;
       }
@@ -1506,19 +1541,97 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
 
     // Variables pour l'autocomplétion des villes
     const cities = ref([
-      // Région Maritime
-      'Lomé', 'Aného', 'Vogan', 'Tsévié', 'Kpalimé', 'Tabligbo',
-      // Région Plateaux  
-      'Atakpamé', 'Kpalimé', 'Badou', 'Danyi', 'Agou', 'Kloto',
-      // Région Centrale
-      'Sokodé', 'Tchamba', 'Blitta', 'Sotouboua', 'Tchaoudjo',
-      // Région Kara
-      'Kara', 'Bassar', 'Niamtougou', 'Pagouda', 'Bafilo', 'Ketao',
-      // Région Savanes
-      'Dapaong', 'Mango', 'Gando', 'Kantè', 'Tandjoaré', 'Cinkassé'
+      // RÉGION MARITIME
+      // Préfecture du Golfe
+      'Lomé', 'Agoè', 'Kégué', 'Bè', 'Tokoin', 'Nyékonakpoè', 'Adidogomé', 'Cacavéli', 'Aflao Gakli', 'Améyomé',
+      // Préfecture des Lacs
+      'Aného', 'Glidji', 'Agbodrafo', 'Togoville', 'Attitogon', 'Sédomè', 'Akoumapé', 'Afanyangan',
+      // Préfecture de Vo
+      'Vogan', 'Afagnan', 'Togokomé', 'Adzido', 'Djagblé', 'Tohoun', 'Kpémé', 'Sagbadaï',
+      // Préfecture de Zio
+      'Tsévié', 'Davié', 'Kévé', 'Tsiko', 'Mission Tové', 'Agomé-Glozou', 'Tséviè-Gbogamé',
+      // Préfecture de Yoto
+      'Tabligbo', 'Wahala', 'Assahoun', 'Kati', 'Kovié', 'Kpélé-Govié', 'Ahépé',
+      // Préfecture d'Avé
+      'Kpalimé', 'Kpélé-Akata', 'Gapé', 'Womé', 'Tové', 'Kpadapé', 'Akpafu',
+      
+      // RÉGION DES PLATEAUX
+      // Préfecture de Kloto
+      'Kpalimé', 'Kpimé', 'Tomégbé', 'Lavié-Apédomé', 'Kpadapé', 'Gapé-Centre', 'Kpélé-Adeta', 'Kpélé-Akata', 'Agomé-Tomégbé',
+      // Préfecture d'Agou
+      'Agou-Gadzepe', 'Kougnohou', 'Agou-Iboé', 'Agomé-Yoh', 'Kpodzi', 'Atakpamé-Dayes', 'Kpélé-Govié', 'Amoussoukopé',
+      // Préfecture de Haho
+      'Notsè', 'Wahala', 'Kpélé-Govié', 'Aouda', 'Kpélé-Adodomé', 'Tchébébé', 'Gnégnévo', 'Kpélé-Tsiko',
+      // Préfecture de Moyen-Mono
+      'Tohoun', 'Atakpamé', 'Badou', 'Kougnohou', 'Amlamé', 'Kpélé-Élé', 'Datcha',
+      // Préfecture du Danyi
+      'Danyi-Apéyéyé', 'Danyi-Dzogbégan', 'Danyi-Todome', 'Dzogbégan', 'Apéyéyé',
+      // Préfecture d'Amou
+      'Amlamé', 'Badja', 'Kpélé-Élé', 'Kpadapé', 'Kamina',
+      // Préfecture de Wawa
+      'Badou', 'Tomégbé', 'Kpélé', 'Atakpamé', 'Datcha', 'Aouda', 'Aou',
+      // Préfecture d'Est-Mono
+      'Elavagnon', 'Datcha', 'Kpélé-Tsiko', 'Kpélé', 'Aouda',
+      // Préfecture d'Akébou
+      'Kougnohou', 'Kambolé', 'Amoussoukopé', 'Koumonko',
+      // Préfecture d'Ogou
+      'Atakpamé', 'Badou', 'Datcha', 'Djama', 'Kougnohou', 'Kpessi', 'Litimé', 'Yégué', 'Ounabé',
+      
+      // RÉGION CENTRALE
+      // Préfecture de Tchaoudjo
+      'Sokodé', 'Fazao', 'Kpadapé', 'Tchamba-Sokodé', 'Léon', 'Adjamdè', 'Adjengré', 'Kadambara', 'Kpangalam', 'Kpawa',
+      // Préfecture de Sotouboua
+      'Sotouboua', 'Blitta', 'Koumongou', 'Adjamdè', 'Kambolé', 'Adjamdè-Bafilo',
+      // Préfecture de Tchamba
+      'Tchamba', 'Kaboli', 'Koussountou', 'Adjengré', 'Balanka', 'Koundjoaré',
+      // Préfecture de Blitta
+      'Blitta', 'Djarkpanga', 'Kambolé', 'Sotouboua-Blitta', 'Koumongou',
+      
+      // RÉGION DE LA KARA
+      // Préfecture de la Kozah
+      'Kara', 'Lama-Kara', 'Pya', 'Kétao', 'Sarakawa', 'Pagala', 'Lassa', 'Bohou', 'Landa-Pozanda', 'Lama-Tessi',
+      // Préfecture de Bassar
+      'Bassar', 'Baghan', 'Kabou', 'Bidjouka', 'Bangéli', 'Binaparba', 'Dimouri', 'Kaboli',
+      // Préfecture de Dankpen
+      'Guérin-Kouka', 'Koka', 'Namon', 'Siou', 'Atalote', 'Pagala-Gare',
+      // Préfecture de Doufelgou
+      'Niamtougou', 'Atalote', 'Alédjo', 'Kétao', 'Kounfaga', 'Siou', 'Défale', 'Kouka',
+      // Préfecture de Binah
+      'Pagouda', 'Kétao', 'Kabou', 'Landa', 'Namon-Nanergou', 'Pana',
+      // Préfecture de Kéran
+      'Kétao', 'Bafilo', 'Koundjoaré', 'Atalote', 'Pagala', 'Pana-Hodo', 'Pagouda-Binah',
+      // Préfecture d'Assoli
+      'Bafilo', 'Koundjoaré', 'Agbandè', 'Lama', 'Ketao-Assoli',
+      
+      // RÉGION DES SAVANES
+      // Préfecture de l'Oti
+      'Mango', 'Sansanné-Mango', 'Bombouaka', 'Dapaong-Mango', 'Naki-Est', 'Gando-Namoni', 'Mandouri',
+      // Préfecture du Tone
+      'Dapaong', 'Cinkassé', 'Gando', 'Bombouaka', 'Mandouri', 'Nano', 'Korbongou', 'Mango-Cinkassé', 'Nadoba', 'Tandjouaré',
+      // Préfecture de Kpendjal
+      'Mandouri', 'Nadoba', 'Ponio', 'Koundjoaré', 'Tandjouaré-Kpendjal',
+      // Préfecture de Cinkassé
+      'Cinkassé', 'Tandjouaré', 'Gando-Cinkassé', 'Borgou', 'Korbongou', 'Logbo',
+      // Préfecture de Tandjouaré
+      'Tandjouaré', 'Kantè', 'Bombouaka', 'Dapaong-Tandjouaré', 'Korbongou', 'Ponio', 'Timbou',
+      
+      // Autres localités importantes
+      'Adéta', 'Agbélouvé', 'Aklakou', 'Alokoégbé', 'Aného-Glidji', 'Assahoun-Fiagbé', 'Atitogon', 
+      'Djagblé-Kagomé', 'Gléi', 'Hanyigba', 'Kévé-Djigbé', 'Kévé-Kpota', 'Kloto-Gapé', 'Kouma-Konda',
+      'Kpalimé-Kpimé', 'Kpélé-Akata-Kpadapé', 'Moretan', 'Noépé', 'Sagbado', 'Sédomé-Kondji', 
+      'Tokpli', 'Tsévié-Davié', 'Vogan-Afagnan', 'Yokoé', 'Zébé', 'Agomé-Seva', 'Kévé', 'Adangbé',
+      'Amlame-Dzogbépimé', 'Apédomé-Kamina', 'Assahoun-Yéviépé', 'Atakpamé-Gléi', 'Balanka-Kaboli',
+      'Bassar-Bangeli', 'Blitta-Kambolé', 'Danyi-Atigou', 'Kougnohou-Amoussoukopé', 'Litimé-Yégué',
+      'Notsé-Djama', 'Sokodé-Kpangalam', 'Tchamba-Kaboli', 'Badou-Tomegbe', 'Kpele-Ele',
+      'Niamtougou-Siou', 'Pagouda-Kabou', 'Bafilo-Agbande', 'Kara-Sarakawa', 'Bassar-Kabou',
+      'Mango-Bombouaka', 'Dapaong-Nano', 'Cinkassé-Korbongou', 'Tandjouaré-Timbou', 'Gando-Namoni'
     ])
     const filteredCities = ref([])
     const showCitySuggestions = ref(false)
+
+    // Variables pour l'autocomplétion du lieu de naissance
+    const filteredBirthPlaces = ref([])
+    const showBirthPlaceSuggestions = ref(false)
 
     // Variables pour l'autocomplétion des nationalités
     const nationalities = ref([
@@ -1753,10 +1866,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
           scrollToFirstError()
           // Afficher une notification pour les erreurs de validation
           const errorCount = Object.keys(errors.value).length
-          notificationStore.warning(
-            'Informations manquantes',
-            `Veuillez remplir ${errorCount === 1 ? 'le champ obligatoire' : `les ${errorCount} champs obligatoires`} pour continuer`
-          )
+          notifyWarning(`Informations manquantes - Veuillez remplir ${errorCount === 1 ? 'le champ obligatoire' : `les ${errorCount} champs obligatoires`} pour continuer`)
         }
       }
     }
@@ -1844,6 +1954,31 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
       }, 200)
     }
 
+    // Gestion de l'autocomplétion du lieu de naissance
+    const filterBirthPlaces = () => {
+      const query = formData.value.birthPlace.toLowerCase().trim()
+      if (query.length === 0) {
+        filteredBirthPlaces.value = cities.value.slice(0, 10) // Limite à 10 suggestions
+      } else {
+        filteredBirthPlaces.value = cities.value
+          .filter(city => city.toLowerCase().includes(query))
+          .slice(0, 10) // Limite à 10 suggestions
+      }
+    }
+
+    const selectBirthPlace = (city) => {
+      formData.value.birthPlace = city
+      showBirthPlaceSuggestions.value = false
+      autoSave()
+    }
+
+    const hideBirthPlaceSuggestions = () => {
+      // Délai pour permettre le clic sur une suggestion
+      setTimeout(() => {
+        showBirthPlaceSuggestions.value = false
+      }, 200)
+    }
+
     // Gestion de l'autocomplétion des nationalités
     const filterNationalities = () => {
       const query = formData.value.nationality.toLowerCase().trim()
@@ -1891,11 +2026,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
         }, 2000)
       } catch (error) {
         console.error('Erreur sauvegarde automatique:', error)
-        notificationStore.warning(
-          'Sauvegarde automatique échouée',
-          'Vos données seront sauvegardées à la prochaine action',
-          { duration: 3000 }
-        )
+        notifyWarning('Sauvegarde automatique échouée - Vos données seront sauvegardées à la prochaine action')
       }
     }
 
@@ -1905,7 +2036,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
       const isValid = validateStep(currentStep.value)
       
       if (!isValid) {
-        notificationStore.error(
+        notifyError(
           'Erreur de validation',
           'Veuillez corriger les erreurs avant de continuer'
         )
@@ -1924,16 +2055,19 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
           // Mode édition : utiliser updateApplication
           await merchantStore.updateApplication(applicationId.value, dataToSubmit)
           
+          notifySuccess('Candidature modifiée ! Votre demande a été mise à jour avec succès')
+          
           // Vider le formulaire après mise à jour réussie
           formData.value = { ...defaultFormData }
           currentStep.value = 1
           errors.value = {}
           await merchantStore.clearFormData()
           
-          notificationStore.success(
-            'Candidature modifiée !',
-            'Votre demande a été mise à jour avec succès'
-          )
+          // Attendre 1.5 seconde pour que l'utilisateur voie la notification avant de rediriger
+          await new Promise(resolve => setTimeout(resolve, 1500))
+          
+          // Rediriger vers la fiche de candidature modifiée
+          router.push({ name: 'ApplicationDetails', params: { id: applicationId.value } })
         } else {
           // Mode création : utiliser submitApplication
           const response = await merchantStore.submitApplication(dataToSubmit)
@@ -1944,10 +2078,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
           errors.value = {}
           await merchantStore.clearFormData()
           
-          notificationStore.success(
-            'Candidature envoyée !',
-            'Votre demande a été soumise avec succès'
-          )
+          notifySuccess('Candidature envoyée ! Votre demande a été soumise avec succès')
           
           // Rediriger vers la page de succès avec l'ID de l'application
           if (response && response.data && response.data.id) {
@@ -1967,8 +2098,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
             const firstError = Object.values(validationErrors)[0]
             const errorMessage = Array.isArray(firstError) ? firstError[0] : firstError
             
-            notificationStore.error(
-              'Erreur de validation',
+            notifyError(
               errorMessage || error.response.data.message || 'Veuillez corriger les données saisies'
             )
             return
@@ -1976,8 +2106,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
         }
         
         // Handle other types of errors
-        notificationStore.error(
-          'Erreur lors de l\'envoi',
+        notifyError(
           error.message || error.response?.data?.message || 'Une erreur inattendue s\'est produite'
         )
       } finally {
@@ -2043,10 +2172,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
         merchantStore.clearFormData();
         
         // Afficher une notification
-        notificationStore.info(
-          'Formulaire vidé',
-          'Tous les champs ont été réinitialisés'
-        );
+        notifyInfo('Formulaire vidé - Tous les champs ont été réinitialisés');
         
         // Recalculer la hauteur
         nextTick(() => setStageHeightToCurrent());
@@ -2117,9 +2243,9 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
             formData.value = { ...formData.value, ...savedData };
           }
           
-          // Remplir les champs commerciaux seulement s'ils sont vides et que c'est un commercial ou personnel
-          if ((isCommercial.value || isPersonnel.value) && userInfo.value && !isEditMode.value) {
-            // Pré-remplir seulement les champs vides
+          // Pré-remplir les champs du soumissionnaire si utilisateur connecté
+          if (isAuthenticated.value && userInfo.value && !isEditMode.value) {
+            // Pré-remplir les champs du soumissionnaire avec les infos de l'utilisateur connecté
             if (!formData.value.commercialLastName) {
               formData.value.commercialLastName = userInfo.value.last_name || '';
             }
@@ -2179,6 +2305,11 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
       cities,
       filteredCities,
       showCitySuggestions,
+      filterBirthPlaces,
+      selectBirthPlace,
+      hideBirthPlaceSuggestions,
+      filteredBirthPlaces,
+      showBirthPlaceSuggestions,
       filterNationalities,
       selectNationality,
       hideNationalitySuggestions,
@@ -2194,7 +2325,10 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
       beforeLeave,
       leave,
       // Add commercial properties
+      isAuthenticated,
       isCommercial,
+      isPersonnel,
+      canSubmit,
       userInfo,
       // Add edit mode properties
       isEditMode,
@@ -2203,6 +2337,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
       loadingError,
       applicationUserId,
       isCommercialInfoDisabled,
+      isSubmitterFieldsDisabled,
       // Add clear form and navigation functions
       clearForm,
       goToApplicationDetails,

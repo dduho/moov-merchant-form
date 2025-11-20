@@ -1,0 +1,6 @@
+prenom,nom,email,telephone,username,role
+Jean,Dupont,jean.dupont@example.com,90123456,jdupont,commercial
+Marie,Martin,,91234567,mmartin,personnel
+Admin,Test,admin@test.com,92345678,admintest,admin
+Pierre,Durand,pierre.durand@example.com,93456789,pdurand,commercial
+Sophie,Bernard,,94567890,sbernard,personnel

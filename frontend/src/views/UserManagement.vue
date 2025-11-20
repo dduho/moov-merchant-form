@@ -22,6 +22,22 @@
               Gérez les utilisateurs, leurs accès et leurs permissions
             </p>
           </div>
+          <div class="mt-4 md:mt-0 flex space-x-3">
+            <button
+              @click="showBulkImportModal = true"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+            >
+              <i class="fas fa-file-import mr-2"></i>
+              Importer
+            </button>
+            <button
+              @click="$router.push('/register')"
+              class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+            >
+              <i class="fas fa-user-plus mr-2"></i>
+              Créer un utilisateur
+            </button>
+          </div>
         </div>
       </div>
 
@@ -390,6 +406,12 @@
     </div>
 
     <!-- Modals -->
+    <BulkImportModal
+      :show="showBulkImportModal"
+      @close="showBulkImportModal = false"
+      @import-success="handleImportSuccess"
+    />
+
     <UserStatsModal
       :show="showStatsModal"
       :user="selectedUser"
@@ -419,13 +441,15 @@ import { useNotificationStore } from '../stores/notifications'
 import UserStatsModal from '../components/UserStatsModal.vue'
 import ResetPasswordModal from '../components/ResetPasswordModal.vue'
 import EditUserModal from '../components/EditUserModal.vue'
+import BulkImportModal from '../components/BulkImportModal.vue'
 
 export default {
   name: 'UserManagement',
   components: {
     UserStatsModal,
     ResetPasswordModal,
-    EditUserModal
+    EditUserModal,
+    BulkImportModal
   },
   setup() {
     const userStore = useUserManagementStore()
@@ -435,6 +459,7 @@ export default {
     const showStatsModal = ref(false)
     const showResetPasswordModal = ref(false)
     const showEditModal = ref(false)
+    const showBulkImportModal = ref(false)
     const selectedUser = ref(null)
     const selectedEditUser = ref(null)
 
@@ -581,6 +606,15 @@ export default {
       loadUsers(pagination.value.current_page)
     }
 
+    const handleImportSuccess = () => {
+      showBulkImportModal.value = false
+      loadUsers(1) // Recharger la première page
+      notificationStore.success(
+        'Importation réussie',
+        'Les utilisateurs ont été importés avec succès'
+      )
+    }
+
     const resetPassword = (user) => {
       selectedUser.value = user
       showResetPasswordModal.value = true
@@ -673,6 +707,7 @@ export default {
       showStatsModal,
       showResetPasswordModal,
       showEditModal,
+      showBulkImportModal,
       selectedUser,
       selectedEditUser,
 
@@ -693,6 +728,7 @@ export default {
       viewUserStats,
       editUser,
       handleUserUpdated,
+      handleImportSuccess,
       resetPassword,
       handlePasswordReset,
       toggleBlock,

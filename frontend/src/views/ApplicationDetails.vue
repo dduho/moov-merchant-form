@@ -318,7 +318,7 @@
                     </div>
                     <div>
                       <label class="block text-sm font-medium" style="color: #005BA4">Type de commerce</label>
-                      <div class="mt-1 text-gray-900">{{ application?.business_type }}</div>
+                      <div class="mt-1 text-gray-900">{{ getBusinessTypeLabel(application?.business_type) }}</div>
                     </div>
                     <div>
                       <label class="block text-sm font-medium" style="color: #005BA4">Téléphone du commerce</label>
@@ -484,6 +484,7 @@
                     </p>
                   </div>
                   <button 
+                    v-if="canEditMerchantPhone"
                     @click="startEditingBusinessPhone"
                     class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl hover:from-orange-700 hover:to-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 print-hide-on-print"
                   >
@@ -587,7 +588,9 @@
                             event.type === 'document_added' && 'bg-green-500',
                             event.type === 'document_verified' && 'bg-emerald-500',
                             event.type === 'note_added' && 'bg-yellow-500',
-                            event.type === 'reviewed' && 'bg-purple-500'
+                            event.type === 'reviewed' && 'bg-purple-500',
+                            event.type === 'approved' && 'bg-green-600',
+                            event.type === 'rejected' && 'bg-red-600'
                           ]">
                             <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path v-if="event.type === 'submitted'" 
@@ -605,6 +608,16 @@
                                     stroke-linejoin="round" 
                                     stroke-width="2" 
                                     d="M9 12l2 2 4-4m5.5-3.5l-8 8-3.5-3.5" />
+                              <path v-else-if="event.type === 'approved'"
+                                    stroke-linecap="round" 
+                                    stroke-linejoin="round" 
+                                    stroke-width="2" 
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              <path v-else-if="event.type === 'rejected'"
+                                    stroke-linecap="round" 
+                                    stroke-linejoin="round" 
+                                    stroke-width="2" 
+                                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                               <path v-else-if="event.type === 'note_added'"
                                     stroke-linecap="round" 
                                     stroke-linejoin="round" 
@@ -947,6 +960,20 @@ export default {
     const canDelete = computed(() => authStore.canDeleteApplications)
     const canVerifyDocuments = computed(() => authStore.canVerifyDocuments)
     
+    // Vérifier si on peut modifier le numéro marchand
+    const canEditMerchantPhone = computed(() => {
+      // Si c'est un admin, il peut toujours modifier
+      if (authStore.isAdmin) return true
+      
+      // Si c'est commercial ou personnel et que la candidature est approuvée, interdire la modification
+      if ((authStore.isCommercial || authStore.isPersonnel) && application.value && 
+          application.value.status === 'approved') {
+        return false
+      }
+      
+      return true
+    })
+    
     // Vérifier si on peut approuver (permissions + merchant_phone renseigné)
     const canApprove = computed(() => {
       return canValidate.value && application.value?.merchant_phone?.trim()
@@ -1015,6 +1042,32 @@ export default {
           type: 'note_added',
           title: 'Note administrative ajoutée',
           description: 'Une note administrative a été ajoutée par l\'équipe de révision',
+          date: application.value.reviewed_at
+        })
+      }
+      
+      // Événement d'approbation
+      if (application.value.status === 'approved' && application.value.reviewed_at) {
+        events.push({
+          id: 'approved',
+          type: 'approved',
+          title: 'Candidature approuvée',
+          description: application.value.reviewer 
+            ? `Approuvée par ${application.value.reviewer.first_name} ${application.value.reviewer.last_name}`
+            : 'Candidature approuvée par l\'administration',
+          date: application.value.reviewed_at
+        })
+      }
+      
+      // Événement de rejet
+      if (application.value.status === 'rejected' && application.value.reviewed_at) {
+        events.push({
+          id: 'rejected',
+          type: 'rejected',
+          title: 'Candidature rejetée',
+          description: application.value.rejected_reason 
+            ? `Raison : ${application.value.rejected_reason}`
+            : 'Candidature rejetée par l\'administration',
           date: application.value.reviewed_at
         })
       }
@@ -1266,6 +1319,39 @@ export default {
       }
       return types[type] || type
     }
+
+    const getBusinessTypeLabel = (type) => {
+      const types = {
+        'boulangerie': 'Boulangerie',
+        'entrepreneuriat': 'Entrepreneuriat',
+        'secretariat-bureautique': 'Secrétariat bureautique',
+        'commerce-general': 'Commerce général',
+        'coiffure': 'Coiffure',
+        'vente-objets-arts': 'Vente d\'objets d\'arts',
+        'informatique': 'Informatique',
+        'restaurant': 'Restaurant',
+        'pret-a-porter': 'Prêt à porter',
+        'vente-pieces-detachees': 'Vente des pièces détachées',
+        'directrice-societe': 'Directrice de société',
+        'btp': 'BTP',
+        'elevage': 'Elevage',
+        'quincaillerie': 'Quincaillerie',
+        'vente-pagnes': 'Vente de pagnes',
+        'lavage-sec': 'Lavage à sec',
+        'vente-produits-vivriers': 'Vente de produits vivriers',
+        'vente-equipements-sportifs': 'Vente des équipements sportifs',
+        'fabrication-reparation-chaussures': 'Fabrication et réparation de chaussures',
+        'graphiste-designer': 'Graphiste designer',
+        'menuiserie-decoration': 'Menuiserie-décoration',
+        'artiste-plasticien': 'Artiste plasticien',
+        'transfert-argent': 'Transfert d\'argent',
+        'location-appartements-meubles': 'Location des appartements meublés',
+        'pharmacie': 'Pharmacie',
+        'hotel': 'Hôtel',
+        'autre': 'Autres'
+      }
+      return types[type] || type
+    }
     
     const getDocumentUrl = (documentId) => {
       return ApiService.getDocumentUrl(documentId)
@@ -1397,6 +1483,7 @@ export default {
       formatMoney,
       getIdTypeLabel,
       getUsageTypeLabel,
+      getBusinessTypeLabel,
       formatBoolean,
       mapContainer,
       initializeMap,
@@ -1417,6 +1504,7 @@ export default {
       canReject,
       canDelete,
       canVerifyDocuments,
+      canEditMerchantPhone,
       // Menu burger
       showActionsMenu,
       // Téléphone professionnel

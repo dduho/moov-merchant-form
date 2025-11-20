@@ -141,6 +141,8 @@ Route::middleware(['throttle:api'])->group(function () {
     Route::middleware(['web', 'auth:sanctum', 'force.password.change'])->prefix('users')->name('users.')->group(function () {
         Route::get('/', [UserManagementController::class, 'index'])->name('index');
         Route::get('/commercials', [UserManagementController::class, 'getCommercials'])->name('commercials');
+        Route::post('/bulk-import', [UserManagementController::class, 'bulkImport'])->name('bulk-import');
+        Route::get('/import-template', [UserManagementController::class, 'downloadTemplate'])->name('import-template');
         Route::put('/{user}', [UserManagementController::class, 'update'])->name('update');
         Route::post('/{user}/reset-password', [UserManagementController::class, 'resetPassword'])->name('reset-password');
         Route::post('/{user}/toggle-block', [UserManagementController::class, 'toggleBlock'])->name('toggle-block');

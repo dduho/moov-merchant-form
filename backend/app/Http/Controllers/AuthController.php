@@ -76,7 +76,7 @@ class AuthController extends Controller
             $request->validate([
                 'first_name' => 'required|string|max:255',
                 'last_name' => 'required|string|max:255',
-                'email' => 'required|email|unique:users',
+                'email' => 'nullable|email|unique:users',
                 'phone' => 'required|string|unique:users',
                 'username' => 'required|string|unique:users|min:4',
                 'password' => 'required|string|min:6',
@@ -160,7 +160,7 @@ class AuthController extends Controller
         $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
+            'email' => ['nullable', 'email', Rule::unique('users')->ignore($user->id)],
             'phone' => ['required', 'string', Rule::unique('users')->ignore($user->id)],
             'current_password' => 'required_with:new_password|string',
             'new_password' => 'nullable|string|min:6',

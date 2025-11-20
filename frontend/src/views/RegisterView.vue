@@ -26,7 +26,6 @@ const rules = {
   first_name: { required: helpers.withMessage('Le prénom est requis', required) },
   last_name: { required: helpers.withMessage('Le nom est requis', required) },
   email: { 
-    required: helpers.withMessage('L\'email est requis', required),
     email: helpers.withMessage('L\'email n\'est pas valide', email)
   },
   phone: { required: helpers.withMessage('Le téléphone est requis', required) },
@@ -192,7 +191,6 @@ const handleSubmit = async () => {
                   id="email"
                   v-model="form.email"
                   type="email"
-                  required
                   class="form-input h-12 block w-full"
                   :class="{ 'border-red-500': v$.email.$error }"
                 />

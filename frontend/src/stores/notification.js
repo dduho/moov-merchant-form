@@ -206,7 +206,7 @@ export const useSystemNotificationStore = defineStore('systemNotifications', () 
 
   /**
    * Validation des notifications côté client comme sécurité supplémentaire
-   * S'assure qu'un commercial ne voit que ses propres notifications
+   * S'assure qu'un commercial ou personnel ne voit que ses propres notifications
    */
   const validateNotifications = (notificationsToValidate) => {
     const authStore = useAuthStore()
@@ -223,10 +223,10 @@ export const useSystemNotificationStore = defineStore('systemNotifications', () 
       return notificationsToValidate
     }
 
-    // Si c'est un commercial, filtrer strictement
-    if (authStore.isCommercial) {
+    // Si c'est un commercial ou personnel, filtrer strictement
+    if (authStore.isCommercial || authStore.isPersonnel) {
       return notificationsToValidate.filter(notification => {
-        // Vérifier les types de notifications autorisés pour les commerciaux
+        // Vérifier les types de notifications autorisés pour les commerciaux et personnel
         const allowedTypes = [
           'application_submitted',
           'application_approved', 
@@ -237,7 +237,7 @@ export const useSystemNotificationStore = defineStore('systemNotifications', () 
         ]
 
         if (!allowedTypes.includes(notification.type)) {
-          // Type de notification non autorisé pour commercial
+          // Type de notification non autorisé pour commercial/personnel
           return false
         }
 

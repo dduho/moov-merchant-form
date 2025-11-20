@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\UserObjective;
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class UserManagementController extends Controller
 {
@@ -292,7 +294,7 @@ class UserManagementController extends Controller
             $validated = $request->validate([
                 'first_name' => 'required|string|max:255',
                 'last_name' => 'required|string|max:255',
-                'email' => 'required|email|unique:users,email,' . $user->id,
+                'email' => 'nullable|email|unique:users,email,' . $user->id,
                 'phone' => 'required|string|max:20|unique:users,phone,' . $user->id,
                 'username' => 'required|string|max:255|unique:users,username,' . $user->id,
                 'role_slug' => 'required|exists:roles,slug'
@@ -490,5 +492,242 @@ class UserManagementController extends Controller
                 'must_change_password' => false
             ]
         ]);
+    }
+
+    /**
+     * Importer des utilisateurs en masse depuis un fichier Excel/CSV
+     */
+    public function bulkImport(Request $request)
+    {
+        // Check admin access
+        $accessCheck = $this->checkAdminAccess($request);
+        if ($accessCheck) return $accessCheck;
+
+        try {
+            $request->validate([
+                'file' => 'required|file|mimes:xlsx,xls,csv|max:2048'
+            ]);
+
+            $file = $request->file('file');
+            $extension = $file->getClientOriginalExtension();
+            
+            $users = [];
+            $errors = [];
+            $successCount = 0;
+            $errorCount = 0;
+
+            // Parse selon le type de fichier
+            if ($extension === 'csv') {
+                $data = $this->parseCSV($file);
+            } else {
+                // Pour Excel, on va utiliser une approche simple avec fgetcsv après conversion
+                return response()->json([
+                    'message' => 'Format Excel non supporté pour le moment. Veuillez utiliser un fichier CSV.',
+                    'errors' => ['file' => ['Seuls les fichiers CSV sont supportés actuellement']]
+                ], 422);
+            }
+
+            // Validation et création des utilisateurs
+            DB::beginTransaction();
+
+            foreach ($data as $index => $row) {
+                $lineNumber = $index + 2; // +2 car ligne 1 = headers et index commence à 0
+
+                try {
+                    // Validation des données de la ligne
+                    $validated = $this->validateUserRow($row, $lineNumber);
+                    
+                    if (!$validated['valid']) {
+                        $errors[] = [
+                            'line' => $lineNumber,
+                            'data' => $row,
+                            'errors' => $validated['errors']
+                        ];
+                        $errorCount++;
+                        continue;
+                    }
+
+                    // Créer l'utilisateur
+                    $user = User::create([
+                        'first_name' => $validated['data']['first_name'],
+                        'last_name' => $validated['data']['last_name'],
+                        'email' => $validated['data']['email'] ?: null,
+                        'phone' => $validated['data']['phone'],
+                        'username' => $validated['data']['username'],
+                        'password' => Hash::make('123456'), // Mot de passe par défaut
+                        'is_active' => true,
+                        'must_change_password' => true
+                    ]);
+
+                    // Assigner le rôle
+                    $role = Role::where('slug', $validated['data']['role_slug'])->first();
+                    if ($role) {
+                        $user->roles()->attach($role->id);
+                        
+                        // Si c'est un commercial, appliquer les objectifs globaux
+                        if ($validated['data']['role_slug'] === 'commercial') {
+                            $user->applyGlobalObjectives();
+                        }
+                    }
+
+                    $users[] = $user;
+                    $successCount++;
+
+                } catch (\Exception $e) {
+                    $errors[] = [
+                        'line' => $lineNumber,
+                        'data' => $row,
+                        'errors' => ['exception' => $e->getMessage()]
+                    ];
+                    $errorCount++;
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => "Importation terminée : {$successCount} utilisateur(s) créé(s), {$errorCount} erreur(s)",
+                'success' => true,
+                'data' => [
+                    'success_count' => $successCount,
+                    'error_count' => $errorCount,
+                    'users' => $users,
+                    'errors' => $errors
+                ]
+            ], $errorCount > 0 ? 207 : 200); // 207 = Multi-Status
+
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Erreur de validation du fichier',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error in bulk import', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'message' => 'Erreur lors de l\'importation',
+                'errors' => ['server' => [$e->getMessage()]]
+            ], 500);
+        }
+    }
+
+    /**
+     * Parser un fichier CSV
+     */
+    private function parseCSV($file)
+    {
+        $data = [];
+        $handle = fopen($file->getRealPath(), 'r');
+        
+        // Lire la première ligne (headers)
+        $headers = fgetcsv($handle, 0, ',');
+        
+        // Normaliser les headers (enlever BOM, espaces, etc.)
+        $headers = array_map(function($header) {
+            return trim(str_replace("\xEF\xBB\xBF", '', $header));
+        }, $headers);
+
+        // Lire les données
+        while (($row = fgetcsv($handle, 0, ',')) !== false) {
+            if (count($row) === count($headers)) {
+                $data[] = array_combine($headers, $row);
+            }
+        }
+        
+        fclose($handle);
+        return $data;
+    }
+
+    /**
+     * Valider une ligne de données utilisateur
+     */
+    private function validateUserRow($row, $lineNumber)
+    {
+        $errors = [];
+        $data = [];
+
+        // Prénom (requis)
+        if (empty($row['prenom']) || empty(trim($row['prenom']))) {
+            $errors[] = 'Le prénom est requis';
+        } else {
+            $data['first_name'] = trim($row['prenom']);
+        }
+
+        // Nom (requis)
+        if (empty($row['nom']) || empty(trim($row['nom']))) {
+            $errors[] = 'Le nom est requis';
+        } else {
+            $data['last_name'] = trim($row['nom']);
+        }
+
+        // Email (optionnel mais doit être valide et unique)
+        $email = isset($row['email']) ? trim($row['email']) : '';
+        if (!empty($email)) {
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $errors[] = 'L\'email n\'est pas valide';
+            } elseif (User::where('email', $email)->exists()) {
+                $errors[] = 'Cet email existe déjà';
+            } else {
+                $data['email'] = $email;
+            }
+        } else {
+            $data['email'] = null;
+        }
+
+        // Téléphone (requis et unique)
+        if (empty($row['telephone']) || empty(trim($row['telephone']))) {
+            $errors[] = 'Le téléphone est requis';
+        } elseif (User::where('phone', trim($row['telephone']))->exists()) {
+            $errors[] = 'Ce téléphone existe déjà';
+        } else {
+            $data['phone'] = trim($row['telephone']);
+        }
+
+        // Nom d'utilisateur (requis et unique)
+        if (empty($row['username']) || empty(trim($row['username']))) {
+            $errors[] = 'Le nom d\'utilisateur est requis';
+        } elseif (strlen(trim($row['username'])) < 4) {
+            $errors[] = 'Le nom d\'utilisateur doit faire au moins 4 caractères';
+        } elseif (User::where('username', trim($row['username']))->exists()) {
+            $errors[] = 'Ce nom d\'utilisateur existe déjà';
+        } else {
+            $data['username'] = trim($row['username']);
+        }
+
+        // Rôle (requis)
+        $role = isset($row['role']) ? strtolower(trim($row['role'])) : '';
+        if (empty($role)) {
+            $errors[] = 'Le rôle est requis';
+        } elseif (!in_array($role, ['admin', 'commercial', 'personnel'])) {
+            $errors[] = 'Le rôle doit être: admin, commercial ou personnel';
+        } else {
+            $data['role_slug'] = $role;
+        }
+
+        return [
+            'valid' => empty($errors),
+            'errors' => $errors,
+            'data' => $data
+        ];
+    }
+
+    /**
+     * Télécharger un template Excel pour l'importation
+     */
+    public function downloadTemplate()
+    {
+        $csv = "prenom,nom,email,telephone,username,role\n";
+        $csv .= "Jean,Dupont,jean.dupont@example.com,90123456,jdupont,commercial\n";
+        $csv .= "Marie,Martin,,91234567,mmartin,personnel\n";
+        $csv .= "Admin,Test,admin@test.com,92345678,admintest,admin\n";
+
+        return response($csv, 200)
+            ->header('Content-Type', 'text/csv')
+            ->header('Content-Disposition', 'attachment; filename="template_import_utilisateurs.csv"');
     }
 }
