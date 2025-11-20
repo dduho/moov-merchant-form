@@ -511,6 +511,12 @@ class UserManagementController extends Controller
             $file = $request->file('file');
             $extension = $file->getClientOriginalExtension();
             
+            // Initialiser les variables
+            $users = [];
+            $errors = [];
+            $successCount = 0;
+            $errorCount = 0;
+            
             // Vérifier et créer les rôles si nécessaire
             $this->ensureRolesExist();
 
