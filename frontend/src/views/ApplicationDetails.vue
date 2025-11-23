@@ -50,14 +50,16 @@
                 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium',
                 application?.status === 'pending' && 'bg-yellow-100 text-yellow-800',
                 application?.status === 'approved' && 'bg-green-100 text-green-800',
-                application?.status === 'exported_for_creation' && 'bg-green-100 text-green-800',
+                application?.status === 'exported_for_creation' && 'bg-blue-100 text-blue-800',
+                application?.status === 'exported_for_update' && 'bg-purple-100 text-purple-800',
                 application?.status === 'rejected' && 'bg-red-100 text-red-800'
               ]">
                 <div :class="[
                   'w-2 h-2 rounded-full mr-2',
                   application?.status === 'pending' && 'bg-yellow-500',
                   application?.status === 'approved' && 'bg-green-500',
-                  application?.status === 'exported_for_creation' && 'bg-green-500',
+                  application?.status === 'exported_for_creation' && 'bg-blue-500',
+                  application?.status === 'exported_for_update' && 'bg-purple-500',
                   application?.status === 'rejected' && 'bg-red-500'
                 ]"></div>
                 {{ getStatusLabel(application?.status) }}
@@ -1261,7 +1263,9 @@ export default {
       const labels = {
         pending: 'En attente',
         approved: 'Approuvée',
-        rejected: 'Rejetée'
+        rejected: 'Rejetée',
+        exported_for_creation: 'Exporté pour création',
+        exported_for_update: 'Exporté pour modification'
       }
       return labels[status] || status
     }

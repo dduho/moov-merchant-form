@@ -980,7 +980,7 @@ class MerchantApplicationController extends Controller
 
                 if ($success) {
                     $updatedCount++;
-                    
+
                     // Log de l'action
                     Log::info('Candidature marquée comme exportée', [
                         'application_id' => $application->id,
@@ -1012,6 +1012,87 @@ class MerchantApplicationController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors du marquage des candidatures comme exportées'
+            ], 500);
+        }
+    }
+
+    /**
+     * Marque les candidatures comme exportées pour modification dans SP
+     */
+    public function markAsExportedForUpdate(Request $request): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'application_ids' => 'required|array',
+                'application_ids.*' => 'required|integer|exists:merchant_applications,id',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Données de validation invalides',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Vérifier que toutes les candidatures sont approuvées, exportées pour création ou déjà exportées pour modification
+            $applications = MerchantApplication::whereIn('id', $request->application_ids)
+                ->whereIn('status', ['approved', 'exported_for_creation', 'exported_for_update'])
+                ->get();
+
+            if ($applications->count() !== count($request->application_ids)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Certaines candidatures ne sont pas dans un statut exportable ou n\'existent pas'
+                ], 400);
+            }
+
+            $updatedCount = 0;
+            $user = $request->user();
+
+            DB::beginTransaction();
+
+            foreach ($applications as $application) {
+                $success = $application->updateStatus(
+                    'exported_for_update',
+                    'Candidature exportée pour modification SP le ' . now()->format('d/m/Y à H:i'),
+                    $user?->id
+                );
+
+                if ($success) {
+                    $updatedCount++;
+
+                    // Log de l'action
+                    Log::info('Candidature marquée comme exportée pour modification', [
+                        'application_id' => $application->id,
+                        'reference' => $application->reference_number,
+                        'user_id' => $user?->id,
+                        'timestamp' => now()
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "$updatedCount candidature(s) marquée(s) comme exportée(s) pour modification",
+                'data' => [
+                    'updated_count' => $updatedCount,
+                    'application_ids' => $request->application_ids
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Erreur lors du marquage des candidatures comme exportées pour modification', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors du marquage des candidatures comme exportées pour modification'
             ], 500);
         }
     }

@@ -75,6 +75,7 @@ Route::middleware(['throttle:api'])->group(function () {
             Route::post('/{merchantApplication}/approve', [MerchantApplicationController::class, 'approve'])->name('approve');
             Route::post('/{merchantApplication}/reject', [MerchantApplicationController::class, 'reject'])->name('reject');
             Route::post('/mark-as-exported', [MerchantApplicationController::class, 'markAsExported'])->name('mark-as-exported');
+            Route::post('/mark-as-exported-for-update', [MerchantApplicationController::class, 'markAsExportedForUpdate'])->name('mark-as-exported-for-update');
             Route::delete('/{merchantApplication}/force', [MerchantApplicationController::class, 'forceDestroy'])->name('force-destroy');
         });
         

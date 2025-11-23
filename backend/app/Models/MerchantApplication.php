@@ -162,6 +162,7 @@ class MerchantApplication extends Model
                 'needs_info' => 'Informations manquantes',
                 'archived' => 'Archivée',
                 'exported_for_creation' => 'Exporté pour création',
+                'exported_for_update' => 'Exporté pour modification',
                 default => 'Inconnu'
             }
         );
@@ -223,6 +224,11 @@ class MerchantApplication extends Model
     public function scopeExportedForCreation($query)
     {
         return $query->where('status', 'exported_for_creation');
+    }
+
+    public function scopeExportedForUpdate($query)
+    {
+        return $query->where('status', 'exported_for_update');
     }
 
     public function scopeSearch($query, string $term)

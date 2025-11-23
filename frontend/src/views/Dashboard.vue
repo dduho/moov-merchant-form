@@ -562,6 +562,7 @@
                 <option value="approved">Approuvée</option>
                 <option value="rejected">Rejetée</option>
                 <option value="exported_for_creation">Exporté pour création</option>
+                <option value="exported_for_update">Exporté pour modification</option>
               </select>
             </div>
 
@@ -708,7 +709,8 @@
                         app.status === 'pending' && 'bg-gradient-to-r from-yellow-50 to-amber-50 text-yellow-800 border border-yellow-200',
                         app.status === 'approved' && 'bg-gradient-to-r from-green-50 to-emerald-50 text-green-800 border border-green-200',
                         app.status === 'rejected' && 'bg-gradient-to-r from-red-50 to-rose-50 text-red-800 border border-red-200',
-                        app.status === 'exported_for_creation' && 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 border border-blue-200'
+                        app.status === 'exported_for_creation' && 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 border border-blue-200',
+                        app.status === 'exported_for_update' && 'bg-gradient-to-r from-purple-50 to-violet-50 text-purple-800 border border-purple-200'
                       ]">
                         {{ app.status_label }}
                       </span>
@@ -998,6 +1000,7 @@ export default {
                 case 'rejected': return '#ef4444'        // Rouge pour rejeté
                 case 'pending': return '#eab308'         // Jaune pour pending
                 case 'exported_for_creation': return '#3b82f6'  // Bleu pour exported_for_creation
+                case 'exported_for_update': return '#a855f7'    // Violet pour exported_for_update
                 case 'under_review': return '#f97316'    // Orange pour en examen
                 case 'needs_info': return '#8b5cf6'      // Violet pour informations manquantes
                 case 'archived': return '#6b7280'       // Gris pour archivé
@@ -1242,53 +1245,54 @@ export default {
     const exportToSPUpdate = async () => {
       try {
         updateExportLoading.value = true
-        
-        // Récupérer toutes les candidatures approuvées
-        const allApprovedApplications = await MerchantService.getApprovedApplicationsForExport()
-        
-        if (!allApprovedApplications || allApprovedApplications.length === 0) {
-          notificationStore.warning('Export impossible', 'Aucune candidature approuvée à exporter.')
+
+        // Récupérer les candidatures approuvées + exportées pour création
+        const allApplications = await MerchantService.getApprovedAndExportedForCreationApplications()
+
+        if (!allApplications || allApplications.length === 0) {
+          notificationStore.warning('Export impossible', 'Aucune candidature disponible à exporter.')
           return
         }
-        
-        // Filtrer les candidatures approuvées selon la sélection
-        let approvedApplications = []
+
+        // Filtrer les candidatures selon la sélection
+        let applicationsToExport = []
         if (selectedApplications.value.length > 0) {
-          // Utiliser seulement les candidatures approuvées sélectionnées
-          approvedApplications = allApprovedApplications.filter(app => selectedApplications.value.includes(app.id))
+          // Si des candidatures sont sélectionnées, utiliser seulement celles-ci
+          // (peu importe leur statut: approved, exported_for_creation, ou exported_for_update)
+          applicationsToExport = allApplications.filter(app => selectedApplications.value.includes(app.id))
         } else {
-          // Utiliser toutes les candidatures approuvées
-          approvedApplications = allApprovedApplications
+          // Si aucune sélection, utiliser seulement les candidatures approuvées
+          applicationsToExport = allApplications.filter(app => app.status === 'approved')
         }
-        
-        if (approvedApplications.length === 0) {
-          notificationStore.warning('Export impossible', 'Aucune candidature approuvée sélectionnée à exporter.')
+
+        if (applicationsToExport.length === 0) {
+          notificationStore.warning('Export impossible', 'Aucune candidature sélectionnée à exporter.')
           return
         }
-        
+
         const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-        
+
         // Générer les fichiers XML pour l'update
-        const updateKycXml = generateUpdateKycXml(approvedApplications)
-        const updateNameXml = generateUpdateNameXml(approvedApplications)
-        
+        const updateKycXml = generateUpdateKycXml(applicationsToExport)
+        const updateNameXml = generateUpdateNameXml(applicationsToExport)
+
         // Télécharger les fichiers
         downloadFile(`UPDATE-KYC-${currentDate}.xml`, updateKycXml)
         downloadFile(`CHANGE-ORG-NAME-${currentDate}.xml`, updateNameXml)
-        
-        // Marquer les candidatures comme exportées pour update
-        const applicationIds = approvedApplications.map(app => app.id)
-        await MerchantService.markApplicationsAsExported(applicationIds)
-        
-        notificationStore.success('Export réussi !', `${approvedApplications.length} candidature(s) exportée(s) pour mise à jour SP.`)
-        
+
+        // Marquer les candidatures comme exportées pour modification
+        const applicationIds = applicationsToExport.map(app => app.id)
+        await MerchantService.markApplicationsAsExportedForUpdate(applicationIds)
+
+        notificationStore.success('Export réussi !', `${applicationsToExport.length} candidature(s) exportée(s) pour mise à jour SP et marquée(s) comme "Exporté pour modification".`)
+
         // Recharger les données pour mettre à jour l'affichage
         refreshData()
         // Rafraîchir la liste des candidatures pour refléter les changements de statut
         loadApplications()
         // Vider la sélection des checkboxes après l'export
         selectedApplications.value = []
-        
+
       } catch (error) {
         console.error('Erreur lors de l\'export update:', error)
         notificationStore.error('Erreur d\'export', 'Une erreur s\'est produite lors de l\'export. Veuillez réessayer.')

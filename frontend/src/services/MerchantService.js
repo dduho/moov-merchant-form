@@ -643,10 +643,40 @@ class MerchantService {
           per_page: 1000 // Récupérer toutes les candidatures approuvées
         }
       })
-      
+
       return response.data.data || []
     } catch (error) {
       console.error('Erreur lors de la récupération des candidatures approuvées:', error)
+      throw error
+    }
+  }
+
+  // Récupérer les candidatures approuvées + exportées pour création (pour Update SP)
+  async getApprovedAndExportedForCreationApplications() {
+    try {
+      // Récupérer les deux types de candidatures en parallèle
+      const [approvedResponse, exportedResponse] = await Promise.all([
+        this.client.get('/merchant-applications', {
+          params: {
+            status: 'approved',
+            per_page: 1000
+          }
+        }),
+        this.client.get('/merchant-applications', {
+          params: {
+            status: 'exported_for_creation',
+            per_page: 1000
+          }
+        })
+      ])
+
+      // Combiner les deux listes
+      const approved = approvedResponse.data.data || []
+      const exported = exportedResponse.data.data || []
+
+      return [...approved, ...exported]
+    } catch (error) {
+      console.error('Erreur lors de la récupération des candidatures pour update:', error)
       throw error
     }
   }
@@ -657,10 +687,24 @@ class MerchantService {
       const response = await this.client.post('/merchant-applications/mark-as-exported', {
         application_ids: applicationIds
       })
-      
+
       return response.data
     } catch (error) {
       console.error('Erreur lors du marquage des candidatures comme exportées:', error)
+      throw error
+    }
+  }
+
+  // Marquer les candidatures comme exportées pour modification dans SP
+  async markApplicationsAsExportedForUpdate(applicationIds) {
+    try {
+      const response = await this.client.post('/merchant-applications/mark-as-exported-for-update', {
+        application_ids: applicationIds
+      })
+
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors du marquage des candidatures comme exportées pour modification:', error)
       throw error
     }
   }
