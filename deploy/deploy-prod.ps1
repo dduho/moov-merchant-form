@@ -3,9 +3,9 @@
 
 param(
     [string]$Server = "moov@10.80.16.51",
-    [string]$ProjectPath = "/path/to/project",  # Update this to actual path on server
-    [string]$DBUser = "DB_USER",  # Update with actual DB user
-    [string]$DBPass = "PASSWORD"   # Update with actual DB password (or prompt)
+    [string]$ProjectPath = "/home/moov/moov-merchant-form",  # Update this to actual path on server
+    [string]$DBUser = "moov_user",  # Update with actual DB user
+    [string]$DBPass = "your_db_password"   # Update with actual DB password (or prompt)
 )
 
 Write-Host "Starting production deployment..." -ForegroundColor Green
