@@ -2393,7 +2393,11 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
 }
 
 .form-label {
-  @apply mb-1 text-sm font-medium text-gray-700 dark:text-gray-200;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: rgb(17 24 39 / var(--tw-text-opacity, 1)); /* text-gray-900 */
 }
 
 .form-group {

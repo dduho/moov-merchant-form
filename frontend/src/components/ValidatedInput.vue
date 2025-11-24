@@ -269,16 +269,34 @@ const emitValidationState = () => {
 
 // Classes dynamiques
 const inputClasses = computed(() => {
-  const classes = getInputClasses(props.fieldName)
-  
-  // Prioritize external error
-  const hasError = props.error || getFieldState(props.fieldName) === ValidationState.INVALID
-  
+  const state = getFieldState(props.fieldName)
+  const hasError = props.error || state === ValidationState.INVALID
+
+  // Base dark mode visual requirements requested:
+  // dark:border-red-500, dark:border-green-500, dark:border-gray-600
+  // dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-500
+  // Apply conditional border colors matching validation states while keeping external error priority.
   return {
-    ...classes,
+    // Background & text (always applied so component looks correct in dark mode)
+    'dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-500': true,
+
+    // Neutral / idle state
+    'border-gray-300 dark:border-gray-600': state === ValidationState.IDLE && !hasError,
+    // Validating state (spinner shown)
+    'border-blue-500 dark:border-blue-400': state === ValidationState.VALIDATING && !hasError,
+    // Valid state
+    'border-green-600 dark:border-green-500': state === ValidationState.VALID && !hasError,
+    // Error state (external or validation)
     'border-red-600 dark:border-red-500': hasError,
+
+    // Disabled appearance
     'opacity-50 cursor-not-allowed': props.disabled,
-    'ring-2 ring-orange-500/20': isFocused.value && getFieldState(props.fieldName) === ValidationState.IDLE
+
+    // Focus ring only when idle (not yet validated and no error)
+    'ring-2 ring-orange-500/20': isFocused.value && state === ValidationState.IDLE && !hasError,
+
+    // Smooth transition for color/border changes
+    'transition-colors duration-200': true
   }
 })
 
@@ -322,5 +340,17 @@ const validationMessage = computed(() => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+/* Label styling (previously only defined in parent component and lost due to scoped boundaries)
+   Ensures consistent dark mode appearance for all labels, including those inside ValidatedInput. */
+.form-label {
+  margin-bottom: 0.25rem; /* mb-1 */
+  font-size: 0.875rem; /* text-sm */
+  line-height: 1.25rem;
+  font-weight: 500; /* font-medium */
+  color: rgb(17 24 39 / 1); /* text-gray-900 */
+}
+.dark .form-label {
+  color: rgb(255 255 255 / 1); /* text-white in dark mode */
 }
 </style>
