@@ -494,7 +494,7 @@
               <!-- Bouton Export SP - Visible seulement pour les administrateurs -->
               <button v-if="authStore.isAdmin"
                       @click="exportToSP" 
-                      :disabled="exportLoading"
+                      :disabled="exportLoading || !hasApprovedSelected"
                       class="hidden sm:flex items-center px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg v-if="!exportLoading" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -508,7 +508,7 @@
               <!-- Bouton Update SP - Visible seulement pour les administrateurs -->
               <button v-if="authStore.isAdmin"
                       @click="exportToSPUpdate"
-                      :disabled="updateExportLoading"
+                      :disabled="updateExportLoading || !hasApprovedOrExportedForCreationSelected"
                       class="hidden sm:flex items-center px-4 py-2 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg v-if="!updateExportLoading" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -857,6 +857,22 @@ export default {
         has_next: currentPage < totalPages,
         has_prev: currentPage > 1
       }
+    })
+    
+    // Vérifier si au moins une candidature approuvée est sélectionnée
+    const hasApprovedSelected = computed(() => {
+      return selectedApplications.value.some(appId => {
+        const app = recentApplications.value.find(a => a.id === appId)
+        return app && app.status === 'approved'
+      })
+    })
+    
+    // Vérifier si au moins une candidature approuvée ou exportée pour création est sélectionnée
+    const hasApprovedOrExportedForCreationSelected = computed(() => {
+      return selectedApplications.value.some(appId => {
+        const app = recentApplications.value.find(a => a.id === appId)
+        return app && (app.status === 'approved' || app.status === 'exported_for_creation')
+      })
     })
     
     // Debounce pour la recherche
@@ -1955,6 +1971,8 @@ export default {
       toggleApplicationSelection,
       toggleSelectAllApplications,
       updateSelectAllState,
+      hasApprovedSelected,
+      hasApprovedOrExportedForCreationSelected,
       // Fonctions pour les stats utilisateurs
       loadUserStats,
       loadUserStatsPage,
