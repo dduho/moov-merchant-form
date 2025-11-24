@@ -1843,6 +1843,24 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
       return Object.keys(errors.value).length === 0
     }
 
+    // Validate all steps and merge errors (used after clearing the form)
+    const validateAllSteps = async () => {
+      const mergedErrors = {}
+
+      // We'll call validateStep for each step and merge results.
+      for (let s = 1; s <= totalSteps.value; s++) {
+        // validateStep resets errors.value, so call it and copy results
+        validateStep(s)
+        Object.assign(mergedErrors, errors.value)
+      }
+
+      // Restore merged errors
+      errors.value = mergedErrors
+      // ensure UI updates
+      await nextTick()
+      setStageHeightToCurrent()
+    }
+
     // Fonction pour scroller vers la première erreur avec animation smooth garantie
     const scrollToFirstError = () => {
       nextTick(() => {
@@ -2185,7 +2203,10 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
         
         // Afficher une notification
         notifyInfo('Formulaire vidé - Tous les champs ont été réinitialisés');
-        
+
+        // Re-run validation for all steps so errors are updated after clearing
+        validateAllSteps()
+
         // Recalculer la hauteur
         nextTick(() => setStageHeightToCurrent());
       }
