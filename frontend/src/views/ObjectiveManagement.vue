@@ -85,7 +85,22 @@
 
         <!-- Filters for Global Objectives -->
         <div v-if="activeTab === 'global'" class="p-4 border-b border-gray-200 bg-gray-50">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Année</label>
+              <select
+                v-model="globalFilters.year"
+                @change="loadObjectives"
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+              >
+                <option value="">Toutes les années</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+              </select>
+            </div>
+
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Période</label>
               <select
@@ -126,7 +141,22 @@
 
         <!-- Filters for Particular Objectives -->
         <div v-if="activeTab === 'particular'" class="p-4 border-b border-gray-200 bg-gray-50">
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Année</label>
+              <select
+                v-model="particularFilters.year"
+                @change="loadObjectives"
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+              >
+                <option value="">Toutes les années</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+              </select>
+            </div>
+
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Commercial</label>
               <select
@@ -508,12 +538,14 @@ export default {
     
     // Filtres pour objectifs globaux
     const globalFilters = ref({
+      year: '',
       period: '',
       status: ''
     })
 
     // Filtres pour objectifs particuliers
     const particularFilters = ref({
+      year: '',
       user_id: '',
       period: '',
       status: ''
@@ -538,6 +570,11 @@ export default {
     // Appliquer les filtres selon l'onglet actif
     const applyFilters = (objectivesList, filters) => {
       let filtered = [...objectivesList]
+      
+      // Filtre par année
+      if (filters.year) {
+        filtered = filtered.filter(obj => obj.target_year === parseInt(filters.year))
+      }
       
       // Filtre par commercial (seulement pour particuliers)
       if (filters.user_id) {
@@ -605,11 +642,13 @@ export default {
 
     // Methods
     const loadObjectives = (page = 1) => {
-      objectiveStore.fetchObjectives({ page })
+      const filters = activeTab.value === 'global' ? globalFilters.value : particularFilters.value
+      objectiveStore.fetchObjectives({ page, ...filters })
     }
 
     const clearGlobalFilters = () => {
       globalFilters.value = {
+        year: '',
         period: '',
         status: ''
       }
@@ -617,6 +656,7 @@ export default {
 
     const clearParticularFilters = () => {
       particularFilters.value = {
+        year: '',
         user_id: '',
         period: '',
         status: ''

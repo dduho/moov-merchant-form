@@ -16,7 +16,7 @@ export const useObjectiveStore = defineStore('objective', () => {
   const error = ref(null)
   const filters = ref({
     user_id: '',
-    year: new Date().getFullYear(),
+    year: null, // null = tous les objectifs, peu importe l'année
     month: null
     // active: true - Retiré pour charger TOUS les objectifs par défaut
   })
