@@ -184,12 +184,12 @@
                             'border-gray-300 dark:border-gray-600 !focus:border-orange-500': !formData.birthPlace && !errors.birthPlace
                           }"
                           placeholder="Tapez ou sélectionnez votre lieu de naissance"
-                          @input="filterBirthPlaces"
-                          @keyup="filterBirthPlaces"
-                          @compositionend="filterBirthPlaces"
-                          @paste="filterBirthPlaces"
+                          @input="filterBirthPlaces()"
+                          @keyup="filterBirthPlaces()"
+                          @compositionend="filterBirthPlaces()"
+                          @paste="filterBirthPlaces()"
                           @focus="showBirthPlaceSuggestions = true; filterBirthPlaces()"
-                          @blur="hideBirthPlaceSuggestions"
+                          @blur="hideBirthPlaceSuggestions()"
                           autocomplete="off"
                           required
                         />
