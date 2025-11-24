@@ -12,6 +12,20 @@ export const useObjectiveStore = defineStore('objective', () => {
     per_page: 15,
     total: 0
   })
+  // Pagination séparée pour les objectifs globaux
+  const globalPagination = ref({
+    current_page: 1,
+    last_page: 1,
+    per_page: 10,
+    total: 0
+  })
+  // Pagination séparée pour les objectifs particuliers
+  const particularPagination = ref({
+    current_page: 1,
+    last_page: 1,
+    per_page: 10,
+    total: 0
+  })
   const isLoading = ref(false)
   const error = ref(null)
   const filters = ref({
@@ -42,6 +56,24 @@ export const useObjectiveStore = defineStore('objective', () => {
     )
   })
 
+  // Objectifs globaux (user_id === null) avec pagination
+  const globalObjectivesPaginated = computed(() => {
+    const globalObjs = objectives.value.filter(obj => obj.user_id === null)
+    const pag = globalPagination.value
+    const start = (pag.current_page - 1) * pag.per_page
+    const end = start + pag.per_page
+    return globalObjs.slice(start, end)
+  })
+
+  // Objectifs particuliers (user_id !== null) avec pagination
+  const particularObjectivesPaginated = computed(() => {
+    const particularObjs = objectives.value.filter(obj => obj.user_id !== null)
+    const pag = particularPagination.value
+    const start = (pag.current_page - 1) * pag.per_page
+    const end = start + pag.per_page
+    return particularObjs.slice(start, end)
+  })
+
   // Actions
   const fetchObjectives = async (params = {}) => {
     isLoading.value = true
@@ -52,21 +84,55 @@ export const useObjectiveStore = defineStore('objective', () => {
       const cleanFilters = Object.entries({...params, ...filters.value})
         .filter(([_, value]) => value !== '' && value !== null && value !== undefined)
         .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {})
-      
-      const response = await ObjectiveService.getObjectives(cleanFilters)
+
+      // Charger tous les objectifs sans pagination backend
+      const response = await ObjectiveService.getObjectives({...cleanFilters, per_page: 1000})
       
       objectives.value = response.data || []
-      pagination.value = response.pagination || {
+      
+      // Calculer les paginations côté client
+      const globalObjs = objectives.value.filter(obj => obj.user_id === null)
+      const particularObjs = objectives.value.filter(obj => obj.user_id !== null)
+      
+      globalPagination.value = {
+        current_page: 1,
+        last_page: Math.ceil(globalObjs.length / globalPagination.value.per_page),
+        per_page: 10,
+        total: globalObjs.length
+      }
+      
+      particularPagination.value = {
+        current_page: 1,
+        last_page: Math.ceil(particularObjs.length / particularPagination.value.per_page),
+        per_page: 10,
+        total: particularObjs.length
+      }
+      
+      // Garder la pagination globale pour compatibilité
+      pagination.value = {
         current_page: 1,
         last_page: 1,
         per_page: 15,
-        total: 0
+        total: objectives.value.length
       }
     } catch (err) {
       error.value = err.message || 'Erreur lors du chargement des objectifs'
       objectives.value = []
     } finally {
       isLoading.value = false
+    }
+  }
+
+  // Actions de pagination
+  const setGlobalPage = (page) => {
+    if (page >= 1 && page <= globalPagination.value.last_page) {
+      globalPagination.value.current_page = page
+    }
+  }
+
+  const setParticularPage = (page) => {
+    if (page >= 1 && page <= particularPagination.value.last_page) {
+      particularPagination.value.current_page = page
     }
   }
 
@@ -214,6 +280,8 @@ export const useObjectiveStore = defineStore('objective', () => {
     progressStats,
     summary,
     pagination,
+    globalPagination,
+    particularPagination,
     isLoading,
     error,
     filters,
@@ -222,9 +290,13 @@ export const useObjectiveStore = defineStore('objective', () => {
     currentYearObjectives,
     monthlyObjectives,
     yearlyObjectives,
+    globalObjectivesPaginated,
+    particularObjectivesPaginated,
     
     // Actions
     fetchObjectives,
+    setGlobalPage,
+    setParticularPage,
     createObjective,
     updateObjective,
     deleteObjective,

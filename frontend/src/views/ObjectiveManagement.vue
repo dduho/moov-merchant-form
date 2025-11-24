@@ -435,20 +435,20 @@
       </div>
 
       <!-- Pagination -->
-      <div v-if="pagination.total > pagination.per_page" class="mt-8">
+      <div v-if="activePagination.total > activePagination.per_page" class="mt-8">
         <div class="bg-white px-4 py-3 border border-gray-200 rounded-lg sm:px-6">
           <div class="flex items-center justify-between">
             <div class="flex-1 flex justify-between sm:hidden">
               <button
-                @click="loadObjectives(pagination.current_page - 1)"
-                :disabled="pagination.current_page <= 1"
+                @click="loadObjectives(activePagination.current_page - 1)"
+                :disabled="activePagination.current_page <= 1"
                 class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Précédent
               </button>
               <button
-                @click="loadObjectives(pagination.current_page + 1)"
-                :disabled="pagination.current_page >= pagination.last_page"
+                @click="loadObjectives(activePagination.current_page + 1)"
+                :disabled="activePagination.current_page >= activePagination.last_page"
                 class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Suivant
@@ -458,26 +458,26 @@
               <div>
                 <p class="text-sm text-gray-700">
                   Affichage de
-                  <span class="font-medium">{{ (pagination.current_page - 1) * pagination.per_page + 1 }}</span>
+                  <span class="font-medium">{{ (activePagination.current_page - 1) * activePagination.per_page + 1 }}</span>
                   à
-                  <span class="font-medium">{{ Math.min(pagination.current_page * pagination.per_page, pagination.total) }}</span>
+                  <span class="font-medium">{{ Math.min(activePagination.current_page * activePagination.per_page, activePagination.total) }}</span>
                   sur
-                  <span class="font-medium">{{ pagination.total }}</span>
+                  <span class="font-medium">{{ activePagination.total }}</span>
                   résultats
                 </p>
               </div>
               <div>
                 <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
                   <button
-                    @click="loadObjectives(pagination.current_page - 1)"
-                    :disabled="pagination.current_page <= 1"
+                    @click="loadObjectives(activePagination.current_page - 1)"
+                    :disabled="activePagination.current_page <= 1"
                     class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <i class="fas fa-chevron-left"></i>
                   </button>
                   <button
-                    @click="loadObjectives(pagination.current_page + 1)"
-                    :disabled="pagination.current_page >= pagination.last_page"
+                    @click="loadObjectives(activePagination.current_page + 1)"
+                    :disabled="activePagination.current_page >= activePagination.last_page"
                     class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <i class="fas fa-chevron-right"></i>
@@ -554,11 +554,17 @@ export default {
     // Computed
     const allObjectives = computed(() => objectiveStore.objectives)
     const pagination = computed(() => objectiveStore.pagination)
+    const globalPagination = computed(() => objectiveStore.globalPagination)
+    const particularPagination = computed(() => objectiveStore.particularPagination)
     const isLoading = computed(() => objectiveStore.isLoading)
     const error = computed(() => objectiveStore.error)
     const commercials = computed(() => userStore.commercials)
     
-    // Séparer les objectifs globaux et particuliers
+    // Objectifs paginés depuis le store
+    const globalObjectivesPaginated = computed(() => objectiveStore.globalObjectivesPaginated)
+    const particularObjectivesPaginated = computed(() => objectiveStore.particularObjectivesPaginated)
+    
+    // Séparer les objectifs globaux et particuliers (pour les compteurs)
     const globalObjectives = computed(() => {
       return allObjectives.value.filter(obj => obj.user_id === null)
     })
@@ -631,19 +637,18 @@ export default {
       return filtered
     }
 
-    // Objectifs affichés selon l'onglet actif
-    const displayedObjectives = computed(() => {
-      if (activeTab.value === 'global') {
-        return applyFilters(globalObjectives.value, globalFilters.value)
-      } else {
-        return applyFilters(particularObjectives.value, particularFilters.value)
-      }
+    // Pagination active selon l'onglet
+    const activePagination = computed(() => {
+      return activeTab.value === 'global' ? globalPagination.value : particularPagination.value
     })
 
     // Methods
     const loadObjectives = (page = 1) => {
-      const filters = activeTab.value === 'global' ? globalFilters.value : particularFilters.value
-      objectiveStore.fetchObjectives({ page, ...filters })
+      if (activeTab.value === 'global') {
+        objectiveStore.setGlobalPage(page)
+      } else {
+        objectiveStore.setParticularPage(page)
+      }
     }
 
     const clearGlobalFilters = () => {
@@ -822,6 +827,15 @@ export default {
     }
 
     // Lifecycle
+    watch(activeTab, (newTab) => {
+      // Reset pagination à 1 quand on change d'onglet
+      if (newTab === 'global') {
+        objectiveStore.setGlobalPage(1)
+      } else {
+        objectiveStore.setParticularPage(1)
+      }
+    })
+
     onMounted(() => {
       loadObjectives()
       loadCommercials()
@@ -834,6 +848,7 @@ export default {
       particularObjectives,
       displayedObjectives,
       pagination,
+      activePagination,
       isLoading,
       error,
       globalFilters,
