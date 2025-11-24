@@ -503,6 +503,12 @@ class UserManagementController extends Controller
         $accessCheck = $this->checkAdminAccess($request);
         if ($accessCheck) return $accessCheck;
 
+        // Initialiser les variables
+        $users = [];
+        $errors = [];
+        $successCount = 0;
+        $errorCount = 0;
+
         try {
             $request->validate([
                 'file' => 'required|file|mimes:xlsx,xls,csv|max:2048'
@@ -510,12 +516,6 @@ class UserManagementController extends Controller
 
             $file = $request->file('file');
             $extension = $file->getClientOriginalExtension();
-            
-            // Initialiser les variables
-            $users = [];
-            $errors = [];
-            $successCount = 0;
-            $errorCount = 0;
             
             // Vérifier et créer les rôles si nécessaire
             $this->ensureRolesExist();
