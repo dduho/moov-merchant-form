@@ -31,10 +31,10 @@
           Documents à préparer
         </h3>
         <ul class="text-sm text-gray-700 space-y-1">
+          <li>• Informations du propriétaire</li>
+          <li>• Informations de la boutique/commerce</li>
           <li>• Carte d'identité ou passeport</li>
-          <li>• Justificatif de domicile (- 3 mois)</li>
           <li>• Documents d'activité commerciale</li>
-          <li>• Photos de votre boutique</li>
         </ul>
       </div>
 
