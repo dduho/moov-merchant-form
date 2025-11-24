@@ -134,13 +134,15 @@ class UserManagementController extends Controller
         $accessCheck = $this->checkAdminAccess($request);
         if ($accessCheck) return $accessCheck;
 
-        $query = User::with('roles')
-            ->whereHas('roles', function($q) {
-                $q->where('slug', 'commercial');
-            })
-            ->where('is_active', true)
-            ->where('is_blocked', false)
-            ->select(['id', 'first_name', 'last_name']);
+        // Build query by explicitly joining the pivot `role_user` to avoid
+        // potential pivot table name mismatches in different environments.
+        $query = User::select(['users.id', 'users.first_name', 'users.last_name'])
+            ->join('role_user', 'users.id', '=', 'role_user.user_id')
+            ->join('roles', 'role_user.role_id', '=', 'roles.id')
+            ->where('roles.slug', 'commercial')
+            ->where('users.is_active', true)
+            ->where('users.is_blocked', false)
+            ->distinct();
 
         // Optional search parameter (q) for typeahead
         if ($request->filled('q')) {
