@@ -85,10 +85,26 @@ export const useObjectiveStore = defineStore('objective', () => {
         .filter(([_, value]) => value !== '' && value !== null && value !== undefined)
         .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {})
 
-      // Charger tous les objectifs sans pagination backend
-      const response = await ObjectiveService.getObjectives({...cleanFilters, per_page: 1000})
-      
-      objectives.value = response.data || []
+      // Si un commercial est sélectionné, utiliser l'endpoint dédié qui renvoie la liste fusionnée
+      if (cleanFilters.user_id) {
+        const page = particularPagination.value.current_page || 1
+        const per_page = particularPagination.value.per_page || 10
+        const response = await ObjectiveService.getObjectivesForCommercial(cleanFilters.user_id, {...cleanFilters, page, per_page})
+
+        // Le backend renvoie data + pagination
+        objectives.value = response.data || []
+        particularPagination.value = {
+          current_page: response.pagination.current_page || 1,
+          last_page: response.pagination.last_page || 1,
+          per_page: response.pagination.per_page || per_page,
+          total: response.pagination.total || (objectives.value.length)
+        }
+      } else {
+        // Charger tous les objectifs sans pagination backend
+        const response = await ObjectiveService.getObjectives({...cleanFilters, per_page: 1000})
+        
+        objectives.value = response.data || []
+      }
       
       // Calculer les paginations côté client
       const globalObjs = objectives.value.filter(obj => obj.user_id === null)
@@ -100,12 +116,15 @@ export const useObjectiveStore = defineStore('objective', () => {
         per_page: 10,
         total: globalObjs.length
       }
-      
-      particularPagination.value = {
-        current_page: 1,
-        last_page: Math.ceil(particularObjs.length / particularPagination.value.per_page),
-        per_page: 10,
-        total: particularObjs.length
+
+      // If no specific commercial selected, compute particular pagination client-side
+      if (!cleanFilters.user_id) {
+        particularPagination.value = {
+          current_page: 1,
+          last_page: Math.ceil(particularObjs.length / particularPagination.value.per_page),
+          per_page: 10,
+          total: particularObjs.length
+        }
       }
       
       // Garder la pagination globale pour compatibilité
@@ -133,6 +152,10 @@ export const useObjectiveStore = defineStore('objective', () => {
   const setParticularPage = (page) => {
     if (page >= 1 && page <= particularPagination.value.last_page) {
       particularPagination.value.current_page = page
+      // Si on affiche la liste pour un commercial précis, demander la page au backend
+      if (filters.value.user_id) {
+        fetchObjectives()
+      }
     }
   }
 

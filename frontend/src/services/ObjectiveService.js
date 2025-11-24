@@ -77,6 +77,12 @@ class ObjectiveService {
       throw error
     }
   }
+
+  // Obtenir la liste fusionnée (particulier + globaux virtualisés) pour un commercial
+  async getObjectivesForCommercial(userId, params = {}) {
+    const response = await this.client.get(`/objectives/for-commercial/${userId}`, { params })
+    return response.data
+  }
 }
 
 export default new ObjectiveService()

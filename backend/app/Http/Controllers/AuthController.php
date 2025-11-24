@@ -112,11 +112,8 @@ class AuthController extends Controller
             
             $user->roles()->attach($role->id);
 
-            // Si c'est un commercial, appliquer les objectifs globaux
-            // Le personnel n'est PAS soumis aux objectifs
-            if ($request->role_slug === 'commercial') {
-                $user->applyGlobalObjectives();
-            }
+            // Plus besoin de créer des objectifs particuliers automatiquement
+            // Les objectifs globaux s'appliquent à tous les commerciaux
 
             return response()->json([
                 'message' => 'Utilisateur créé avec succès',

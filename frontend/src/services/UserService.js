@@ -57,8 +57,8 @@ class UserService {
   }
 
   // Obtenir la liste des commerciaux pour attribution d'objectifs
-  async getCommercials() {
-    const response = await this.client.get('/users/commercials')
+  async getCommercials(params = {}) {
+    const response = await this.client.get('/users/commercials', { params })
     return response.data
   }
   

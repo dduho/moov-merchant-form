@@ -163,6 +163,8 @@ Route::middleware(['throttle:api'])->group(function () {
         Route::get('/{objective}', [ObjectiveController::class, 'show'])->name('show');
         Route::put('/{objective}', [ObjectiveController::class, 'update'])->name('update');
         Route::delete('/{objective}', [ObjectiveController::class, 'destroy'])->name('destroy');
+        // Renvoie la liste fusionnée (objectifs particuliers + objectifs globaux appliqués virtuellement) pour un commercial
+        Route::get('/for-commercial/{user}', [ObjectiveController::class, 'forCommercial'])->name('for-commercial');
     });
     
     // Route de test pour vérifier FormData

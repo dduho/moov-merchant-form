@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\UserObjective;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ObjectiveController extends Controller
 {
@@ -36,36 +37,44 @@ class ObjectiveController extends Controller
         $accessCheck = $this->checkAdminAccess($request);
         if ($accessCheck) return $accessCheck;
 
-        $query = UserObjective::with(['user']);
+        try {
+            $query = UserObjective::with(['user']);
 
-        // Filtres
-        if ($request->has('user_id')) {
-            $query->where('user_id', $request->user_id);
+            // Filtres
+            if ($request->has('user_id')) {
+                $query->where('user_id', $request->user_id);
+            }
+
+            if ($request->has('year')) {
+                $query->forYear($request->year);
+            }
+
+            if ($request->has('month')) {
+                $query->forMonth($request->month);
+            }
+
+            if ($request->has('active')) {
+                $query->active();
+            }
+
+            $objectives = $query->paginate($request->get('per_page', 15));
+
+            return response()->json([
+                'data' => $objectives->items(),
+                'pagination' => [
+                    'current_page' => $objectives->currentPage(),
+                    'last_page' => $objectives->lastPage(),
+                    'per_page' => $objectives->perPage(),
+                    'total' => $objectives->total()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('ObjectiveController@index error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'Erreur interne du serveur'], 500);
         }
-
-        if ($request->has('year')) {
-            $query->forYear($request->year);
-        }
-
-        if ($request->has('month')) {
-            $query->forMonth($request->month);
-        }
-
-        if ($request->has('active')) {
-            $query->active();
-        }
-
-        $objectives = $query->paginate($request->get('per_page', 15));
-
-        return response()->json([
-            'data' => $objectives->items(),
-            'pagination' => [
-                'current_page' => $objectives->currentPage(),
-                'last_page' => $objectives->lastPage(),
-                'per_page' => $objectives->perPage(),
-                'total' => $objectives->total()
-            ]
-        ]);
     }
 
     /**
@@ -272,6 +281,7 @@ class ObjectiveController extends Controller
         $year = $request->get('year', date('Y'));
         $month = $request->get('month');
 
+        // Récupérer tous les objectifs particuliers
         $query = UserObjective::with(['user'])
             ->forYear($year);
 
@@ -279,47 +289,50 @@ class ObjectiveController extends Controller
             $query->forMonth($month);
         }
 
-        $objectives = $query->active()->get();
+        $particularObjectives = $query->active()->get();
 
-        $stats = $objectives->map(function ($objective) use ($year, $month) {
+        // Récupérer tous les objectifs globaux
+        $globalObjectivesQuery = UserObjective::forYear($year);
+        if ($month) {
+            $globalObjectivesQuery->forMonth($month);
+        }
+        $globalObjectives = $globalObjectivesQuery->active()->whereNull('user_id')->get();
+
+        // Récupérer tous les commerciaux
+        $commercials = User::whereHas('roles', function($query) {
+            $query->where('slug', 'commercial');
+        })->where('is_active', true)->get();
+
+        $stats = collect();
+
+        // Traiter les objectifs particuliers existants
+        foreach ($particularObjectives as $objective) {
             $user = $objective->user;
-            
-            if ($month) {
-                // Stats mensuelles
-                $startDate = date('Y-m-01 00:00:00', strtotime("{$year}-{$month}-01"));
-                $endDate = date('Y-m-t 23:59:59', strtotime($startDate));
-                $applications = $user->countApplicationsForPeriod($startDate, $endDate);
-                $target = $objective->monthly_target;
-            } else {
-                // Stats annuelles
-                $startDate = date('Y-01-01 00:00:00', strtotime("{$year}-01-01"));
-                $endDate = date('Y-12-31 23:59:59', strtotime("{$year}-12-31"));
-                $applications = $user->countApplicationsForPeriod($startDate, $endDate);
-                $target = $objective->yearly_target;
+            $stats->push($this->calculateObjectiveStats($objective, $user, $year, $month));
+        }
+
+        // Pour chaque commercial, ajouter les statistiques des objectifs globaux
+        foreach ($commercials as $commercial) {
+            foreach ($globalObjectives as $globalObjective) {
+                // Créer un objectif "virtuel" pour ce commercial basé sur l'objectif global
+                $virtualObjective = new UserObjective([
+                    'id' => 'global_' . $globalObjective->id . '_user_' . $commercial->id,
+                    'user_id' => $commercial->id,
+                    'yearly_target' => $globalObjective->yearly_target,
+                    'monthly_target' => $globalObjective->monthly_target,
+                    'target_year' => $globalObjective->target_year,
+                    'target_month' => $globalObjective->target_month,
+                    'description' => $globalObjective->description,
+                    'is_active' => $globalObjective->is_active,
+                    'created_at' => $globalObjective->created_at,
+                    'updated_at' => $globalObjective->updated_at
+                ]);
+                $virtualObjective->user = $commercial;
+                $virtualObjective->is_global_for_user = true; // Marquer comme objectif global appliqué
+
+                $stats->push($this->calculateObjectiveStats($virtualObjective, $commercial, $year, $month));
             }
-
-            $progressPercentage = $target > 0 ? min(100, round(($applications / $target) * 100, 2)) : 0;
-
-            return [
-                'user' => [
-                    'id' => $user->id,
-                    'full_name' => $user->full_name,
-                    'email' => $user->email
-                ],
-                'objective' => [
-                    'id' => $objective->id,
-                    'target' => $target,
-                    'description' => $objective->description
-                ],
-                'stats' => [
-                    'applications' => $applications,
-                    'target' => $target,
-                    'progress_percentage' => $progressPercentage,
-                    'remaining' => max(0, $target - $applications),
-                    'status' => $progressPercentage >= 100 ? 'completed' : ($progressPercentage >= 80 ? 'on_track' : 'behind')
-                ]
-            ];
-        });
+        }
 
         // Statistiques globales
         $totalApplications = $stats->sum('stats.applications');
@@ -341,6 +354,88 @@ class ObjectiveController extends Controller
                 'year' => $year,
                 'month' => $month,
                 'type' => $month ? 'monthly' : 'yearly'
+            ]
+        ]);
+    }
+
+    /**
+     * Retourne la liste fusionnée d'objectifs pour un commercial donné
+     * (objectifs particuliers + objectifs globaux virtualisés)
+     */
+    public function forCommercial(Request $request, $userId)
+    {
+        // Check admin access
+        $accessCheck = $this->checkAdminAccess($request);
+        if ($accessCheck) return $accessCheck;
+
+        $year = $request->get('year', date('Y'));
+        $month = $request->get('month');
+
+        // Charger l'utilisateur (commercial)
+        $commercial = User::find($userId);
+        if (!$commercial) {
+            return response()->json(['message' => 'Commercial non trouvé'], 404);
+        }
+
+        // Récupérer objectifs particuliers pour ce commercial
+        $particularQuery = UserObjective::with('user')
+            ->where('user_id', $commercial->id)
+            ->forYear($year);
+
+        if ($month) $particularQuery->forMonth($month);
+        $particularObjectives = $particularQuery->active()->get();
+
+        // Récupérer objectifs globaux pour la période
+        $globalQuery = UserObjective::forYear($year)->whereNull('user_id');
+        if ($month) $globalQuery->forMonth($month);
+        $globalObjectives = $globalQuery->active()->get();
+
+        // Créer des objectifs virtuels basés sur les globaux
+        $virtuals = collect();
+        foreach ($globalObjectives as $g) {
+            $virtual = new UserObjective([
+                'id' => 'global_' . $g->id . '_user_' . $commercial->id,
+                'user_id' => $commercial->id,
+                'yearly_target' => $g->yearly_target,
+                'monthly_target' => $g->monthly_target,
+                'target_year' => $g->target_year,
+                'target_month' => $g->target_month,
+                'description' => $g->description,
+                'is_active' => $g->is_active,
+                'created_at' => $g->created_at,
+                'updated_at' => $g->updated_at
+            ]);
+            $virtual->user = $commercial;
+            $virtual->is_global_for_user = true;
+            $virtuals->push($virtual);
+        }
+
+        // Fusionner les collections (particuliers d'abord, puis globaux virtuels)
+        $merged = $particularObjectives->merge($virtuals);
+
+        // Tri par date (année desc, mois desc)
+        $sorted = $merged->sortByDesc(function ($item) {
+            return sprintf('%04d-%02d', $item->target_year ?? 0, $item->target_month ?? 0);
+        })->values();
+
+        // Pagination manuelle
+        $page = max(1, (int)$request->get('page', 1));
+        $perPage = (int)$request->get('per_page', 10);
+        $total = $sorted->count();
+        $results = $sorted->slice(($page - 1) * $perPage, $perPage)->values();
+
+        $paginator = new LengthAwarePaginator($results, $total, $perPage, $page, [
+            'path' => LengthAwarePaginator::resolveCurrentPath(),
+            'query' => $request->query()
+        ]);
+
+        return response()->json([
+            'data' => $paginator->items(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total()
             ]
         ]);
     }
@@ -459,6 +554,49 @@ class ObjectiveController extends Controller
             'monthly' => $monthlyQuery->count(),
             'week' => $weeklyQuery->count(),
             'today' => $todayQuery->count()
+        ];
+    }
+
+    /**
+     * Calculer les statistiques pour un objectif donné
+     */
+    private function calculateObjectiveStats($objective, $user, $year, $month)
+    {
+        if ($month) {
+            // Stats mensuelles
+            $startDate = date('Y-m-01 00:00:00', strtotime("{$year}-{$month}-01"));
+            $endDate = date('Y-m-t 23:59:59', strtotime($startDate));
+            $applications = $user->countApplicationsForPeriod($startDate, $endDate);
+            $target = $objective->monthly_target;
+        } else {
+            // Stats annuelles
+            $startDate = date('Y-01-01 00:00:00', strtotime("{$year}-01-01"));
+            $endDate = date('Y-12-31 23:59:59', strtotime("{$year}-12-31"));
+            $applications = $user->countApplicationsForPeriod($startDate, $endDate);
+            $target = $objective->yearly_target;
+        }
+
+        $progressPercentage = $target > 0 ? min(100, round(($applications / $target) * 100, 2)) : 0;
+
+        return [
+            'user' => [
+                'id' => $user->id,
+                'full_name' => $user->full_name,
+                'email' => $user->email
+            ],
+            'objective' => [
+                'id' => $objective->id,
+                'target' => $target,
+                'description' => $objective->description,
+                'is_global_for_user' => $objective->is_global_for_user ?? false
+            ],
+            'stats' => [
+                'applications' => $applications,
+                'target' => $target,
+                'progress_percentage' => $progressPercentage,
+                'remaining' => max(0, $target - $applications),
+                'status' => $progressPercentage >= 100 ? 'completed' : ($progressPercentage >= 80 ? 'on_track' : 'behind')
+            ]
         ];
     }
 }

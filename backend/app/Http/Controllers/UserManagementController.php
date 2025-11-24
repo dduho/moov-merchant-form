@@ -134,14 +134,26 @@ class UserManagementController extends Controller
         $accessCheck = $this->checkAdminAccess($request);
         if ($accessCheck) return $accessCheck;
 
-        $commercials = User::with('roles')
+        $query = User::with('roles')
             ->whereHas('roles', function($q) {
                 $q->where('slug', 'commercial');
             })
             ->where('is_active', true)
             ->where('is_blocked', false)
-            ->select(['id', 'first_name', 'last_name', 'email'])
-            ->get();
+            ->select(['id', 'first_name', 'last_name']);
+
+        // Optional search parameter (q) for typeahead
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->where(function($sub) use ($q) {
+                $sub->where('first_name', 'like', "%{$q}%")
+                    ->orWhere('last_name', 'like', "%{$q}%");
+            });
+        }
+
+        // Limit results to prevent huge payloads
+        $limit = intval($request->get('limit', 50));
+        $commercials = $query->limit($limit)->get();
 
         return response()->json([
             'success' => true,
@@ -568,10 +580,8 @@ class UserManagementController extends Controller
                     if ($role) {
                         $user->roles()->attach($role->id);
                         
-                        // Si c'est un commercial, appliquer les objectifs globaux
-                        if ($validated['data']['role_slug'] === 'commercial') {
-                            $user->applyGlobalObjectives();
-                        }
+                        // Plus besoin de créer des objectifs particuliers automatiquement
+                        // Les objectifs globaux s'appliquent à tous les commerciaux
                     } else {
                         // Si le rôle n'existe pas, ajouter une erreur
                         $errors[] = [

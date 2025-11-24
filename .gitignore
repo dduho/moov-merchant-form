@@ -13,3 +13,4 @@ nginx-moov-merchant.conf
 
 # Windows special files
 NUL
+frontend/dev-dist/workbox-*.js

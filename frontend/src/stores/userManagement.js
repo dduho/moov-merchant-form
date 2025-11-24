@@ -168,9 +168,9 @@ export const useUserManagementStore = defineStore('userManagement', () => {
     }
   }
 
-  const fetchCommercials = async () => {
+  const fetchCommercials = async (params = {}) => {
     try {
-      const response = await UserService.getCommercials()
+      const response = await UserService.getCommercials(params)
       commercials.value = response.data || []
       return response
     } catch (err) {

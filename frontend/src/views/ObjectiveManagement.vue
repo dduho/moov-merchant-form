@@ -157,21 +157,69 @@
               </select>
             </div>
 
-            <div>
+            <div class="relative">
               <label class="block text-sm font-medium text-gray-700 mb-1">Commercial</label>
-              <select
-                v-model="particularFilters.user_id"
-                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-              >
-                <option value="">Tous les commerciaux</option>
-                <option
-                  v-for="user in commercials"
-                  :key="user.id"
-                  :value="user.id"
+
+              <div class="relative">
+                <div class="flex items-center">
+                  <input
+                    type="text"
+                    v-model="commercialQuery"
+                    @input="onCommercialInput"
+                    @focus="dropdownOpen = true"
+                    @keydown.down.prevent="highlightIndex = Math.min(highlightIndex + 1, visibleCommercials.length - 1)"
+                    @keydown.up.prevent="highlightIndex = Math.max(highlightIndex - 1, 0)"
+                    @keydown.enter.prevent="selectHighlighted()"
+                    placeholder="Rechercher un commercial..."
+                    class="block w-full px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                  />
+                  <button
+                    v-if="particularFilters.user_id"
+                    @click="clearCommercial"
+                    class="px-3 py-2 border border-gray-300 rounded-r-md bg-white text-gray-600 hover:bg-gray-50"
+                    title="Effacer la sélection"
+                  >
+                    <i class="fas fa-times"></i>
+                  </button>
+                  <button
+                    v-else
+                    @click="toggleDropdown"
+                    class="px-3 py-2 border border-gray-300 rounded-r-md bg-white text-gray-600 hover:bg-gray-50"
+                    title="Ouvrir la liste"
+                  >
+                    <i class="fas fa-chevron-down"></i>
+                  </button>
+                </div>
+
+                <div
+                  v-show="dropdownOpen && visibleCommercials.length > 0"
+                  @mousedown.prevent
+                  class="absolute z-30 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto"
                 >
-                  {{ user.first_name }} {{ user.last_name }}
-                </option>
-              </select>
+                  <ul>
+                    <li
+                      v-for="(user, idx) in visibleCommercials"
+                      :key="user.id"
+                      @click="selectCommercial(user)"
+                      @mousemove="highlightIndex = idx"
+                      :class="['px-3 py-2 cursor-pointer hover:bg-gray-100', highlightIndex === idx ? 'bg-gray-100' : '']"
+                    >
+                        <div class="flex items-center space-x-3">
+                          <div class="flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center bg-gray-100 text-gray-700 font-medium">
+                            {{ (user.first_name?.charAt(0) || '') + (user.last_name?.charAt(0) || '') }}
+                          </div>
+                          <div class="text-sm text-gray-800">{{ user.first_name }} {{ user.last_name }}</div>
+                        </div>
+                    </li>
+                  </ul>
+
+                  <div v-if="filteredCommercials.length > defaultCommercialLimit" class="px-3 py-2 border-t text-sm text-gray-600 bg-gray-50">
+                    <button @click="toggleShowAllCommercials" class="text-orange-600 underline">
+                      {{ showAllCommercials ? 'Voir moins' : `Voir plus (${filteredCommercials.length - defaultCommercialLimit} restants)` }}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div>
@@ -515,6 +563,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useObjectiveStore } from '../stores/objective'
 import { useUserManagementStore } from '../stores/userManagement'
+import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notifications'
 import ObjectiveModal from '../components/ObjectiveModal.vue'
 import ConfirmModal from '../components/ConfirmModal.vue'
@@ -528,6 +577,7 @@ export default {
   setup() {
     const objectiveStore = useObjectiveStore()
     const userStore = useUserManagementStore()
+    const authStore = useAuthStore()
     const notificationStore = useNotificationStore()
 
     // State
@@ -551,14 +601,38 @@ export default {
       status: ''
     })
 
+    // Pagination séparée pour chaque onglet
+    const globalPage = ref(1)
+    const particularPage = ref(1)
+    const itemsPerPage = 10
+
+    // Commercial select helpers (searchable + limited by default)
+    const commercialQuery = ref('')
+    const showAllCommercials = ref(false)
+    const defaultCommercialLimit = 6
+    const dropdownOpen = ref(false)
+    const highlightIndex = ref(-1)
+    const commercialFetchTimeout = ref(null)
+
     // Computed
     const allObjectives = computed(() => objectiveStore.objectives)
     const pagination = computed(() => objectiveStore.pagination)
-    const globalPagination = computed(() => objectiveStore.globalPagination)
-    const particularPagination = computed(() => objectiveStore.particularPagination)
     const isLoading = computed(() => objectiveStore.isLoading)
     const error = computed(() => objectiveStore.error)
     const commercials = computed(() => userStore.commercials)
+    const filteredCommercials = computed(() => {
+      // Commercials are retrieved server-side (filtered by q). Use store list directly.
+      return commercials.value || []
+    })
+    const visibleCommercials = computed(() => {
+      if (showAllCommercials.value) return filteredCommercials.value
+      return filteredCommercials.value.slice(0, defaultCommercialLimit)
+    })
+
+    const selectedCommercial = computed(() => {
+      if (!particularFilters.value.user_id) return null
+      return (commercials.value || []).find(u => u.id === parseInt(particularFilters.value.user_id)) || null
+    })
     
     // Objectifs paginés depuis le store
     const globalObjectivesPaginated = computed(() => objectiveStore.globalObjectivesPaginated)
@@ -570,6 +644,7 @@ export default {
     })
 
     const particularObjectives = computed(() => {
+      // Particuliers = objectifs ayant un user_id (réels objectifs assignés à des utilisateurs)
       return allObjectives.value.filter(obj => obj.user_id !== null)
     })
 
@@ -582,10 +657,7 @@ export default {
         filtered = filtered.filter(obj => obj.target_year === parseInt(filters.year))
       }
       
-      // Filtre par commercial (seulement pour particuliers)
-      if (filters.user_id) {
-        filtered = filtered.filter(obj => obj.user_id === parseInt(filters.user_id))
-      }
+      // (Commercial filter removed - global objectives apply to all commercials by default)
       
       // Filtre par période
       if (filters.period) {
@@ -637,17 +709,124 @@ export default {
       return filtered
     }
 
-    // Pagination active selon l'onglet
-    const activePagination = computed(() => {
-      return activeTab.value === 'global' ? globalPagination.value : particularPagination.value
+    // Objectifs affichés selon l'onglet actif avec pagination
+    const displayedObjectives = computed(() => {
+      let objectives
+      let currentPage
+      let filtered
+
+      if (activeTab.value === 'global') {
+        objectives = globalObjectives.value
+        currentPage = globalPage.value
+        filtered = applyFilters(objectives, globalFilters.value)
+      } else {
+        objectives = particularObjectives.value
+        currentPage = particularPage.value
+        filtered = applyFilters(objectives, particularFilters.value)
+      }
+
+      // Pagination côté client
+      const start = (currentPage - 1) * itemsPerPage
+      const end = start + itemsPerPage
+      return filtered.slice(start, end)
     })
 
-    // Methods
-    const loadObjectives = (page = 1) => {
-      if (activeTab.value === 'global') {
-        objectiveStore.setGlobalPage(page)
+    // Pagination info pour l'onglet actif
+    const activePagination = computed(() => {
+      const objectives = activeTab.value === 'global' ? globalObjectives.value : particularObjectives.value
+      const filters = activeTab.value === 'global' ? globalFilters.value : particularFilters.value
+      const currentPage = activeTab.value === 'global' ? globalPage.value : particularPage.value
+      const filtered = applyFilters(objectives, filters)
+
+      const total = filtered.length
+      const lastPage = Math.ceil(total / itemsPerPage)
+
+      return {
+        current_page: currentPage,
+        last_page: lastPage,
+        per_page: itemsPerPage,
+        total: total
+      }
+    })
+
+    // Watchers
+    watch(activeTab, (newTab) => {
+      if (newTab === 'global') {
+        globalPage.value = 1
       } else {
-        objectiveStore.setParticularPage(page)
+        particularPage.value = 1
+      }
+    })
+
+    // Watchers pour les filtres
+    watch(globalFilters, () => {
+      globalPage.value = 1
+    }, { deep: true })
+
+    watch(particularFilters, () => {
+      particularPage.value = 1
+    }, { deep: true })
+
+    // Methods
+    const loadObjectives = async (page = 1) => {
+      if (activeTab.value === 'global') {
+        globalPage.value = page
+      } else {
+        particularPage.value = page
+      }
+      
+      // Charger les objectifs depuis l'API
+      await objectiveStore.fetchObjectives()
+    }
+
+    const toggleShowAllCommercials = () => {
+      showAllCommercials.value = !showAllCommercials.value
+    }
+
+    const onCommercialInput = () => {
+      // Open dropdown and reset highlight
+      dropdownOpen.value = true
+      highlightIndex.value = -1
+      showAllCommercials.value = false
+      // Debounced server-side search
+      if (commercialFetchTimeout.value) clearTimeout(commercialFetchTimeout.value)
+      commercialFetchTimeout.value = setTimeout(async () => {
+        try {
+          await userStore.fetchCommercials({ q: commercialQuery.value, limit: 50 })
+        } catch (e) {
+          // ignore fetch errors here, store will set error
+        }
+      }, 300)
+    }
+
+    const selectCommercial = (user) => {
+      particularFilters.value.user_id = user.id
+      commercialQuery.value = `${user.first_name} ${user.last_name}`
+      dropdownOpen.value = false
+      highlightIndex.value = -1
+      // Load objectives for the selected commercial
+      loadObjectives(1)
+    }
+
+    const selectHighlighted = () => {
+      const idx = highlightIndex.value
+      if (idx >= 0 && idx < visibleCommercials.value.length) {
+        selectCommercial(visibleCommercials.value[idx])
+      }
+    }
+
+    const clearCommercial = () => {
+      particularFilters.value.user_id = ''
+      commercialQuery.value = ''
+      dropdownOpen.value = false
+      // reload without commercial filter
+      loadObjectives(1)
+    }
+
+    const toggleDropdown = () => {
+      dropdownOpen.value = !dropdownOpen.value
+      if (dropdownOpen.value) {
+        highlightIndex.value = -1
       }
     }
 
@@ -662,15 +841,12 @@ export default {
     const clearParticularFilters = () => {
       particularFilters.value = {
         year: '',
-        user_id: '',
         period: '',
         status: ''
       }
     }
 
-    const loadCommercials = () => {
-      userStore.fetchCommercials()
-    }
+    // loadCommercials removed because commercial filter was removed
 
     const getUserInitials = (user) => {
       if (!user) return 'GL' // GL = Global
@@ -827,18 +1003,10 @@ export default {
     }
 
     // Lifecycle
-    watch(activeTab, (newTab) => {
-      // Reset pagination à 1 quand on change d'onglet
-      if (newTab === 'global') {
-        objectiveStore.setGlobalPage(1)
-      } else {
-        objectiveStore.setParticularPage(1)
-      }
-    })
-
     onMounted(() => {
       loadObjectives()
-      loadCommercials()
+      // Charger la liste des commerciaux pour le modal de création/édition
+      userStore.fetchCommercials()
     })
 
     return {
@@ -847,13 +1015,20 @@ export default {
       globalObjectives,
       particularObjectives,
       displayedObjectives,
-      pagination,
       activePagination,
       isLoading,
       error,
       globalFilters,
       particularFilters,
       commercials,
+      commercialQuery,
+      showAllCommercials,
+      defaultCommercialLimit,
+      filteredCommercials,
+      visibleCommercials,
+      dropdownOpen,
+      highlightIndex,
+      selectedCommercial,
       showCreateModal,
       showDeleteModal,
       selectedObjective,
@@ -875,6 +1050,14 @@ export default {
       handleDeleteConfirm,
       closeModal,
       handleObjectiveSuccess
+      ,
+      // Commercial helpers
+      toggleShowAllCommercials,
+      onCommercialInput,
+      selectCommercial,
+      clearCommercial,
+      toggleDropdown,
+      selectHighlighted
     }
   }
 }
