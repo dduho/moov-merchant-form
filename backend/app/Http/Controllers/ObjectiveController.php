@@ -91,51 +91,77 @@ class ObjectiveController extends Controller
             'monthly_target' => 'required|integer|min:1',
             'yearly_target' => 'nullable|integer|min:0',
             'target_year' => 'required|integer|min:2020|max:2050',
-            'target_month' => 'required|integer|min:1|max:12',
+            'target_month' => 'nullable|integer|min:1|max:12',
             'description' => 'nullable|string|max:500'
         ]);
 
-        // Vérifier si un objectif existe déjà pour cette période
-        $query = UserObjective::where('target_year', $request->target_year)
-            ->where('target_month', $request->target_month);
-        
-        if ($request->user_id) {
-            $query->where('user_id', $request->user_id);
-        } else {
-            $query->whereNull('user_id');
-        }
-        
-        $existingObjective = $query->first();
+        // If no specific month provided, create/update objectives for all months of the year
+        $months = $request->filled('target_month') ? [(int)$request->target_month] : range(1, 12);
 
-        // Si un objectif existe, on le met à jour au lieu de créer un nouveau
-        if ($existingObjective) {
-            $existingObjective->update([
+        // Remove any existing annual objective (target_month == null) for this user/year
+        try {
+            $delQuery = UserObjective::where('target_year', $request->target_year)
+                ->whereNull('target_month');
+            if ($request->user_id) {
+                $delQuery->where('user_id', $request->user_id);
+            } else {
+                $delQuery->whereNull('user_id');
+            }
+            $deletedCount = $delQuery->delete();
+            if ($deletedCount > 0) {
+                \Log::info('Removed annual objective(s) before creating monthly ones', ['year' => $request->target_year, 'user_id' => $request->user_id, 'deleted' => $deletedCount]);
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Failed to delete annual objectives before creating monthly ones', ['error' => $e->getMessage()]);
+        }
+
+        $created = 0;
+        $updated = 0;
+        $last = null;
+
+        foreach ($months as $m) {
+            // Vérifier si un objectif existe déjà pour cette période et ce mois
+            $query = UserObjective::where('target_year', $request->target_year)
+                ->where('target_month', $m);
+
+            if ($request->user_id) {
+                $query->where('user_id', $request->user_id);
+            } else {
+                $query->whereNull('user_id');
+            }
+
+            $existingObjective = $query->first();
+
+            $objectiveData = [
+                'user_id' => $request->user_id ?? null,
                 'monthly_target' => $request->monthly_target,
                 'yearly_target' => $request->yearly_target ?? 0,
+                'target_year' => $request->target_year,
+                'target_month' => $m,
                 'description' => $request->description,
                 'is_active' => $request->is_active ?? true
-            ]);
+            ];
 
-            $message = $request->user_id 
-                ? 'Objectif particulier mis à jour pour cette période.'
-                : 'Objectif global mis à jour pour cette période.';
-            
-            return response()->json([
-                'message' => $message,
-                'data' => $existingObjective->load('user')
-            ], 200);
+            if ($existingObjective) {
+                $existingObjective->update($objectiveData);
+                $updated++;
+                $last = $existingObjective->fresh()->load('user');
+            } else {
+                $newObj = UserObjective::create($objectiveData);
+                $created++;
+                $last = $newObj->load('user');
+            }
         }
 
-        // Sinon, créer un nouvel objectif
-        $objectiveData = $request->all();
-        $objectiveData['yearly_target'] = $request->yearly_target ?? 0;
-        
-        $objective = UserObjective::create($objectiveData);
+        $message = [];
+        if ($created) $message[] = "$created objectif(s) créé(s)";
+        if ($updated) $message[] = "$updated objectif(s) mis à jour";
+        if (empty($message)) $message = ['Aucune modification effectuée'];
 
         return response()->json([
-            'message' => 'Objectif créé avec succès',
-            'data' => $objective->load('user')
-        ], 201);
+            'message' => implode(' - ', $message),
+            'data' => $last
+        ], 200);
     }
 
     /**

@@ -103,28 +103,27 @@
             <!-- Période -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Mois <span class="text-red-500">*</span>
-                </label>
-                <select
-                  v-model.number="form.target_month"
-                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                  required
-                >
-                  <option value="">Sélectionnez un mois</option>
-                  <option :value="1">Janvier</option>
-                  <option :value="2">Février</option>
-                  <option :value="3">Mars</option>
-                  <option :value="4">Avril</option>
-                  <option :value="5">Mai</option>
-                  <option :value="6">Juin</option>
-                  <option :value="7">Juillet</option>
-                  <option :value="8">Août</option>
-                  <option :value="9">Septembre</option>
-                  <option :value="10">Octobre</option>
-                  <option :value="11">Novembre</option>
-                  <option :value="12">Décembre</option>
-                </select>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Mois (optionnel)
+                  </label>
+                  <select
+                    v-model="form.target_month"
+                    class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                  >
+                    <option value="">Tous les mois (toute l'année)</option>
+                    <option :value="1">Janvier</option>
+                    <option :value="2">Février</option>
+                    <option :value="3">Mars</option>
+                    <option :value="4">Avril</option>
+                    <option :value="5">Mai</option>
+                    <option :value="6">Juin</option>
+                    <option :value="7">Juillet</option>
+                    <option :value="8">Août</option>
+                    <option :value="9">Septembre</option>
+                    <option :value="10">Octobre</option>
+                    <option :value="11">Novembre</option>
+                    <option :value="12">Décembre</option>
+                  </select>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -253,17 +252,17 @@ export default {
     })
 
     const isFormValid = computed(() => {
-      // For global objective: month, year, and target are required
-      if (form.value.user_id === null) {
-        return form.value.target_month &&
-               form.value.target_year &&
-               form.value.monthly_target > 0
-      }
-      // For specific user: user_id, month, year, and target are required
-      return form.value.user_id &&
-             form.value.target_month &&
-             form.value.target_year &&
-             form.value.monthly_target > 0
+      // Year is always required
+      if (!form.value.target_year) return false
+
+      // monthly_target must be positive
+      if (!form.value.monthly_target || form.value.monthly_target <= 0) return false
+
+      // For specific user: user_id required
+      if (form.value.user_id !== null && !form.value.user_id) return false
+
+      // Month is optional: if omitted, the objective applies to all months of the year
+      return true
     })
 
     // Methods
@@ -304,7 +303,7 @@ export default {
 
         const objectiveData = {
           user_id: form.value.user_id, // null for global, or user ID
-          target_month: Number(form.value.target_month),
+          target_month: form.value.target_month === '' || form.value.target_month === null ? null : Number(form.value.target_month),
           target_year: Number(form.value.target_year),
           monthly_target: Number(form.value.monthly_target),
           description: form.value.description || null
