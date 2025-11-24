@@ -17,6 +17,14 @@ node_modules
 dist
 dist-ssr
 *.local
+# PWA generated artifacts (dev/build)
+dev-dist/
+workbox-*.js
+registerSW.js
+# Generated service worker (dev)
+dev-dist/sw.js
+# If relying solely on VitePWA, uncomment next line to ignore manual SW in public
+# public/sw.js
 
 # Environment
 .env

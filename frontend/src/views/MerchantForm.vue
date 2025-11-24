@@ -179,9 +179,9 @@
                           style="border-width: 2px !important;"
                           class="form-input h-12 w-full rounded-xl px-4 py-2 pr-12 focus:outline-none focus:ring-2 focus:ring-orange-500/50 dark:bg-gray-700 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all duration-200" 
                           :class="{
-                            'border-red-600 dark:border-red-500 focus:border-red-600': errors.birthPlace,
-                            'border-green-600 dark:border-green-500 focus:border-green-600': formData.birthPlace && !errors.birthPlace,
-                            'border-gray-300 dark:border-gray-600 focus:border-orange-500': !formData.birthPlace && !errors.birthPlace
+                            'border-red-600 dark:border-red-500 !focus:border-red-600': errors.birthPlace,
+                            'border-green-600 dark:border-green-500 !focus:border-green-600': formData.birthPlace && !errors.birthPlace,
+                            'border-gray-300 dark:border-gray-600 !focus:border-orange-500': !formData.birthPlace && !errors.birthPlace
                           }"
                           placeholder="Tapez ou sélectionnez votre lieu de naissance"
                           @input="filterBirthPlaces"
@@ -2378,7 +2378,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
   border-radius: 9999px;
 }
 
-/* Inputs & Selects */
+/* Inputs & Selects (commented out to prevent scoped override causing unwanted dark mode style)
 .form-input {
   @apply w-full rounded-xl border px-4 py-2 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder:text-gray-400;
 }
@@ -2386,11 +2386,24 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
 .form-select {
   @apply form-input;
 }
+*/
 
 /* Typo & sections */
 .section-title {
-  @apply text-base sm:text-lg font-semibold mb-3 sm:mb-4 dark:text-white;
+  font-size: 1rem; /* text-base */
+  line-height: 1.5rem;
+  font-weight: 600; /* font-semibold */
+  margin-bottom: 0.75rem; /* mb-3 */
+  color: #111827;
 }
+@media (min-width: 640px) { /* sm: */
+  .section-title {
+    font-size: 1.125rem; /* text-lg */
+    line-height: 1.75rem;
+    margin-bottom: 1rem; /* mb-4 */
+  }
+}
+.dark .section-title { color: #ffffff; }
 
 .form-label {
   margin-bottom: 0.25rem;
@@ -2400,22 +2413,31 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
   color: rgb(17 24 39 / var(--tw-text-opacity, 1)); /* text-gray-900 */
 }
 
-.form-group {
-  @apply space-y-1;
-}
+.form-group > * + * { margin-top: 0.25rem; }
 
 /* Boutons */
 .btn-primary {
-  @apply transition active:scale-[.99];
+  transition: all .15s ease;
   min-height: 44px;
   min-width: 44px;
 }
+.btn-primary:active { transform: scale(.99); }
 
 .btn-secondary {
-  @apply bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:border-gray-600;
-  min-height: 44px;
-  min-width: 44px;
+  background:#ffffff;
+  color:#374151; /* text-gray-700 */
+  border:1px solid #d1d5db; /* light border */
+  transition: background-color .15s ease,color .15s ease,border-color .15s ease;
+  min-height:44px;
+  min-width:44px;
 }
+.btn-secondary:hover { background:#f9fafb; } /* hover:bg-gray-50 */
+.dark .btn-secondary {
+  background:#374151; /* dark:bg-gray-700 */
+  color:#e5e7eb; /* dark:text-gray-200 */
+  border-color:#4b5563; /* dark:border-gray-600 */
+}
+.dark .btn-secondary:hover { background:#4b5563; } /* dark:hover:bg-gray-600 */
 
 @media (max-width: 768px) {
   .circle-1 {
@@ -2465,6 +2487,10 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
   .form-select {
     height: 3rem;
   }
+}
+
+.dark .form-label {
+  color: rgb(255 255 255 / 1); /* text-white in dark mode */
 }
 
 /* Animation de la modale */
