@@ -1,5 +1,9 @@
 node_modules
 
+# Environment files (local Docker setup)
+**/.env.local
+.env.local
+
 # Deployment scripts (local only)
 deploy-*.sh
 deploy-*.ps1

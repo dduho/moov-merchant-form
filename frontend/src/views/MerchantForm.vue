@@ -191,13 +191,13 @@
                           autocomplete="off"
                           required
                         />
-                        <div 
+                        <div
                           v-if="showBirthPlaceSuggestions && filteredBirthPlaces.length > 0"
                           class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl shadow-lg max-h-60 overflow-y-auto"
                         >
-                          <div 
-                            v-for="city in filteredBirthPlaces" 
-                            :key="city"
+                          <div
+                            v-for="(city, index) in filteredBirthPlaces"
+                            :key="`birth-place-${index}-${city}`"
                             @mousedown="selectBirthPlace(city)"
                             class="px-4 py-2 hover:bg-orange-50 dark:hover:bg-gray-700 cursor-pointer transition-colors duration-150 dark:text-white"
                           >

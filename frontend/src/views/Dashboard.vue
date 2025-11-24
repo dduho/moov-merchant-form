@@ -649,7 +649,7 @@
                     </label>
                   </div>
                   <label for="select-all-applications" class="text-sm font-medium text-gray-700 cursor-pointer">
-                    Tout sélectionner (approuvées)
+                    Tout sélectionner (exportables)
                   </label>
                 </div>
               </div>
@@ -660,13 +660,13 @@
                      class="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors"
                      :class="{ 'border-b border-gray-200': index < recentApplications.length - 1 }">
                   <div class="flex items-center space-x-3 sm:space-x-4 min-w-0">
-                    <!-- Checkbox pour sélectionner cette candidature (désactivée si non approuvée) -->
+                    <!-- Checkbox pour sélectionner cette candidature (désactivée si non exportable) -->
                     <div class="relative flex-shrink-0">
                       <input
                         :id="'select-app-' + app.id"
                         type="checkbox"
                         :checked="selectedApplications.includes(app.id)"
-                        :disabled="app.status !== 'approved'"
+                        :disabled="!['approved', 'exported_for_creation', 'exported_for_update'].includes(app.status)"
                         @change="toggleApplicationSelection(app.id)"
                         class="sr-only peer"
                       />
@@ -1717,27 +1717,33 @@ export default {
     }
     
     const toggleSelectAllApplications = () => {
-      const approvedApplications = recentApplications.value.filter(app => app.status === 'approved')
+      // Candidatures exportables : approved, exported_for_creation, exported_for_update
+      const exportableApplications = recentApplications.value.filter(app =>
+        ['approved', 'exported_for_creation', 'exported_for_update'].includes(app.status)
+      )
       if (selectAllApplications.value) {
-        // Désélectionner toutes les candidatures approuvées
-        selectedApplications.value = selectedApplications.value.filter(id => 
-          !approvedApplications.some(app => app.id === id)
+        // Désélectionner toutes les candidatures exportables
+        selectedApplications.value = selectedApplications.value.filter(id =>
+          !exportableApplications.some(app => app.id === id)
         )
       } else {
-        // Sélectionner toutes les candidatures approuvées
-        const approvedIds = approvedApplications.map(app => app.id)
-        selectedApplications.value = [...new Set([...selectedApplications.value, ...approvedIds])]
+        // Sélectionner toutes les candidatures exportables
+        const exportableIds = exportableApplications.map(app => app.id)
+        selectedApplications.value = [...new Set([...selectedApplications.value, ...exportableIds])]
       }
       selectAllApplications.value = !selectAllApplications.value
     }
     
     const updateSelectAllState = () => {
-      const approvedApplications = recentApplications.value.filter(app => app.status === 'approved')
-      const totalApproved = approvedApplications.length
-      const selectedApprovedCount = selectedApplications.value.filter(id => 
-        approvedApplications.some(app => app.id === id)
+      // Candidatures exportables : approved, exported_for_creation, exported_for_update
+      const exportableApplications = recentApplications.value.filter(app =>
+        ['approved', 'exported_for_creation', 'exported_for_update'].includes(app.status)
+      )
+      const totalExportable = exportableApplications.length
+      const selectedExportableCount = selectedApplications.value.filter(id =>
+        exportableApplications.some(app => app.id === id)
       ).length
-      selectAllApplications.value = totalApproved > 0 && selectedApprovedCount === totalApproved
+      selectAllApplications.value = totalExportable > 0 && selectedExportableCount === totalExportable
     }
     
     // Fonction pour adapter les textes selon la période sélectionnée
