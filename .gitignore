@@ -10,3 +10,6 @@ deploy-*.ps1
 create-admin.php
 moov-queue.service
 nginx-moov-merchant.conf
+
+# Windows special files
+NUL
