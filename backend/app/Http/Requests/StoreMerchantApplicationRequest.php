@@ -61,13 +61,19 @@ class StoreMerchantApplicationRequest extends FormRequest
             'signature' => 'required|string',
             'accept_terms' => 'required|accepted',
             
-            // Documents (fichiers) - Individual fields
-                'id_card' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'cfe_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'business_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'residence_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'residence_proof' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'nif_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            // Documents (fichiers) - Individual fields (support multiple files per type, max 3)
+                'id_card' => 'required|array|max:3',
+            'id_card.*' => 'file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'cfe_document' => 'nullable|array|max:3',
+            'cfe_document.*' => 'file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'business_document' => 'nullable|array|max:3',
+            'business_document.*' => 'file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'residence_card' => 'nullable|array|max:3',
+            'residence_card.*' => 'file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'residence_proof' => 'nullable|array|max:3',
+            'residence_proof.*' => 'file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'nif_document' => 'nullable|array|max:3',
+            'nif_document.*' => 'file|mimes:pdf,jpg,jpeg,png|max:5120',
             
             // Legacy documents array (for backward compatibility)
             'documents' => 'nullable|array',
@@ -108,8 +114,8 @@ class StoreMerchantApplicationRequest extends FormRequest
             'accept_terms.accepted' => 'Vous devez accepter les conditions générales',
             // Document validation messages
             'id_card.required' => 'La photo de la pièce d\'identité est obligatoire',
-            'id_card.mimes' => 'La pièce d\'identité doit être un fichier PDF, JPG ou PNG',
-            'id_card.max' => 'La pièce d\'identité ne doit pas dépasser 5MB',
+            'id_card.*.mimes' => 'La pièce d\'identité doit être un fichier PDF, JPG ou PNG',
+            'id_card.*.max' => 'La pièce d\'identité ne doit pas dépasser 5MB',
             'cfe_document.mimes' => 'Le document CFE doit être un fichier PDF, JPG ou PNG',
             'cfe_document.max' => 'Le document CFE ne doit pas dépasser 5MB',
             'business_document.mimes' => 'Le document commercial doit être un fichier PDF, JPG ou PNG',
@@ -200,13 +206,19 @@ class StoreMerchantApplicationRequest extends FormRequest
             'signature' => 'required|string',
             'accept_terms' => 'required|accepted',
             
-            // Documents (fichiers) - Individual fields
-                'id_card' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'cfe_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'business_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'residence_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'residence_proof' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'nif_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+                // Documents (fichiers) - Individual fields (support multiple files per type, max 3)
+                'id_card' => 'required|array|max:3',
+            'id_card.*' => 'file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'cfe_document' => 'nullable|array|max:3',
+            'cfe_document.*' => 'file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'business_document' => 'nullable|array|max:3',
+            'business_document.*' => 'file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'residence_card' => 'nullable|array|max:3',
+            'residence_card.*' => 'file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'residence_proof' => 'nullable|array|max:3',
+            'residence_proof.*' => 'file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'nif_document' => 'nullable|array|max:3',
+            'nif_document.*' => 'file|mimes:pdf,jpg,jpeg,png|max:5120',
             
             // Legacy documents array (for backward compatibility)
             'documents' => 'nullable|array',
