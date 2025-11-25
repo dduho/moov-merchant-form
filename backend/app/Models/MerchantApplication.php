@@ -39,9 +39,7 @@ class MerchantApplication extends Model
         'id_type',
         'id_number',
         'id_expiry_date',
-        'has_anid_card',
-        'anid_number',
-        'anid_expiry_date',
+        // legacy ANID fields removed; ANID is represented via 'id_type' === 'carte_anid'
         'is_foreigner',
         
         // Informations commerciales
@@ -93,9 +91,7 @@ class MerchantApplication extends Model
         return [
             'birth_date' => 'date',
             'id_expiry_date' => 'date',
-            'anid_expiry_date' => 'date',
             'cfe_expiry_date' => 'date',
-            'has_anid_card' => 'boolean',
             'is_foreigner' => 'boolean',
             'has_cfe' => 'boolean',
             'has_nif' => 'boolean',
@@ -287,8 +283,14 @@ class MerchantApplication extends Model
     {
         $requiredDocs = ['id_card'];
 
-        if ($this->has_anid_card) $requiredDocs[] = 'anid_card';
-        if ($this->is_foreigner) $requiredDocs[] = 'residence_card';
+        // If identity type is the ANID card, require anid_card (ANID represented by id_type 'carte_anid')
+        if (($this->id_type ?? null) === 'carte_anid') {
+            $requiredDocs[] = 'anid_card';
+        }
+
+        if ($this->is_foreigner) {
+            $requiredDocs[] = 'residence_card';
+        }
 
         $uploadedDocs = $this->documents->pluck('document_type')->toArray();
 
