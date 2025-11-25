@@ -1530,6 +1530,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
           
           // Gérer les documents depuis le tableau 'documents'
           if (data.documents && Array.isArray(data.documents)) {
+            console.log('[MerchantForm] Documents reçus:', data.documents);
             data.documents.forEach(doc => {
               // Construire l'URL complète du document
               let documentUrl = doc.url || doc.file_path;
@@ -1539,6 +1540,8 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
                 const backendURL = baseURL.replace('/api', ''); // Enlever /api pour avoir l'URL de base
                 documentUrl = backendURL + documentUrl;
               }
+              
+              console.log('[MerchantForm] Document URL construite:', { type: doc.type, url: documentUrl, original: doc.url || doc.file_path });
               
               // Créer un objet document compatible avec FileUpload
               const documentObject = {
@@ -1569,8 +1572,10 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
                 }
                 // Ajouter le document au tableau
                 formData.value.documents[frontendKey].push(documentObject);
+                console.log('[MerchantForm] Document ajouté à formData.documents.' + frontendKey, documentObject);
               }
             });
+            console.log('[MerchantForm] formData.documents final:', formData.value.documents);
           }
           
           // logs retirés
