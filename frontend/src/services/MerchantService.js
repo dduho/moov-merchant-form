@@ -87,6 +87,9 @@ class MerchantService {
     if (formData.commercialPhone && formData.commercialPhone.trim()) {
       submitData.append('commercial_phone', formData.commercialPhone.trim())
     }
+    if (formData.merchantPhone && formData.merchantPhone.trim()) {
+      submitData.append('merchant_phone', formData.merchantPhone.trim())
+    }
     
     // Informations commerciales
     if (formData.businessName && formData.businessName.trim()) {
@@ -448,6 +451,9 @@ class MerchantService {
     submitData.append('gender', formData.gender || '')
     submitData.append('nationality', (formData.nationality && formData.nationality.trim()) || '')
     submitData.append('phone', (formData.personalPhone && formData.personalPhone.trim()) || '')
+    if (formData.merchantPhone && formData.merchantPhone.trim()) {
+      submitData.append('merchant_phone', formData.merchantPhone.trim())
+    }
     if (formData.email && formData.email.trim()) {
       submitData.append('email', formData.email.trim())
     }
