@@ -748,8 +748,16 @@ class MerchantApplicationController extends Controller
      */
     public function approve(MerchantApplication $merchantApplication): JsonResponse
     {
-        // Vérifier les permissions
-        if (!auth()->user()->hasRole('admin')) {
+        // Vérifier les permissions et l'authentification
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Non authentifié'
+            ], 401);
+        }
+
+        if (!$user->hasRole('admin')) {
             return response()->json([
                 'success' => false,
                 'message' => 'Action non autorisée'

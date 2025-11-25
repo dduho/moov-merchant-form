@@ -590,7 +590,7 @@
                       </label>
                       <select v-model="formData.region" 
                         style="border-width: 2px !important;"
-                        class="form-input h-12" 
+                        class="form-input h-12 !mt-0" 
                         :class="{
                           'border-red-600 dark:border-red-500': errors.region,
                           'border-green-600 dark:border-green-500': formData.region && !errors.region,
@@ -676,6 +676,34 @@
                         <option value="CORP">CORP - Entreprise/Corporation</option>
                       </select>
                       <p v-if="errors.usageType" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.usageType }}</p>
+                    </div>
+                    
+                    <div class="form-group md:col-span-2">
+                      <label class="form-label flex items-center justify-between">
+                        <span>Numéro marchand *</span>
+                        <i v-if="formData.merchantPhone && !errors.merchantPhone" class="fas fa-check-circle text-green-500 text-sm"></i>
+                        <i v-else-if="errors.merchantPhone" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
+                      </label>
+                      <div class="relative">
+                        <PhoneInput v-model="formData.merchantPhone" 
+                          style="border-width: 2px !important;"
+                          class="rounded-xl focus-within:ring-2 focus-within:ring-orange-500/50 transition-all duration-200"
+                          :class="{
+                            'border-red-600 dark:border-red-500': errors.merchantPhone,
+                            'border-green-600 dark:border-green-500': formData.merchantPhone && !errors.merchantPhone,
+                            'border-gray-300 dark:border-gray-600': !formData.merchantPhone && !errors.merchantPhone
+                          }"
+                          @blur="validateMerchantPhone"
+                          autocomplete="tel" required />
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <i v-if="formData.merchantPhone && !errors.merchantPhone" class="fas fa-check-circle text-green-500 text-lg"></i>
+                          <i v-else-if="errors.merchantPhone" class="fas fa-exclamation-circle text-red-500 text-lg"></i>
+                        </div>
+                      </div>
+                      <p v-if="errors.merchantPhone" class="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center space-x-1">
+                        <i class="fas fa-exclamation-circle text-xs"></i>
+                        <span>{{ errors.merchantPhone }}</span>
+                      </p>
                     </div>
                   </div>
 
@@ -1353,6 +1381,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
       region: '',
       city: '',
       businessEmail: '',
+      merchantPhone: '',
       usageType: '',
       businessPhone: '',
       hasCFE: false,
@@ -1464,6 +1493,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
           if (data.city) formData.value.city = data.city;
           if (data.business_email) formData.value.businessEmail = data.business_email;
           if (data.usage_type) formData.value.usageType = data.usage_type;
+          if (data.merchant_phone) formData.value.merchantPhone = data.merchant_phone;
           if (data.has_cfe !== undefined) formData.value.hasCFE = data.has_cfe;
           if (data.cfe_number) formData.value.cfeNumber = data.cfe_number;
           if (data.cfe_expiry_date) formData.value.cfeExpiryDate = data.cfe_expiry_date;
@@ -1828,6 +1858,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
         if (!formData.value.region) errors.value.region = 'Champ obligatoire'
         if (!formData.value.city) errors.value.city = 'Champ obligatoire'
         if (!formData.value.usageType) errors.value.usageType = 'Champ obligatoire'
+        if (!formData.value.merchantPhone) errors.value.merchantPhone = 'Champ obligatoire'
         // businessPhone is now optional, no validation needed
         
         // Validate commercial info if user is commercial or personnel
@@ -2072,6 +2103,12 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
     const validatePhone = () => {
       if (formData.value.personalPhone && formData.value.personalPhone.trim()) {
         delete errors.value.personalPhone
+      }
+    }
+
+    const validateMerchantPhone = () => {
+      if (formData.value.merchantPhone && formData.value.merchantPhone.trim()) {
+        delete errors.value.merchantPhone
       }
     }
 
