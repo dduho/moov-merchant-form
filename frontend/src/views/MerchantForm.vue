@@ -1563,7 +1563,12 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
               
               const frontendKey = documentTypeMapping[doc.type];
               if (frontendKey) {
-                formData.value.documents[frontendKey] = documentObject;
+                // Initialiser comme tableau si pas déjà fait
+                if (!Array.isArray(formData.value.documents[frontendKey])) {
+                  formData.value.documents[frontendKey] = [];
+                }
+                // Ajouter le document au tableau
+                formData.value.documents[frontendKey].push(documentObject);
               }
             });
           }
@@ -1820,7 +1825,9 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
           if (!formData.value.anidNumber) errors.value.anidNumber = 'Champ obligatoire'
           if (!formData.value.anidExpiryDate) errors.value.anidExpiryDate = 'Champ obligatoire'
           else if (!validateIdExpiryDate(formData.value.anidExpiryDate)) errors.value.anidExpiryDate = 'Date invalide'
-          if (!formData.value.documents.anidCard) errors.value.anidCard = 'Champ obligatoire'
+          // Vérifier si c'est un tableau ou un objet
+          const anidDoc = formData.value.documents.anidCard;
+          if (!anidDoc || (Array.isArray(anidDoc) && anidDoc.length === 0)) errors.value.anidCard = 'Champ obligatoire'
         } else {
           // Sinon, valider les champs de pièce d'identité standard
           if (!formData.value.idType) errors.value.idType = 'Champ obligatoire'
@@ -1844,7 +1851,9 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
           }
           if (!formData.value.idExpiryDate) errors.value.idExpiryDate = 'Champ obligatoire'
           else if (!validateIdExpiryDate(formData.value.idExpiryDate)) errors.value.idExpiryDate = 'Date invalide'
-          if (!formData.value.documents.idCard) errors.value.idCard = 'Champ obligatoire'
+          // Vérifier si c'est un tableau ou un objet
+          const idDoc = formData.value.documents.idCard;
+          if (!idDoc || (Array.isArray(idDoc) && idDoc.length === 0)) errors.value.idCard = 'Champ obligatoire'
         }
       }
       else if (step === 3) {
