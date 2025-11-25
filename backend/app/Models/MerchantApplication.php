@@ -39,9 +39,6 @@ class MerchantApplication extends Model
         'id_type',
         'id_number',
         'id_expiry_date',
-        'has_anid_card',
-        'anid_number',
-        'anid_expiry_date',
         'is_foreigner',
         
         // Informations commerciales
@@ -93,9 +90,7 @@ class MerchantApplication extends Model
         return [
             'birth_date' => 'date',
             'id_expiry_date' => 'date',
-            'anid_expiry_date' => 'date',
             'cfe_expiry_date' => 'date',
-            'has_anid_card' => 'boolean',
             'is_foreigner' => 'boolean',
             'has_cfe' => 'boolean',
             'has_nif' => 'boolean',
@@ -205,6 +200,7 @@ class MerchantApplication extends Model
                 'elector' => 'Carte d\'électeur',
                 'driving_license' => 'Permis de conduire',
                 'foreign_id' => 'Carte d\'identité étrangère',
+                'carte_anid' => 'Carte ANID',
                 default => 'Non spécifié'
             }
         );
@@ -287,7 +283,8 @@ class MerchantApplication extends Model
     {
         $requiredDocs = ['id_card'];
 
-        if ($this->has_anid_card) $requiredDocs[] = 'anid_card';
+        // ANID uploads removed from required documents flow.
+        // If applicant is a foreigner, require residence card.
         if ($this->is_foreigner) $requiredDocs[] = 'residence_card';
 
         $uploadedDocs = $this->documents->pluck('document_type')->toArray();

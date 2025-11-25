@@ -1164,7 +1164,8 @@ export default {
           'passport': 'Passeport',
           'driving_license': 'Permis de conduire',
           'residence': 'Carte de séjour',
-          'foreign_id': 'Carte d\'identité étrangère'
+          'foreign_id': 'Carte d\'identité étrangère',
+          'carte_anid': 'Carte ANID'
         }
         
         // Préparer les données pour Excel

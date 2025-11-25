@@ -363,7 +363,7 @@
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-6">
                     <div class="form-group">
                       <label class="form-label flex items-center justify-between">
-                        <span>Type de pièce d'identité <span v-if="!formData.hasAnidCard">*</span></span>
+                        <span>Type de pièce d'identité *</span>
                         <i v-if="formData.idType && !errors.idType" class="fas fa-check-circle text-green-500 text-sm"></i>
                         <i v-else-if="errors.idType" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
                       </label>
@@ -375,7 +375,7 @@
                           'border-green-600 dark:border-green-500': formData.idType && !errors.idType,
                           'border-gray-300 dark:border-gray-600': !formData.idType && !errors.idType
                         }"
-                        :required="!formData.hasAnidCard">
+                        required>
                         <option value="">Sélectionnez</option>
                         <option value="cni">Carte Nationale d'Identité</option>
                         <option value="passport">Passeport</option>
@@ -383,13 +383,14 @@
                         <option value="elector">Carte d'électeur</option>
                         <option value="driving_license">Permis de conduire</option>
                         <option value="foreign_id">Carte d'identité étrangère</option>
+                        <option value="carte_anid">Carte ANID</option>
                       </select>
                       <p v-if="errors.idType" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.idType }}</p>
                     </div>
 
                     <div class="form-group">
                       <label class="form-label flex items-center justify-between">
-                        <span>Numéro de pièce <span v-if="!formData.hasAnidCard">*</span></span>
+                        <span>Numéro de pièce *</span>
                         <i v-if="formData.idNumber && !errors.idNumber" class="fas fa-check-circle text-green-500 text-sm"></i>
                         <i v-else-if="errors.idNumber" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
                       </label>
@@ -399,7 +400,7 @@
                         :id-type="formData.idType"
                         :has-error="!!errors.idNumber"
                         :is-valid="!!formData.idNumber && !errors.idNumber"
-                        :required="!formData.hasAnidCard"
+                        required
                       />
                       <input v-else
                         v-model="formData.idNumber"
@@ -413,7 +414,7 @@
 
                     <div class="form-group">
                       <label class="form-label flex items-center justify-between">
-                        <span>Date d'expiration <span v-if="!formData.hasAnidCard">*</span></span>
+                        <span>Date d'expiration *</span>
                         <i v-if="formData.idExpiryDate && !errors.idExpiryDate" class="fas fa-check-circle text-green-500 text-sm"></i>
                         <i v-else-if="errors.idExpiryDate" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
                       </label>
@@ -426,7 +427,7 @@
                           'border-green-600 dark:border-green-500': formData.idExpiryDate && !errors.idExpiryDate,
                           'border-gray-300 dark:border-gray-600': !formData.idExpiryDate && !errors.idExpiryDate
                         }"
-                        :required="!formData.hasAnidCard">
+                        required>
                       <p v-if="errors.idExpiryDate" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.idExpiryDate }}</p>
                     </div>
                   </div>
@@ -434,7 +435,7 @@
                   <!-- Upload pièce d'identité -->
                   <div class="mb-6">
                     <label class="form-label">
-                      Photo de la pièce d'identité <span v-if="!formData.hasAnidCard">*</span>
+                      Photo de la pièce d'identité *
                     </label>
                     <FileUpload @file-uploaded="handleFileUpload('idCard', $event)" 
                       accept="image/*"
@@ -443,49 +444,7 @@
                     <p v-if="errors.idCard" class="mt-1 text-sm text-red-600">{{ errors.idCard }}</p>
                   </div>
 
-                  <!-- Carte ANID -->
-                  <div class="mb-4" v-show="false">
-                    <label class="flex items-center space-x-2">
-                      <input v-model="formData.hasAnidCard" type="checkbox"
-                        class="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500">
-                      <span class="text-sm font-medium text-gray-700 dark:text-gray-200">Je possède une carte ANID</span>
-                    </label>
-                  </div>
-
-                  <div v-if="formData.hasAnidCard" class="mb-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4">
-                      <div class="form-group">
-                        <label class="form-label">Numéro ANID *</label>
-                        <input v-model="formData.anidNumber" 
-                          type="text" 
-                          class="form-input h-12"
-                          :class="{ 'border-red-500': errors.anidNumber }"
-                          placeholder="Numéro ANID"
-                          autocomplete="off"
-                          inputmode="numeric"
-                          :maxlength="maxLengths.anidNumber"
-                          @input="limitInput('anidNumber', $event)"
-                          @keydown="handleKeydown('anidNumber', $event)"
-                          required>
-                        <p v-if="errors.anidNumber" class="mt-1 text-sm text-red-600">{{ errors.anidNumber }}</p>
-                      </div>
-                      <div class="form-group">
-                        <label class="form-label">Date d'expiration ANID *</label>
-                        <input v-model="formData.anidExpiryDate" 
-                          type="date" 
-                          class="form-input h-12"
-                          :class="{ 'border-red-500': errors.anidExpiryDate }"
-                          required>
-                        <p v-if="errors.anidExpiryDate" class="mt-1 text-sm text-red-600">{{ errors.anidExpiryDate }}</p>
-                      </div>
-                    </div>
-                    <FileUpload @file-uploaded="handleFileUpload('anidCard', $event)" 
-                      accept="image/*"
-                      :current-file="formData.documents.anidCard" 
-                      :has-error="!!errors.anidCard"
-                      label="Photo de la carte ANID (obligatoire)" />
-                    <p v-if="errors.anidCard" class="mt-1 text-sm text-red-600">{{ errors.anidCard }}</p>
-                  </div>
+                  <!-- ANID upload removed (handled via id_type + id_number only) -->
                 </div>
               </template>
 
@@ -1371,9 +1330,6 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
       idType: '',
       idNumber: '',
       idExpiryDate: '',
-      hasAnidCard: false,
-      anidNumber: '',
-      anidExpiryDate: '',
       // Informations commerciales
       businessName: '',
       businessType: '',
@@ -1402,14 +1358,13 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
       // Documents
       documents: {
         idCard: null,
-        anidCard: null,
         cfeCard: null
       }
     };
 
     // Fonctions de limitation de longueur pour les numéros
     const maxLengths = {
-      anidNumber: 15,  // ANID peut avoir jusqu'à 15 caractères
+      // ANID removed: specific limit handled by IdNumberInput when id_type === 'carte_anid'
       cfeNumber: 20,   // CFE peut avoir jusqu'à 20 caractères 
       nifNumber: 15    // NIF peut avoir jusqu'à 15 caractères
     };
@@ -1484,9 +1439,6 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
           if (data.id_type) formData.value.idType = data.id_type;
           if (data.id_number) formData.value.idNumber = data.id_number;
           if (data.id_expiry_date) formData.value.idExpiryDate = data.id_expiry_date;
-          if (data.has_anid_card !== undefined) formData.value.hasAnidCard = data.has_anid_card;
-          if (data.anid_number) formData.value.anidNumber = data.anid_number;
-          if (data.anid_expiry_date) formData.value.anidExpiryDate = data.anid_expiry_date;
           if (data.business_name) formData.value.businessName = data.business_name;
           if (data.business_type) formData.value.businessType = data.business_type;
           if (data.business_address) formData.value.businessAddress = data.business_address;
@@ -1553,7 +1505,6 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
               // Mapper les types de documents backend vers les clés frontend
               const documentTypeMapping = {
                 'id_card': 'idCard',
-                'anid_card': 'anidCard',
                 'residence_card': 'residenceCard',
                 'cfe_card': 'cfeCard',
                 'business_license': 'businessDocument',
@@ -1814,38 +1765,38 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
         console.log('FORM DATA:', formData.value)
       }
       else if (step === 2) {
-        // Validate ID documents
-        if (formData.value.hasAnidCard) {
-          // Si l'utilisateur a une carte ANID, valider les champs ANID
-          if (!formData.value.anidNumber) errors.value.anidNumber = 'Champ obligatoire'
-          if (!formData.value.anidExpiryDate) errors.value.anidExpiryDate = 'Champ obligatoire'
-          else if (!validateIdExpiryDate(formData.value.anidExpiryDate)) errors.value.anidExpiryDate = 'Date invalide'
-          if (!formData.value.documents.anidCard) errors.value.anidCard = 'Champ obligatoire'
-        } else {
-          // Sinon, valider les champs de pièce d'identité standard
-          if (!formData.value.idType) errors.value.idType = 'Champ obligatoire'
-          if (!formData.value.idNumber) {
-            errors.value.idNumber = 'Champ obligatoire'
-          } else {
-            // Valider le format selon le type de pièce
-            const idFormats = {
-              cni: { pattern: /^[0-9]{4}-[0-9]{3}-[0-9]{4}$/, label: 'XXXX-XXX-XXXX' },
-              passport: { pattern: /^[A-Z0-9]{8}$/, label: 'XXXXXXXX' },
-              elector: { pattern: /^[0-9]{2}-[0-9]{2}-[0-9]{3}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{5}$/, label: 'XX-XX-XXX-XX-XX-XX-XX-XXXXX' },
-              residence: { pattern: /^[A-Z0-9]{1,20}$/, label: 'max 20 caractères' },
-              driving_license: { pattern: /^[A-Z0-9]{3} [A-Z0-9]{3} [A-Z0-9]{3}$/, label: 'XXX XXX XXX' },
-              foreign_id: { pattern: /^.{1,20}$/, label: 'max 20 caractères' }
-            }
+        // Validate identity documents (ANID is now an id_type 'carte_anid')
+        if (!formData.value.idType) errors.value.idType = 'Champ obligatoire'
 
-            const format = idFormats[formData.value.idType]
-            if (format && !format.pattern.test(formData.value.idNumber)) {
-              errors.value.idNumber = `Le format doit être ${format.label}`
-            }
+        if (!formData.value.idNumber) {
+          errors.value.idNumber = 'Champ obligatoire'
+        } else {
+          // Valider le format selon le type de pièce
+          const idFormats = {
+            cni: { pattern: /^[0-9]{4}-[0-9]{3}-[0-9]{4}$/, label: 'XXXX-XXX-XXXX' },
+            passport: { pattern: /^[A-Z0-9]{8}$/, label: 'XXXXXXXX' },
+            elector: { pattern: /^[0-9]{2}-[0-9]{2}-[0-9]{3}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{5}$/, label: 'XX-XX-XXX-XX-XX-XX-XX-XXXXX' },
+            residence: { pattern: /^[A-Z0-9]{1,20}$/, label: 'max 20 caractères' },
+            driving_license: { pattern: /^[A-Z0-9]{3} [A-Z0-9]{3} [A-Z0-9]{3}$/, label: 'XXX XXX XXX' },
+            foreign_id: { pattern: /^.{1,20}$/, label: 'max 20 caractères' },
+            carte_anid: { pattern: /^[0-9]{4} [0-9]{4} [0-9]{4}$/, label: 'XXXX XXXX XXXX' }
           }
-          if (!formData.value.idExpiryDate) errors.value.idExpiryDate = 'Champ obligatoire'
-          else if (!validateIdExpiryDate(formData.value.idExpiryDate)) errors.value.idExpiryDate = 'Date invalide'
-          if (!formData.value.documents.idCard) errors.value.idCard = 'Champ obligatoire'
+
+          const format = idFormats[formData.value.idType]
+          if (format && !format.pattern.test(formData.value.idNumber)) {
+            errors.value.idNumber = `Le format doit être ${format.label}`
+          }
         }
+
+        if (!formData.value.idExpiryDate) errors.value.idExpiryDate = 'Champ obligatoire'
+        else if (!validateIdExpiryDate(formData.value.idExpiryDate)) errors.value.idExpiryDate = 'Date invalide'
+
+        // Require photo of identity (id_card) — must be present
+        if (!formData.value.documents || !formData.value.documents.idCard) {
+          errors.value.idCard = "La photo de la pièce d'identité est obligatoire"
+        }
+
+        // ANID handled as id_type 'carte_anid' using idNumber only (no document upload required)
       }
       else if (step === 3) {
         // Debug: Log values during validation
@@ -2414,6 +2365,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
       hideNationalitySuggestions,
       validateNationality,
       validatePhone,
+      validateMerchantPhone,
       nationalities,
       filteredNationalities,
       showNationalitySuggestions,

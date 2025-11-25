@@ -29,8 +29,6 @@ class MerchantApplicationFactory extends Factory
             'id_type' => $this->faker->randomElement(['cni', 'passport', 'residence']),
             'id_number' => $this->faker->unique()->numerify('##########'),
             'id_expiry_date' => $this->faker->dateTimeBetween('now', '+10 years'),
-            'has_anid_card' => (bool) $this->faker->boolean(30),
-            'anid_number' => $this->faker->optional(0.3)->numerify('##########'),
             'is_foreigner' => (bool) $this->faker->boolean(10),
             'business_name' => $this->faker->company(),
             'business_type' => $this->faker->randomElement(['boutique', 'pharmacie', 'station-service', 'supermarche', 'autre']),

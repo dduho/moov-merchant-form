@@ -36,9 +36,6 @@ class MerchantApplicationResource extends JsonResource
             'id_type_label' => $this->id_type_label,
             'id_number' => $this->id_number,
             'id_expiry_date' => $this->id_expiry_date?->format('Y-m-d'),
-            'has_anid_card' => $this->has_anid_card,
-            'anid_number' => $this->anid_number,
-            'anid_expiry_date' => $this->anid_expiry_date?->format('Y-m-d'),
             'is_foreigner' => $this->is_foreigner,
             
             // Informations commerciales

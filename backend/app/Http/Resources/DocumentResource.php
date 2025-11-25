@@ -42,7 +42,6 @@ class DocumentResource extends JsonResource
         return match($type) {
             'id_card' => 'Pièce d\'identité',
             'passport' => 'Passeport',
-            'anid_card' => 'Carte ANID',
             'residence_permit' => 'Titre de séjour',
             'business_permit' => 'Autorisation commerciale',
             'cfe_certificate' => 'Certificat CFE',
