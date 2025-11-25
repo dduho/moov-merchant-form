@@ -500,6 +500,15 @@ class NotificationService
     private function sendApplicationStatusEmail(MerchantApplication $application, string $status, string $reason = null): void
     {
         try {
+            // Défensive: s'assurer que l'utilisateur et son e-mail existent
+            if (!$application->user || empty($application->user->email)) {
+                Log::warning('Skipping sending application status email: missing user email', [
+                    'application_id' => $application->id,
+                    'user_id' => $application->user_id ?? null
+                ]);
+                return;
+            }
+
             Mail::send('emails.application-status', [
                 'application' => $application,
                 'status' => $status,
@@ -507,7 +516,7 @@ class NotificationService
                 'user' => $application->user
             ], function ($message) use ($application, $status) {
                 $message->to($application->user->email, $application->user->first_name . ' ' . $application->user->last_name);
-                $message->subject($status === 'approved' 
+                $message->subject($status === 'approved'
                     ? "Candidature approuvée - #{$application->reference_number}"
                     : "Candidature à réviser - #{$application->reference_number}"
                 );
@@ -528,13 +537,21 @@ class NotificationService
     private function sendApplicationStatusEmailDirect(MerchantApplication $application, string $status, string $reason = null): void
     {
         try {
+            // Défensive: s'assurer que l'adresse e-mail existe
+            if (empty($application->email)) {
+                Log::warning('Skipping sending direct application status email: missing email', [
+                    'application_id' => $application->id
+                ]);
+                return;
+            }
+
             Mail::send('emails.application-status-direct', [
                 'application' => $application,
                 'status' => $status,
                 'reason' => $reason
             ], function ($message) use ($application, $status) {
                 $message->to($application->email, $application->full_name);
-                $message->subject($status === 'approved' 
+                $message->subject($status === 'approved'
                     ? "Candidature approuvée - #{$application->reference_number}"
                     : "Candidature à réviser - #{$application->reference_number}"
                 );
