@@ -49,7 +49,7 @@ class NotificationResource extends JsonResource
             'system' => 'info',
             'reminder' => 'bell',
             default => 'bell'
-        ];
+        };
     }
 
     /**
@@ -73,6 +73,6 @@ class NotificationResource extends JsonResource
             'system' => 'gray',
             'reminder' => 'yellow',
             default => 'blue'
-        ];
+        };
     }
 }
