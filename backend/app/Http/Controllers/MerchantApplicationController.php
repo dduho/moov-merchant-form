@@ -184,28 +184,13 @@ class MerchantApplicationController extends Controller
                 
                 foreach ($documentFields as $fieldName => $documentType) {
                     if ($request->hasFile($fieldName)) {
-                        $files = $request->file($fieldName);
-                        if (is_array($files)) {
-                            foreach ($files as $file) {
-                                if (!$file) continue;
-                                Log::info('Processing document file (array)', [
-                                    'field_name' => $fieldName,
-                                    'document_type' => $documentType,
-                                    'file_size' => $file->getSize(),
-                                    'file_name' => $file->getClientOriginalName()
-                                ]);
-                                $this->storeDocument($application, $documentType, $file, $request->ip());
-                            }
-                        } else {
-                            $file = $files;
-                            Log::info('Processing document file', [
-                                'field_name' => $fieldName,
-                                'document_type' => $documentType,
-                                'file_size' => $file->getSize(),
-                                'file_name' => $file->getClientOriginalName()
-                            ]);
-                            $this->storeDocument($application, $documentType, $file, $request->ip());
-                        }
+                        Log::info('Processing document file', [
+                            'field_name' => $fieldName,
+                            'document_type' => $documentType,
+                            'file_size' => $request->file($fieldName)->getSize(),
+                            'file_name' => $request->file($fieldName)->getClientOriginalName()
+                        ]);
+                        $this->storeDocument($application, $documentType, $request->file($fieldName), $request->ip());
                     }
                 }
                 
@@ -468,25 +453,19 @@ class MerchantApplicationController extends Controller
                 
                 foreach ($documentFields as $fieldName => $documentType) {
                     if ($request->hasFile($fieldName)) {
-                        // Supprimer tous les anciens documents de ce type s'ils existent
-                        $existingDocuments = $merchantApplication->documents()
+                        // Supprimer l'ancien document de ce type s'il existe
+                        $existingDocument = $merchantApplication->documents()
                             ->where('document_type', $documentType)
-                            ->get();
-
-                        foreach ($existingDocuments as $existingDocument) {
+                            ->first();
+                        
+                        if ($existingDocument) {
+                            // Supprime le fichier existant via le service de stockage
                             $this->documentStorage->delete($existingDocument->file_path);
                             $existingDocument->delete();
                         }
-
-                        $files = $request->file($fieldName);
-                        if (is_array($files)) {
-                            foreach ($files as $file) {
-                                if (!$file) continue;
-                                $this->storeDocument($merchantApplication, $documentType, $file, $request->ip());
-                            }
-                        } else {
-                            $this->storeDocument($merchantApplication, $documentType, $files, $request->ip());
-                        }
+                        
+                        // Ajouter le nouveau document
+                        $this->storeDocument($merchantApplication, $documentType, $request->file($fieldName), $request->ip());
                     }
                 }
             });

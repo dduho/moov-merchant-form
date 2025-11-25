@@ -440,9 +440,7 @@
                     <FileUpload @file-uploaded="handleFileUpload('idCard', $event)" 
                       accept="image/*"
                       :current-file="formData.documents.idCard"
-                      :has-error="!!errors.idCard"
-                      :multiple="true"
-                      :max-files="3" />
+                      :has-error="!!errors.idCard" />
                     <p v-if="errors.idCard" class="mt-1 text-sm text-red-600">{{ errors.idCard }}</p>
                   </div>
 
@@ -751,7 +749,7 @@
                     <!-- Upload CFE Card -->
                     <div v-if="formData.hasCFE" class="mt-6">
                       <FileUpload @file-uploaded="handleFileUpload('cfeCard', $event)" accept="image/*"
-                        :current-file="formData.documents.cfeCard" label="Photo de la carte CFE" :multiple="true" :max-files="3" />
+                        :current-file="formData.documents.cfeCard" label="Photo de la carte CFE" />
                     </div>
                   </div>
 
@@ -1922,44 +1920,34 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
       }
     }
 
-    // Gestion des fichiers - supporte un fichier unique ou un tableau de fichiers
-    const handleFileUpload = (type, fileOrFiles) => {
-      const setFiles = (fileArray) => {
-        // Normalize into array of fileData objects
-        const normalized = fileArray.map((file) => {
-          if (file instanceof File || file instanceof Blob) {
-            return {
-              name: file.name,
-              type: file.type,
-              size: file.size,
-              lastModified: file.lastModified || Date.now(),
-              file: file,
-              dataUrl: null,
-            }
-          }
-          // Already a wrapper produced by FileUpload
-          return file
-        })
+    // Gestion des fichiers
+    const handleFileUpload = (type, file) => {
+      if (file instanceof File || file instanceof Blob) {
+        // Si c'est un nouveau fichier, créer un objet avec les métadonnées
+        const fileData = {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          lastModified: file.lastModified,
+          file: file // Garder une référence au fichier pour l'upload
+        }
 
-        // If only one file, still store as array (frontend now expects arrays)
-        formData.value.documents[type] = normalized
-        autoSave()
-      }
-
-      if (!fileOrFiles) {
-        formData.value.documents[type] = []
-        autoSave()
+        // Créer une URL de données pour TOUS les fichiers (images ET PDFs)
+        // Cela permet de les sauvegarder en localStorage et de les restaurer après rechargement
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          fileData.dataUrl = e.target.result
+          formData.value.documents[type] = fileData
+          autoSave()
+        }
+        reader.readAsDataURL(file)
+        // Ne pas appeler autoSave ici car le reader est asynchrone
         return
+      } else {
+        // Si null ou déjà un objet avec url/dataUrl
+        formData.value.documents[type] = file
       }
-
-      if (Array.isArray(fileOrFiles)) {
-        // FileUpload emits an array of fileData wrappers
-        setFiles(fileOrFiles)
-        return
-      }
-
-      // Single file provided
-      setFiles([fileOrFiles])
+      autoSave()
     }
 
     // Gestion de la localisation
