@@ -68,13 +68,6 @@ class MerchantService {
     if (formData.idExpiryDate) {
       submitData.append('id_expiry_date', formData.idExpiryDate)
     }
-    submitData.append('has_anid_card', formData.hasAnidCard ? '1' : '0')
-    if (formData.anidNumber && formData.anidNumber.trim()) {
-      submitData.append('anid_number', formData.anidNumber.trim())
-    }
-    if (formData.anidExpiryDate) {
-      submitData.append('anid_expiry_date', formData.anidExpiryDate)
-    }
     submitData.append('is_foreigner', formData.isForeigner ? '1' : '0')
     
     // Informations commercial
@@ -384,9 +377,6 @@ class MerchantService {
       id_type: formData.idType || '',
       id_number: formData.idNumber || '',
       id_expiry_date: formData.idExpiryDate || '',
-      has_anid_card: formData.hasAnidCard ? 1 : 0,
-      anid_number: formData.anidNumber || null,
-      anid_expiry_date: formData.anidExpiryDate || null,
       is_foreigner: formData.isForeigner ? 1 : 0,
       
       // Informations business
@@ -463,13 +453,6 @@ class MerchantService {
     submitData.append('id_type', formData.idType || '')
     submitData.append('id_number', (formData.idNumber && formData.idNumber.trim()) || '')
     submitData.append('id_expiry_date', formData.idExpiryDate || '')
-    submitData.append('has_anid_card', formData.hasAnidCard ? '1' : '0')
-    if (formData.anidNumber && formData.anidNumber.trim()) {
-      submitData.append('anid_number', formData.anidNumber.trim())
-    }
-    if (formData.anidExpiryDate) {
-      submitData.append('anid_expiry_date', formData.anidExpiryDate)
-    }
     submitData.append('is_foreigner', formData.isForeigner ? '1' : '0')
 
     // Informations business (required fields must always be included)
@@ -537,88 +520,96 @@ class MerchantService {
 
     // Documents - Individual fields (matching backend expectations)
     if (formData.documents) {
-      // Helper function to extract file from object or return direct file
-      // Only return files that need to be uploaded (skip already uploaded documents)
-      const getFile = (fileObj) => {
-        if (!fileObj) return null
+      // Helper pour extraire les fichiers File d'un objet ou tableau
+      const getFiles = (docValue) => {
+        if (!docValue) return []
         
-        // Skip already uploaded documents (they have uploaded: true property)
-        if (fileObj.uploaded === true) {
-          return null
-        }
+        const arr = Array.isArray(docValue) ? docValue : [docValue]
+        const files = []
         
-        // Direct File check
-        if (fileObj instanceof File) {
-          return fileObj
-        }
-        
-        // Check for wrapped file in 'file' property (most common case from FileUpload component)
-        if (fileObj.file instanceof File) {
-          return fileObj.file
-        }
-        
-        // If file property exists but is not a File instance, it might be a serialized file
-        // Try to reconstruct from dataUrl
-        if (fileObj.dataUrl && fileObj.name && fileObj.type) {
-          try {
-            // Convert base64 data URL to Blob
-            const arr = fileObj.dataUrl.split(',')
-            const mime = arr[0].match(/:(.*?);/)[1]
-            const bstr = atob(arr[1])
-            let n = bstr.length
-            const u8arr = new Uint8Array(n)
-            while (n--) {
-              u8arr[n] = bstr.charCodeAt(n)
+        for (const item of arr) {
+          if (!item) continue
+          
+          // Skip uploaded files (already on server)
+          if (item.uploaded) continue
+          
+          if (item instanceof File) {
+            files.push(item)
+          } else if (item.file instanceof File) {
+            files.push(item.file)
+          } else if (item.dataUrl && item.name && item.type) {
+            // Convert dataUrl to File
+            try {
+              const arr = item.dataUrl.split(',')
+              const mime = arr[0].match(/:(.*?);/)[1]
+              const bstr = atob(arr[1])
+              let n = bstr.length
+              const u8arr = new Uint8Array(n)
+              while (n--) {
+                u8arr[n] = bstr.charCodeAt(n)
+              }
+              const blob = new Blob([u8arr], { type: mime })
+              const file = new File([blob], item.name, {
+                type: item.type || mime,
+                lastModified: item.lastModified || Date.now()
+              })
+              files.push(file)
+            } catch (error) {
+              console.error('Error reconstructing file:', error)
             }
-            const blob = new Blob([u8arr], { type: mime })
-            
-            // Create File from Blob
-            const file = new File([blob], fileObj.name, {
-              type: fileObj.type || mime,
-              lastModified: fileObj.lastModified || Date.now()
-            })
-            return file
-          } catch (error) {
-            console.error('Error reconstructing file:', error);
           }
         }
         
-        return null
+        return files
       }
       
-      const file_idCard = getFile(formData.documents.idCard)
-      if (file_idCard) {
-        submitData.append('id_card', file_idCard)
+      // Mapping des champs frontend vers backend
+      const documentMapping = {
+        idCard: 'id_card',
+        anidCard: 'anid_card',
+        cfeCard: 'cfe_document',
+        businessDocument: 'business_document',
+        residenceCard: 'residence_card',
+        residenceProof: 'residence_proof',
+        nifDocument: 'nif_document'
       }
       
-      const file_anidCard = getFile(formData.documents.anidCard)
-      if (file_anidCard) {
-        submitData.append('anid_card', file_anidCard)
-      }
-      
-      const file_cfeCard = getFile(formData.documents.cfeCard)
-      if (file_cfeCard) {
-        submitData.append('cfe_document', file_cfeCard)
-      }
-      
-      const file_businessDocument = getFile(formData.documents.businessDocument)
-      if (file_businessDocument) {
-        submitData.append('business_document', file_businessDocument)
-      }
-      
-      const file_residenceCard = getFile(formData.documents.residenceCard)
-      if (file_residenceCard) {
-        submitData.append('residence_card', file_residenceCard)
-      }
-      
-      const file_residenceProof = getFile(formData.documents.residenceProof)
-      if (file_residenceProof) {
-        submitData.append('residence_proof', file_residenceProof)
-      }
-      
-      const file_nifDocument = getFile(formData.documents.nifDocument)
-      if (file_nifDocument) {
-        submitData.append('nif_document', file_nifDocument)
+      // Pour chaque type de document
+      for (const [frontendKey, backendKey] of Object.entries(documentMapping)) {
+        const docValue = formData.documents[frontendKey]
+        const files = getFiles(docValue)
+        
+        console.log(`[Document ${frontendKey}]`, {
+          docValue,
+          filesCount: files.length,
+          isArray: Array.isArray(docValue),
+          isEmpty: !docValue || (Array.isArray(docValue) && docValue.length === 0)
+        })
+        
+        // Récupérer les fichiers uploadés existants (à garder)
+        const arr = Array.isArray(docValue) ? docValue : (docValue ? [docValue] : [])
+        const uploadedFiles = arr.filter(item => item && item.uploaded === true)
+        
+        // Si on a des fichiers uploadés à garder, envoyer leurs IDs
+        if (uploadedFiles.length > 0) {
+          const idsToKeep = uploadedFiles.map(f => f.id).filter(id => id)
+          
+          idsToKeep.forEach(id => {
+            submitData.append(`keep_${backendKey}_ids[]`, id)
+          })
+        }
+        
+        // Si on a de nouveaux fichiers à uploader, les envoyer
+        if (files.length > 0) {
+          files.forEach(file => {
+            submitData.append(`${backendKey}[]`, file)
+          })
+        }
+        
+        // Si aucun fichier uploadé ET aucun nouveau fichier, marquer pour suppression totale
+        if (uploadedFiles.length === 0 && files.length === 0) {
+          submitData.append(`delete_${backendKey}`, '1')
+        }
       }
     }
 

@@ -1530,7 +1530,6 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
           
           // Gérer les documents depuis le tableau 'documents'
           if (data.documents && Array.isArray(data.documents)) {
-            console.log('[MerchantForm] Documents reçus:', data.documents);
             data.documents.forEach(doc => {
               // Construire l'URL complète du document
               let documentUrl = doc.url || doc.file_path;
@@ -1540,8 +1539,6 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
                 const backendURL = baseURL.replace('/api', ''); // Enlever /api pour avoir l'URL de base
                 documentUrl = backendURL + documentUrl;
               }
-              
-              console.log('[MerchantForm] Document URL construite:', { type: doc.type, url: documentUrl, original: doc.url || doc.file_path });
               
               // Créer un objet document compatible avec FileUpload
               const documentObject = {
@@ -1572,10 +1569,8 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
                 }
                 // Ajouter le document au tableau
                 formData.value.documents[frontendKey].push(documentObject);
-                console.log('[MerchantForm] Document ajouté à formData.documents.' + frontendKey, documentObject);
               }
             });
-            console.log('[MerchantForm] formData.documents final:', formData.value.documents);
           }
           
           // logs retirés
@@ -1984,7 +1979,33 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
     }
 
     // Gestion des fichiers
-    const handleFileUpload = (type, file) => {
+    const handleFileUpload = (type, fileOrArray) => {
+      // Si c'est un tableau (depuis le FileUpload multi-fichiers)
+      if (Array.isArray(fileOrArray)) {
+        // IMPORTANT: Préserver les objets uploaded avec leurs IDs
+        // FileUpload peut renvoyer des objets sans certaines propriétés (comme 'id')
+        const preservedArray = fileOrArray.map(item => {
+          // Si c'est un fichier uploadé avec URL mais sans ID, chercher l'original
+          if (item.url && item.uploaded && !item.id) {
+            const existing = formData.value.documents[type]
+            if (Array.isArray(existing)) {
+              const original = existing.find(f => f.url === item.url && f.id)
+              if (original) {
+                return original // Garder l'objet original avec toutes ses propriétés
+              }
+            }
+          }
+          return item
+        })
+        
+        formData.value.documents[type] = preservedArray
+        autoSave()
+        return
+      }
+      
+      // Compatibilité avec l'ancien code (fichier unique)
+      const file = fileOrArray
+      
       if (file instanceof File || file instanceof Blob) {
         // Si c'est un nouveau fichier, créer un objet avec les métadonnées
         const fileData = {
@@ -2428,6 +2449,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
       hideNationalitySuggestions,
       validateNationality,
       validatePhone,
+      validateMerchantPhone,
       nationalities,
       filteredNationalities,
       showNationalitySuggestions,
