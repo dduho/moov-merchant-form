@@ -1941,7 +1941,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
     // Gestion des fichiers
     const handleFileUpload = (type, file) => {
       if (file instanceof File || file instanceof Blob) {
-        // Si c'est un nouveau fichier, créer un objet avec les métadonnées ET l'aperçu
+        // Si c'est un nouveau fichier, créer un objet avec les métadonnées
         const fileData = {
           name: file.name,
           type: file.type,
@@ -1949,21 +1949,18 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
           lastModified: file.lastModified,
           file: file // Garder une référence au fichier pour l'upload
         }
-        
-        // Créer une URL de données pour l'aperçu si c'est une image
-        if (file.type.startsWith('image/')) {
-          const reader = new FileReader()
-          reader.onload = (e) => {
-            fileData.dataUrl = e.target.result
-            formData.value.documents[type] = fileData
-            autoSave()
-          }
-          reader.readAsDataURL(file)
-          // Ne pas appeler autoSave ici car le reader est asynchrone
-          return
-        } else {
+
+        // Créer une URL de données pour TOUS les fichiers (images ET PDFs)
+        // Cela permet de les sauvegarder en localStorage et de les restaurer après rechargement
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          fileData.dataUrl = e.target.result
           formData.value.documents[type] = fileData
+          autoSave()
         }
+        reader.readAsDataURL(file)
+        // Ne pas appeler autoSave ici car le reader est asynchrone
+        return
       } else {
         // Si null ou déjà un objet avec url/dataUrl
         formData.value.documents[type] = file

@@ -297,14 +297,23 @@ class MerchantService {
 
     // Debug: Log document processing and FormData being sent
     // Debug logs removed
-    
-    const response = await this.client.post('/merchant-applications', submitData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
+
+    try {
+      const response = await this.client.post('/merchant-applications', submitData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+
+      return response.data
+    } catch (error) {
+      // Log detailed validation errors
+      if (error.response?.status === 422 && error.response?.data) {
+        console.error('❌ Validation errors:', error.response.data)
+        console.error('❌ Failed fields:', error.response.data.errors)
       }
-    })
-    
-    return response.data
+      throw error
+    }
   }
   
   // Récupération du statut d'une candidature

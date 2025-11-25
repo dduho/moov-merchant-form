@@ -232,12 +232,14 @@ class DashboardController extends Controller
             $processedCurrent = $processedCurrentQuery->count();
             
             // Temps de réponse moyen pour la période courante
+            // Ne calculer que pour les candidatures approuvées ou rejetées (réellement traitées)
             $avgResponseTimeQuery = MerchantApplication::whereNotNull('reviewed_at')
-                ->whereNotNull('created_at');
+                ->whereNotNull('submitted_at')
+                ->whereIn('status', ['approved', 'rejected', 'exported_for_creation', 'exported_for_update']);
             $avgResponseTimeQuery = $this->applyPeriodFilter($avgResponseTimeQuery, $period);
             $avgResponseTimeQuery = $this->applyUserFilter($avgResponseTimeQuery, $request);
             $avgResponseTime = $avgResponseTimeQuery
-                ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, created_at, reviewed_at)) as avg')
+                ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, submitted_at, reviewed_at)) as avg')
                 ->value('avg');
             
             return response()->json([

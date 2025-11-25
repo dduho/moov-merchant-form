@@ -12,6 +12,9 @@ RUN apk add --no-cache \
 # Installer Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Copier la configuration PHP personnalisée
+COPY php.ini /usr/local/etc/php/conf.d/uploads.ini
+
 # Définir le répertoire de travail
 WORKDIR /var/www/html
 

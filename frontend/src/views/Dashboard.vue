@@ -796,6 +796,7 @@ import ObjectiveWidget from '../components/ObjectiveWidget.vue'
 import ConfirmModal from '../components/ConfirmModal.vue'
 import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notifications'
+import { useNotification } from '../composables/useNotification'
 import * as XLSX from 'xlsx'
 import SkeletonLoader from '../components/SkeletonLoader.vue'
 import { usePullToRefresh } from '../composables/usePullToRefresh'
@@ -812,6 +813,7 @@ export default {
   setup() {
     const authStore = useAuthStore()
     const notificationStore = useNotificationStore()
+    const { success: notifySuccess, error: notifyError } = useNotification()
     const loading = ref(true)
     const applicationsLoading = ref(false)
     const exportLoading = ref(false)
@@ -1940,10 +1942,7 @@ export default {
         await ApiService.deleteApplication(applicationToDelete.value.id)
 
         // Afficher notification de succès
-        notificationStore.success(
-          'Candidature supprimée',
-          `La candidature de ${applicationToDelete.value.full_name} a été supprimée avec succès.`
-        )
+        notifySuccess(`La candidature de ${applicationToDelete.value.full_name} a été supprimée avec succès.`)
 
         // Fermer la modale
         showDeleteModal.value = false
@@ -1956,10 +1955,7 @@ export default {
         haptic.success()
       } catch (error) {
         console.error('Erreur lors de la suppression:', error)
-        notificationStore.error(
-          'Erreur de suppression',
-          error.response?.data?.message || 'Impossible de supprimer la candidature'
-        )
+        notifyError(error.response?.data?.message || 'Impossible de supprimer la candidature')
         haptic.error()
       }
     }

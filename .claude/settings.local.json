@@ -12,7 +12,12 @@
       "Bash(docker-compose restart:*)",
       "Bash(timeout /t 5)",
       "Bash(nul)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(php -r:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker-compose build:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker-compose up:*)"
     ],
     "deny": [],
     "ask": []
