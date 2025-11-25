@@ -768,7 +768,7 @@
 
                   <!-- Section Soumissionnaire (Commercial ou Personnel) -->
                   <div class="border-t pt-6 mt-6">
-                    <h3 class="text-base font-semibold mb-4 flex items-center">
+                    <h3 class="text-base font-semibold mb-4 flex items-center dark:text-gray-400">
                       <i class="fas fa-user-tie text-orange-500 mr-2"></i>
                       Informations du Soumissionnaire
                     </h3>
@@ -831,6 +831,9 @@
 
                   <div class="mb-6">
                     <LocationPicker @location-selected="handleLocationSelected" :initial-location="formData.location" />
+                    <p v-if="errors.location" class="mt-2 text-sm text-red-600 dark:text-red-400">
+                      <i class="fas fa-exclamation-circle mr-1"></i>{{ errors.location }}
+                    </p>
                   </div>
 
                   <div class="form-group">
@@ -879,7 +882,7 @@
                           'border-green-500': formData.acceptTerms && !errors.acceptTerms
                         }" 
                         required>
-                      <span class="text-sm">
+                      <span class="text-sm dark:text-gray-400">
                         J'accepte les <a href="#" @click.prevent="showTermsModal = true" class="text-orange-600 underline hover:text-orange-700">termes et conditions</a>
                         de Moov Money et certifie l'exactitude des informations fournies.
                       </span>
@@ -1791,7 +1794,24 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
         } else {
           // Sinon, valider les champs de pièce d'identité standard
           if (!formData.value.idType) errors.value.idType = 'Champ obligatoire'
-          if (!formData.value.idNumber) errors.value.idNumber = 'Champ obligatoire'
+          if (!formData.value.idNumber) {
+            errors.value.idNumber = 'Champ obligatoire'
+          } else {
+            // Valider le format selon le type de pièce
+            const idFormats = {
+              cni: { pattern: /^[0-9]{4}-[0-9]{3}-[0-9]{4}$/, label: 'XXXX-XXX-XXXX' },
+              passport: { pattern: /^[A-Z0-9]{8}$/, label: 'XXXXXXXX' },
+              elector: { pattern: /^[0-9]{2}-[0-9]{2}-[0-9]{3}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{5}$/, label: 'XX-XX-XXX-XX-XX-XX-XX-XXXXX' },
+              residence: { pattern: /^[A-Z0-9]{1,20}$/, label: 'max 20 caractères' },
+              driving_license: { pattern: /^[A-Z0-9]{3} [A-Z0-9]{3} [A-Z0-9]{3}$/, label: 'XXX XXX XXX' },
+              foreign_id: { pattern: /^.{1,20}$/, label: 'max 20 caractères' }
+            }
+
+            const format = idFormats[formData.value.idType]
+            if (format && !format.pattern.test(formData.value.idNumber)) {
+              errors.value.idNumber = `Le format doit être ${format.label}`
+            }
+          }
           if (!formData.value.idExpiryDate) errors.value.idExpiryDate = 'Champ obligatoire'
           else if (!validateIdExpiryDate(formData.value.idExpiryDate)) errors.value.idExpiryDate = 'Date invalide'
           if (!formData.value.documents.idCard) errors.value.idCard = 'Champ obligatoire'
@@ -1826,6 +1846,14 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
         // Validation conditionnelle NIF
         if (formData.value.hasNIF) {
           if (!formData.value.nifNumber) errors.value.nifNumber = 'Numéro NIF obligatoire'
+        }
+      }
+      else if (step === 4) {
+        // Validation de la localisation GPS
+        if (!formData.value.location?.lat) {
+          errors.value.location = 'La localisation GPS est obligatoire. Veuillez autoriser l\'accès à votre position.'
+        } else if (!formData.value.location?.lng) {
+          errors.value.location = 'La localisation GPS est obligatoire. Veuillez autoriser l\'accès à votre position.'
         }
       }
       else if (step === 5) {
@@ -1946,6 +1974,10 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
     // Gestion de la localisation
     const handleLocationSelected = (location) => {
       formData.value.location = location
+      // Effacer l'erreur de localisation si elle existe
+      if (errors.value.location && location?.lat && location?.lng) {
+        delete errors.value.location
+      }
       autoSave()
     }
 

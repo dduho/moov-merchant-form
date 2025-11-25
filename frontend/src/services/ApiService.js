@@ -126,12 +126,12 @@ class ApiService {
     
     // Voir document
     getDocumentUrl(id) {
-        return `${API_URL}/documents/${id}`
+        return `${API_URL}/api/documents/${id}`
     }
     
     // Télécharger document
     getDocumentDownloadUrl(id) {
-        return `${API_URL}/documents/${id}/download`
+        return `${API_URL}/api/documents/${id}/download`
     }
     
     // Supprimer document

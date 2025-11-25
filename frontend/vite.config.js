@@ -8,7 +8,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       devOptions: {
-        enabled: true
+        enabled: false  // Désactivé en dev pour éviter les problèmes de cache
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,ttf,eot}'],
