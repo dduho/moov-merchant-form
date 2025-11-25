@@ -717,15 +717,26 @@
                       <span class="text-xs text-gray-400 mt-1">{{ formatDate(app.submitted_at) }}</span>
                     </div>
                     
-                    <router-link :to="`/applications/${app.id}`"
-                               class="inline-flex items-center px-3 py-1.5 border border-orange-600 text-xs sm:text-sm font-medium rounded-lg text-orange-600 bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors">
-                      <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                      <span class="hidden sm:inline">Détails</span>
-                      <span class="sm:hidden">Voir</span>
-                    </router-link>
+                    <div class="flex items-center space-x-2">
+                      <router-link :to="`/applications/${app.id}`"
+                                 class="inline-flex items-center px-3 py-1.5 border border-orange-600 text-xs sm:text-sm font-medium rounded-lg text-orange-600 bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors">
+                        <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        <span class="hidden sm:inline">Détails</span>
+                        <span class="sm:hidden">Voir</span>
+                      </router-link>
+
+                      <button v-if="app.status === 'pending'"
+                              @click="confirmDeleteApplication(app)"
+                              class="inline-flex items-center px-3 py-1.5 border border-red-600 text-xs sm:text-sm font-medium rounded-lg text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                        <svg class="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        <span class="hidden sm:inline">Supprimer</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -760,6 +771,18 @@
     
     <!-- Espacement en bas pour éviter l'overlap -->
     <div class="h-8"></div>
+
+    <!-- Modale de confirmation de suppression -->
+    <ConfirmModal
+      :show="showDeleteModal"
+      title="Supprimer la candidature"
+      :message="`Êtes-vous sûr de vouloir supprimer la candidature de ${applicationToDelete?.full_name} ?\n\nRéférence: ${applicationToDelete?.reference_number}\nCommerce: ${applicationToDelete?.business_name}\n\nCette action est irréversible.`"
+      confirmText="Supprimer"
+      cancelText="Annuler"
+      confirmClass="bg-red-600 hover:bg-red-700 focus:ring-red-500"
+      @close="closeDeleteModal"
+      @confirm="deleteApplication"
+    />
   </div>
 </template>
 
@@ -770,6 +793,7 @@ import MerchantService from '../services/MerchantService'
 import Chart from 'chart.js/auto'
 import PaginationControls from '../components/PaginationControls.vue'
 import ObjectiveWidget from '../components/ObjectiveWidget.vue'
+import ConfirmModal from '../components/ConfirmModal.vue'
 import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notifications'
 import * as XLSX from 'xlsx'
@@ -782,7 +806,8 @@ export default {
   components: {
     PaginationControls,
     ObjectiveWidget,
-    SkeletonLoader
+    SkeletonLoader,
+    ConfirmModal
   },
   setup() {
     const authStore = useAuthStore()
@@ -803,7 +828,11 @@ export default {
     // Variables pour la sélection des candidatures à exporter
     const selectedApplications = ref([])
     const selectAllApplications = ref(false)
-    
+
+    // Variables pour la modale de confirmation de suppression
+    const showDeleteModal = ref(false)
+    const applicationToDelete = ref(null)
+
     // Variables pour les filtres et pagination
     const searchQuery = ref('')
     const selectedStatus = ref('all')
@@ -1897,9 +1926,53 @@ export default {
       return pages
     }
     
+    // Fonction pour ouvrir la modale de confirmation de suppression
+    const confirmDeleteApplication = (app) => {
+      applicationToDelete.value = app
+      showDeleteModal.value = true
+    }
+
+    // Fonction pour supprimer une candidature
+    const deleteApplication = async () => {
+      if (!applicationToDelete.value) return
+
+      try {
+        await ApiService.deleteApplication(applicationToDelete.value.id)
+
+        // Afficher notification de succès
+        notificationStore.success(
+          'Candidature supprimée',
+          `La candidature de ${applicationToDelete.value.full_name} a été supprimée avec succès.`
+        )
+
+        // Fermer la modale
+        showDeleteModal.value = false
+        applicationToDelete.value = null
+
+        // Recharger les données
+        await loadApplications()
+        await loadData() // Pour mettre à jour les statistiques
+
+        haptic.success()
+      } catch (error) {
+        console.error('Erreur lors de la suppression:', error)
+        notificationStore.error(
+          'Erreur de suppression',
+          error.response?.data?.message || 'Impossible de supprimer la candidature'
+        )
+        haptic.error()
+      }
+    }
+
+    // Fonction pour fermer la modale de suppression
+    const closeDeleteModal = () => {
+      showDeleteModal.value = false
+      applicationToDelete.value = null
+    }
+
     // Variable pour stocker la fonction cleanup
     let cleanupPullToRefresh = null
-    
+
     // Cleanup avant démontage
     onBeforeUnmount(() => {
       if (cleanupPullToRefresh) cleanupPullToRefresh()
@@ -1979,6 +2052,12 @@ export default {
       debouncedUserStatsSearch,
       clearUserSearch,
       getPaginationPages,
+      // Modale et fonctions de suppression
+      showDeleteModal,
+      applicationToDelete,
+      confirmDeleteApplication,
+      deleteApplication,
+      closeDeleteModal,
       // Composables mobiles
       haptic,
       dashboardContainer

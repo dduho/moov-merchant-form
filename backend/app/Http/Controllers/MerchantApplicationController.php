@@ -684,25 +684,33 @@ class MerchantApplicationController extends Controller
     public function destroy(MerchantApplication $merchantApplication): JsonResponse
     {
         try {
+            // Vérifier que seules les candidatures en attente peuvent être supprimées
+            if ($merchantApplication->status !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Seules les candidatures en attente peuvent être supprimées'
+                ], 403);
+            }
+
             $merchantApplication->delete();
-            
+
             Log::warning('Candidature supprimée', [
                 'application_id' => $merchantApplication->id,
                 'reference' => $merchantApplication->reference_number,
                 'deleted_by' => auth()->id()
             ]);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Candidature archivée avec succès'
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Erreur suppression candidature', [
                 'application_id' => $merchantApplication->id,
                 'error' => $e->getMessage()
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la suppression'
