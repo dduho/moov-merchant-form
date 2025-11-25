@@ -88,6 +88,7 @@ class ApplicationDocument extends Model
     {
         $labels = [
             'id_card' => "Pièce d'identité",
+            'anid_card' => "Carte ANID", 
             'cfe_document' => "Document CFE",
             'business_document' => "Document commercial",
             'residence_card' => "Carte de séjour",

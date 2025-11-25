@@ -24,6 +24,7 @@ class MerchantApplicationTest extends TestCase
             'address' => '123 Rue de Lomé, Lomé, Togo',
             'id_number' => '1234567890',
             'id_expiry_date' => '2030-12-31',
+            'has_anid_card' => false,
             'is_foreigner' => false,
             'business_name' => 'Boutique Jean',
             'business_type' => 'boutique',

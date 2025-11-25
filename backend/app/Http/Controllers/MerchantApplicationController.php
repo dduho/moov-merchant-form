@@ -152,7 +152,7 @@ class MerchantApplicationController extends Controller
                 }
                 
                 // Remove document files from application data (they're handled separately)
-                $documentFields = ['id_card', 'residence_card', 'residence_proof', 'business_document', 'cfe_document', 'nif_document'];
+                $documentFields = ['id_card', 'anid_card', 'residence_card', 'residence_proof', 'business_document', 'cfe_document', 'nif_document'];
                 foreach ($documentFields as $field) {
                     unset($applicationData[$field]);
                 }
@@ -166,6 +166,7 @@ class MerchantApplicationController extends Controller
                 // Handle individual document fields - with debug logging
                 $documentFields = [
                     'id_card' => 'id_card',
+                    'anid_card' => 'anid_card',
                     'residence_card' => 'residence_card',
                     'residence_proof' => 'other',  // Map to 'other' as it's not in enum
                     'business_document' => 'business_license',  // Use correct enum value
@@ -444,6 +445,7 @@ class MerchantApplicationController extends Controller
                 // Gestion des nouveaux documents si fournis - handle individual document fields
                 $documentFields = [
                     'id_card' => 'id_card',
+                    'anid_card' => 'anid_card',
                     'residence_card' => 'residence_card',
                     'residence_proof' => 'other',  // Map to 'other' as it's not in enum
                     'business_document' => 'business_license',  // Use correct enum value

@@ -28,10 +28,12 @@ class StoreMerchantApplicationRequest extends FormRequest
             'region' => 'required|in:Maritime,Plateaux,Centrale,Kara,Savanes',
             
             // Documents d'identité
-            'id_type' => 'required|in:cni,passport,residence,elector,driving_license,foreign_id,carte_anid',
+            'id_type' => 'required|in:cni,passport,residence,elector,driving_license,foreign_id',
             'id_number' => 'required|string|max:50',
             'id_expiry_date' => 'required|date|after:today',
-            // ANID fields removed; use id_type === 'carte_anid' + id_number and documents.anidCard
+            'has_anid_card' => 'nullable|boolean',
+            'anid_number' => 'nullable|string|max:50',
+            'anid_expiry_date' => 'nullable|date|after:today',
             'is_foreigner' => 'nullable|boolean',
             
             // Informations commerciales
@@ -62,7 +64,8 @@ class StoreMerchantApplicationRequest extends FormRequest
             'accept_terms' => 'required|accepted',
             
             // Documents (fichiers) - Individual fields
-                'id_card' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'id_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'anid_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'cfe_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'business_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'residence_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
@@ -89,7 +92,7 @@ class StoreMerchantApplicationRequest extends FormRequest
             'id_type.required' => 'Le type de pièce d\'identité est obligatoire',
             'id_type.in' => 'Type de pièce invalide',
             'id_expiry_date.after' => 'La pièce d\'identité est expirée',
-            // ANID expiry message removed (ANID handled as id_type)
+            'anid_expiry_date.after' => 'La carte ANID est expirée',
             'cfe_number.required_if' => 'Le numéro CFE est obligatoire si vous possédez une carte CFE',
             'cfe_expiry_date.required_if' => 'La date d\'expiration CFE est obligatoire si vous possédez une carte CFE',
             'cfe_expiry_date.after' => 'La carte CFE est expirée',
@@ -107,9 +110,10 @@ class StoreMerchantApplicationRequest extends FormRequest
             'signature.required' => 'La signature est obligatoire',
             'accept_terms.accepted' => 'Vous devez accepter les conditions générales',
             // Document validation messages
-            'id_card.required' => 'La photo de la pièce d\'identité est obligatoire',
             'id_card.mimes' => 'La pièce d\'identité doit être un fichier PDF, JPG ou PNG',
             'id_card.max' => 'La pièce d\'identité ne doit pas dépasser 5MB',
+            'anid_card.mimes' => 'La carte ANID doit être un fichier PDF, JPG ou PNG',
+            'anid_card.max' => 'La carte ANID ne doit pas dépasser 5MB',
             'cfe_document.mimes' => 'Le document CFE doit être un fichier PDF, JPG ou PNG',
             'cfe_document.max' => 'Le document CFE ne doit pas dépasser 5MB',
             'business_document.mimes' => 'Le document commercial doit être un fichier PDF, JPG ou PNG',
@@ -130,7 +134,7 @@ class StoreMerchantApplicationRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         // Convertir les valeurs booléennes
-        $booleans = ['is_foreigner', 'has_cfe', 'has_nif', 'accept_terms'];
+        $booleans = ['has_anid_card', 'is_foreigner', 'has_cfe', 'has_nif', 'accept_terms'];
         foreach ($booleans as $field) {
             if ($this->has($field)) {
                 $this->merge([
@@ -167,10 +171,12 @@ class StoreMerchantApplicationRequest extends FormRequest
             'region' => 'required|in:Maritime,Plateaux,Centrale,Kara,Savanes',
             
             // Documents d'identité
-            'id_type' => 'required|in:cni,passport,residence,elector,driving_license,foreign_id,carte_anid',
+            'id_type' => 'required|in:cni,passport,residence,elector,driving_license,foreign_id',
             'id_number' => 'required|string|max:50',
             'id_expiry_date' => 'required|date|after:today',
-            // ANID fields removed; use id_type === 'carte_anid' + id_number and documents.anidCard
+            'has_anid_card' => 'nullable|boolean',
+            'anid_number' => 'nullable|string|max:50',
+            'anid_expiry_date' => 'nullable|date|after:today',
             'is_foreigner' => 'nullable|boolean',
             
             // Informations commerciales
@@ -201,7 +207,8 @@ class StoreMerchantApplicationRequest extends FormRequest
             'accept_terms' => 'required|accepted',
             
             // Documents (fichiers) - Individual fields
-                'id_card' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'id_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'anid_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'cfe_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'business_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'residence_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',

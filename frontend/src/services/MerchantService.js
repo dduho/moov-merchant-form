@@ -68,7 +68,13 @@ class MerchantService {
     if (formData.idExpiryDate) {
       submitData.append('id_expiry_date', formData.idExpiryDate)
     }
-    // ANID fields removed: handled as a regular id_type ('carte_anid')
+    submitData.append('has_anid_card', formData.hasAnidCard ? '1' : '0')
+    if (formData.anidNumber && formData.anidNumber.trim()) {
+      submitData.append('anid_number', formData.anidNumber.trim())
+    }
+    if (formData.anidExpiryDate) {
+      submitData.append('anid_expiry_date', formData.anidExpiryDate)
+    }
     submitData.append('is_foreigner', formData.isForeigner ? '1' : '0')
     
     // Informations commercial
@@ -260,7 +266,10 @@ class MerchantService {
         submitData.append('id_card', file_idCard)
       }
       
-      // ANID upload removed: do not append 'anid_card'
+      const file_anidCard = getFile(formData.documents.anidCard)
+      if (file_anidCard) {
+        submitData.append('anid_card', file_anidCard)
+      }
       
       const file_cfeCard = getFile(formData.documents.cfeCard)
       if (file_cfeCard) {
@@ -375,7 +384,9 @@ class MerchantService {
       id_type: formData.idType || '',
       id_number: formData.idNumber || '',
       id_expiry_date: formData.idExpiryDate || '',
-      // ANID fields removed: use id_type === 'carte_anid' and `id_number` (no document upload)
+      has_anid_card: formData.hasAnidCard ? 1 : 0,
+      anid_number: formData.anidNumber || null,
+      anid_expiry_date: formData.anidExpiryDate || null,
       is_foreigner: formData.isForeigner ? 1 : 0,
       
       // Informations business
@@ -452,7 +463,13 @@ class MerchantService {
     submitData.append('id_type', formData.idType || '')
     submitData.append('id_number', (formData.idNumber && formData.idNumber.trim()) || '')
     submitData.append('id_expiry_date', formData.idExpiryDate || '')
-    // ANID fields removed from FormData
+    submitData.append('has_anid_card', formData.hasAnidCard ? '1' : '0')
+    if (formData.anidNumber && formData.anidNumber.trim()) {
+      submitData.append('anid_number', formData.anidNumber.trim())
+    }
+    if (formData.anidExpiryDate) {
+      submitData.append('anid_expiry_date', formData.anidExpiryDate)
+    }
     submitData.append('is_foreigner', formData.isForeigner ? '1' : '0')
 
     // Informations business (required fields must always be included)
@@ -574,7 +591,10 @@ class MerchantService {
         submitData.append('id_card', file_idCard)
       }
       
-      // ANID upload removed: do not append 'anid_card'
+      const file_anidCard = getFile(formData.documents.anidCard)
+      if (file_anidCard) {
+        submitData.append('anid_card', file_anidCard)
+      }
       
       const file_cfeCard = getFile(formData.documents.cfeCard)
       if (file_cfeCard) {

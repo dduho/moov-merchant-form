@@ -80,6 +80,9 @@ export const useMerchantStore = defineStore('merchant', () => {
         idType: data.idType,
         idNumber: data.idNumber,
         idExpiryDate: data.idExpiryDate,
+        hasAnidCard: data.hasAnidCard,
+        anidNumber: data.anidNumber,
+        anidExpiryDate: data.anidExpiryDate,
         isForeigner: data.isForeigner,
         
         // Informations commercial

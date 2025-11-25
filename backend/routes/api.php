@@ -169,7 +169,7 @@ Route::middleware(['throttle:api'])->group(function () {
     
     // Route de test pour vérifier FormData
     Route::post('/test-form', function (Request $request) {
-        $documentFields = ['id_card', 'residence_card', 'residence_proof', 'business_document', 'cfe_document', 'nif_document'];
+        $documentFields = ['id_card', 'anid_card', 'residence_card', 'residence_proof', 'business_document', 'cfe_document', 'nif_document'];
         $hasFiles = [];
         $fileDetails = [];
         

@@ -29,7 +29,7 @@ export default {
     idType: {
       type: String,
       required: true,
-      validator: value => ['cni', 'passport', 'elector', 'residence', 'driving_license', 'foreign_id', 'carte_anid'].includes(value)
+      validator: value => ['cni', 'passport', 'elector', 'residence', 'driving_license', 'foreign_id'].includes(value)
     },
     hasError: {
       type: Boolean,
@@ -110,20 +110,6 @@ export default {
           return parts.join(' ')
         },
         clean: value => value.replace(/[^A-Z0-9]/g, '').toUpperCase()
-      },
-      carte_anid: {
-        pattern: /^[0-9]{4} [0-9]{4} [0-9]{4}$/,
-        display: 'XXXX XXXX XXXX',
-        maxLength: 12,
-        format: value => {
-          const digits = value.replace(/\D/g, '').slice(0, 12)
-          const parts = []
-          if (digits.length > 0) parts.push(digits.slice(0, 4))
-          if (digits.length > 4) parts.push(digits.slice(4, 8))
-          if (digits.length > 8) parts.push(digits.slice(8, 12))
-          return parts.join(' ')
-        },
-        clean: value => value.replace(/\D/g, '')
       },
       foreign_id: {
         pattern: /^.+$/, // Pas de format spécifique
