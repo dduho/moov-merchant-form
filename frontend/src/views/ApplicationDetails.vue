@@ -280,10 +280,7 @@
                     <div class="mt-1 text-gray-900">{{ formatBoolean(application?.is_foreigner) }}</div>
                   </div>
 
-                  <div class="mt-4">
-                    <label class="block text-sm font-medium" style="color: #005BA4">Carte ANID</label>
-                    <div class="mt-1 text-gray-900">{{ application?.anid_number || 'Non renseigné' }}</div>
-                  </div>
+                  <!-- ANID is shown as id_type === 'carte_anid' using the main ID fields -->
 
                   <div v-if="application?.nif_number" class="mt-4">
                     <label class="block text-sm font-medium text-gray-700">Numéro NIF</label>
@@ -1310,7 +1307,10 @@ export default {
         cni: "Carte Nationale d'Identité",
         passport: "Passeport",
         residence: "Carte de séjour",
-        elector: "Carte d'électeur"
+        elector: "Carte d'électeur",
+        driving_license: "Permis de conduire",
+        foreign_id: "Carte d'identité étrangère",
+        carte_anid: "Carte ANID"
       }
       return types[type] || type
     }

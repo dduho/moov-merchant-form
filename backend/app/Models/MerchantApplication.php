@@ -39,7 +39,6 @@ class MerchantApplication extends Model
         'id_type',
         'id_number',
         'id_expiry_date',
-        // legacy ANID fields removed; ANID is represented via 'id_type' === 'carte_anid'
         'is_foreigner',
         
         // Informations commerciales
@@ -201,6 +200,7 @@ class MerchantApplication extends Model
                 'elector' => 'Carte d\'électeur',
                 'driving_license' => 'Permis de conduire',
                 'foreign_id' => 'Carte d\'identité étrangère',
+                'carte_anid' => 'Carte ANID',
                 default => 'Non spécifié'
             }
         );
@@ -283,14 +283,9 @@ class MerchantApplication extends Model
     {
         $requiredDocs = ['id_card'];
 
-        // If identity type is the ANID card, require anid_card (ANID represented by id_type 'carte_anid')
-        if (($this->id_type ?? null) === 'carte_anid') {
-            $requiredDocs[] = 'anid_card';
-        }
-
-        if ($this->is_foreigner) {
-            $requiredDocs[] = 'residence_card';
-        }
+        // ANID uploads removed from required documents flow.
+        // If applicant is a foreigner, require residence card.
+        if ($this->is_foreigner) $requiredDocs[] = 'residence_card';
 
         $uploadedDocs = $this->documents->pluck('document_type')->toArray();
 

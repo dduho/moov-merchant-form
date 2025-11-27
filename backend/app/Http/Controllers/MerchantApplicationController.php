@@ -152,7 +152,7 @@ class MerchantApplicationController extends Controller
                 }
                 
                 // Remove document files from application data (they're handled separately)
-                $documentFields = ['id_card', 'anid_card', 'residence_card', 'residence_proof', 'business_document', 'cfe_document', 'nif_document'];
+                $documentFields = ['id_card', 'residence_card', 'residence_proof', 'business_document', 'cfe_document', 'nif_document'];
                 foreach ($documentFields as $field) {
                     unset($applicationData[$field]);
                 }
@@ -166,7 +166,6 @@ class MerchantApplicationController extends Controller
                 // Handle individual document fields - with debug logging
                 $documentFields = [
                     'id_card' => 'id_card',
-                    'anid_card' => 'anid_card',
                     'residence_card' => 'residence_card',
                     'residence_proof' => 'other',  // Map to 'other' as it's not in enum
                     'business_document' => 'business_license',  // Use correct enum value
@@ -185,13 +184,28 @@ class MerchantApplicationController extends Controller
                 
                 foreach ($documentFields as $fieldName => $documentType) {
                     if ($request->hasFile($fieldName)) {
-                        Log::info('Processing document file', [
-                            'field_name' => $fieldName,
-                            'document_type' => $documentType,
-                            'file_size' => $request->file($fieldName)->getSize(),
-                            'file_name' => $request->file($fieldName)->getClientOriginalName()
-                        ]);
-                        $this->storeDocument($application, $documentType, $request->file($fieldName), $request->ip());
+                        $files = $request->file($fieldName);
+                        if (is_array($files)) {
+                            foreach ($files as $file) {
+                                if (!$file) continue;
+                                Log::info('Processing document file (array)', [
+                                    'field_name' => $fieldName,
+                                    'document_type' => $documentType,
+                                    'file_size' => $file->getSize(),
+                                    'file_name' => $file->getClientOriginalName()
+                                ]);
+                                $this->storeDocument($application, $documentType, $file, $request->ip());
+                            }
+                        } else {
+                            $file = $files;
+                            Log::info('Processing document file', [
+                                'field_name' => $fieldName,
+                                'document_type' => $documentType,
+                                'file_size' => $file->getSize(),
+                                'file_name' => $file->getClientOriginalName()
+                            ]);
+                            $this->storeDocument($application, $documentType, $file, $request->ip());
+                        }
                     }
                 }
                 
@@ -425,21 +439,6 @@ class MerchantApplicationController extends Controller
             $incomingDocuments = $validated['documents'] ?? null;
             unset($validated['documents']);
             
-            // Retirer les champs de gestion de documents (pas des colonnes DB)
-            $documentManagementFields = [
-                'id_card', 'anid_card', 'cfe_document', 'business_document', 
-                'residence_card', 'residence_proof', 'nif_document',
-                'delete_id_card', 'delete_anid_card', 'delete_cfe_document', 
-                'delete_business_document', 'delete_residence_card', 
-                'delete_residence_proof', 'delete_nif_document',
-                'keep_id_card_ids', 'keep_anid_card_ids', 'keep_cfe_document_ids',
-                'keep_business_document_ids', 'keep_residence_card_ids',
-                'keep_residence_proof_ids', 'keep_nif_document_ids'
-            ];
-            foreach ($documentManagementFields as $field) {
-                unset($validated[$field]);
-            }
-            
             // Supprimer les champs système qui ne doivent pas être modifiés
             $protectedFields = [
                 'user_id', 'reference_number', 'submitted_at', 
@@ -457,100 +456,36 @@ class MerchantApplicationController extends Controller
             DB::transaction(function () use ($merchantApplication, $validated, $request) {
                 $merchantApplication->update($validated);
 
-                // Gestion des documents - handle individual document fields with array support
+                // Gestion des nouveaux documents si fournis - handle individual document fields
                 $documentFields = [
                     'id_card' => 'id_card',
-                    'anid_card' => 'anid_card',
                     'residence_card' => 'residence_card',
-                    'residence_proof' => 'other',
-                    'business_document' => 'business_license',
-                    'cfe_document' => 'cfe_card',
+                    'residence_proof' => 'other',  // Map to 'other' as it's not in enum
+                    'business_document' => 'business_license',  // Use correct enum value
+                    'cfe_document' => 'cfe_card',  // Use correct enum value 
                     'nif_document' => 'nif_document',
                 ];
                 
                 foreach ($documentFields as $fieldName => $documentType) {
-                    // Vérifier si on doit supprimer les documents existants
-                    $deleteValue = $request->input("delete_{$fieldName}");
-                    $shouldDelete = $deleteValue === '1' || $deleteValue === 1;
-                    
-                    // Récupérer les IDs des fichiers à garder
-                    $idsToKeep = $request->input("keep_{$fieldName}_ids", []);
-                    if (!is_array($idsToKeep)) {
-                        $idsToKeep = [$idsToKeep];
-                    }
-                    $idsToKeep = array_filter($idsToKeep); // Retirer les valeurs vides
-                    
-                    Log::info("Vérification suppression document", [
-                        'field' => $fieldName,
-                        'type' => $documentType,
-                        'delete_value' => $deleteValue,
-                        'should_delete' => $shouldDelete,
-                        'has_file' => $request->hasFile($fieldName),
-                        'ids_to_keep' => $idsToKeep
-                    ]);
-                    
-                    if ($shouldDelete) {
-                        // Supprimer tous les documents de ce type
-                        $existingDocuments = $merchantApplication->documents()
-                            ->where('document_type', $documentType)
-                            ->get();
-                        
-                        Log::info("Documents à supprimer (TOUS)", [
-                            'field' => $fieldName,
-                            'count' => $existingDocuments->count(),
-                            'docs' => $existingDocuments->pluck('id')->toArray()
-                        ]);
-                        
-                        foreach ($existingDocuments as $doc) {
-                            Log::info("Suppression document", [
-                                'id' => $doc->id,
-                                'path' => $doc->file_path
-                            ]);
-                            $this->documentStorage->delete($doc->file_path);
-                            $doc->delete();
-                        }
-                    } 
-                    // Si on a des IDs à garder, supprimer les autres
-                    elseif (!empty($idsToKeep)) {
-                        $existingDocuments = $merchantApplication->documents()
-                            ->where('document_type', $documentType)
-                            ->whereNotIn('id', $idsToKeep)
-                            ->get();
-                        
-                        Log::info("Documents à supprimer (sélectifs)", [
-                            'field' => $fieldName,
-                            'ids_to_keep' => $idsToKeep,
-                            'count_to_delete' => $existingDocuments->count(),
-                            'docs_to_delete' => $existingDocuments->pluck('id')->toArray()
-                        ]);
-                        
-                        foreach ($existingDocuments as $doc) {
-                            Log::info("Suppression document sélective", [
-                                'id' => $doc->id,
-                                'path' => $doc->file_path
-                            ]);
-                            $this->documentStorage->delete($doc->file_path);
-                            $doc->delete();
-                        }
-                    }
-                    
-                    // Vérifier si de nouveaux fichiers sont uploadés (supporte les tableaux)
                     if ($request->hasFile($fieldName)) {
-                        $files = $request->file($fieldName);
-                        
-                        // Normaliser en tableau
-                        if (!is_array($files)) {
-                            $files = [$files];
+                        // Supprimer tous les anciens documents de ce type s'ils existent
+                        $existingDocuments = $merchantApplication->documents()
+                            ->where('document_type', $documentType)
+                            ->get();
+
+                        foreach ($existingDocuments as $existingDocument) {
+                            $this->documentStorage->delete($existingDocument->file_path);
+                            $existingDocument->delete();
                         }
-                        
-                        Log::info("Ajout de nouveaux fichiers", [
-                            'field' => $fieldName,
-                            'count' => count($files)
-                        ]);
-                        
-                        // Ajouter les nouveaux documents (ne PAS supprimer les anciens, déjà géré avec keep_ids)
-                        foreach ($files as $file) {
-                            $this->storeDocument($merchantApplication, $documentType, $file, $request->ip());
+
+                        $files = $request->file($fieldName);
+                        if (is_array($files)) {
+                            foreach ($files as $file) {
+                                if (!$file) continue;
+                                $this->storeDocument($merchantApplication, $documentType, $file, $request->ip());
+                            }
+                        } else {
+                            $this->storeDocument($merchantApplication, $documentType, $files, $request->ip());
                         }
                     }
                 }

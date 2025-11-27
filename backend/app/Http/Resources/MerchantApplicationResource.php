@@ -36,10 +36,6 @@ class MerchantApplicationResource extends JsonResource
             'id_type_label' => $this->id_type_label,
             'id_number' => $this->id_number,
             'id_expiry_date' => $this->id_expiry_date?->format('Y-m-d'),
-            // Legacy ANID columns removed: represent ANID using id_type === 'carte_anid'
-            'has_anid_card' => (($this->id_type ?? null) === 'carte_anid'),
-            'anid_number' => (($this->id_type ?? null) === 'carte_anid') ? $this->id_number : null,
-            'anid_expiry_date' => (($this->id_type ?? null) === 'carte_anid') ? $this->id_expiry_date?->format('Y-m-d') : null,
             'is_foreigner' => $this->is_foreigner,
             
             // Informations commerciales

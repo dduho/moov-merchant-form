@@ -37,8 +37,8 @@ class DatabaseSeeder extends Seeder
                     ->count(3)
                     ->sequence(
                         ['document_type' => 'id_card'],
-                        ['document_type' => 'anid_card'],
                         ['document_type' => 'residence_card'],
+                        ['document_type' => 'cfe_card'],
                     )
                     ->for($app, 'merchantApplication')
                     ->create();
@@ -54,8 +54,8 @@ class DatabaseSeeder extends Seeder
                     ->count(3)
                     ->sequence(
                         ['document_type' => 'id_card'],
-                        ['document_type' => 'anid_card'],
                         ['document_type' => 'residence_card'],
+                        ['document_type' => 'cfe_card'],
                     )
                     ->for($app, 'merchantApplication') // si ta relation s'appelle merchantApplication()
                     // sinon ->state(fn() => ['merchant_application_id' => $app->id])

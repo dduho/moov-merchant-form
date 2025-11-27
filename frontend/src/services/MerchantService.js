@@ -68,6 +68,7 @@ class MerchantService {
     if (formData.idExpiryDate) {
       submitData.append('id_expiry_date', formData.idExpiryDate)
     }
+    // ANID fields removed: handled as a regular id_type ('carte_anid')
     submitData.append('is_foreigner', formData.isForeigner ? '1' : '0')
     
     // Informations commercial
@@ -157,138 +158,52 @@ class MerchantService {
       submitData.append('accept_terms', '1')
     }
     
-    // Helper function to extract file from object or return direct file
-    const getFile = (fileObj) => {
+    // Helper: convert wrapper or File into File instance
+    const toFile = (fileObj) => {
       if (!fileObj) return null
-      
-      
-      // Direct File check
       if (fileObj instanceof File) return fileObj
-      if (fileObj instanceof Blob && fileObj.name) {
-        return new File([fileObj], fileObj.name, { 
-          type: fileObj.type,
-          lastModified: fileObj.lastModified || Date.now()
-        })
-      }
-      
-      // Check for Vue proxy objects with 'dataUrl' property (base64 encoded files)
-      
-      if (fileObj && typeof fileObj === 'object' && fileObj.dataUrl && typeof fileObj.dataUrl === 'string') {
+      if (fileObj instanceof Blob && fileObj.name) return new File([fileObj], fileObj.name, { type: fileObj.type, lastModified: fileObj.lastModified || Date.now() })
+      if (fileObj && typeof fileObj === 'object' && fileObj.file instanceof File) return fileObj.file
+      if (fileObj && typeof fileObj === 'object' && fileObj.dataUrl && fileObj.name) {
         try {
-          // Convert base64 data URL to Blob synchronously
-          const dataUrl = fileObj.dataUrl
-          const arr = dataUrl.split(',')
+          const arr = fileObj.dataUrl.split(',')
           const mime = arr[0].match(/:(.*?);/)[1]
           const bstr = atob(arr[1])
           let n = bstr.length
           const u8arr = new Uint8Array(n)
-          while (n--) {
-            u8arr[n] = bstr.charCodeAt(n)
-          }
+          while (n--) u8arr[n] = bstr.charCodeAt(n)
           const blob = new Blob([u8arr], { type: mime })
-          
-          // Create File from Blob with metadata
-          const file = new File([blob], fileObj.name || 'document', {
-            type: fileObj.type || mime,
-            lastModified: fileObj.lastModified || Date.now()
-          })
-          return file
-        } catch (error) {
-          console.error('Failed to convert dataUrl to File:', error)
-        }
-      }
-      
-      // Check for Vue proxy objects with 'file' property (most common case)
-      if (fileObj && typeof fileObj === 'object' && fileObj.file) {
-        if (fileObj.file instanceof File) {
-          return fileObj.file
-        }
-        if (fileObj.file instanceof Blob) {
-          // Use metadata from the wrapper object
-          return new File([fileObj.file], fileObj.name || 'document', { 
-            type: fileObj.type || fileObj.file.type,
-            lastModified: fileObj.lastModified || Date.now()
-          })
-        }
-      }
-      
-      // Check if it's a File-like object with data property
-      if (fileObj.data instanceof File) return fileObj.data
-      if (fileObj.data instanceof Blob && fileObj.name) {
-        return new File([fileObj.data], fileObj.name, { 
-          type: fileObj.type,
-          lastModified: fileObj.lastModified || Date.now()
-        })
-      }
-      if (fileObj.value instanceof File) return fileObj.value
-      
-      // Try array access (in case it's wrapped in an array)
-      if (Array.isArray(fileObj) && fileObj.length > 0) {
-        if (fileObj[0] instanceof File) return fileObj[0]
-        if (fileObj[0] instanceof Blob && fileObj.name) {
-          return new File([fileObj[0]], fileObj.name, { 
-            type: fileObj.type,
-            lastModified: fileObj.lastModified || Date.now()
-          })
-        }
-      }
-      
-      // Try accessing properties dynamically for any File or Blob
-      if (typeof fileObj === 'object') {
-        for (const key of Object.keys(fileObj)) {
-          if (fileObj[key] instanceof File) {
-            return fileObj[key]
-          }
-          if (fileObj[key] instanceof Blob) {
-            return new File([fileObj[key]], fileObj.name || `document.${key}`, { 
-              type: fileObj.type || fileObj[key].type,
-              lastModified: fileObj.lastModified || Date.now()
-            })
-          }
+          return new File([blob], fileObj.name, { type: fileObj.type || mime, lastModified: fileObj.lastModified || Date.now() })
+        } catch (e) {
+          console.error('Failed to convert dataUrl to File:', e)
         }
       }
       return null
     }
-    
 
-    // Documents - S'assurer que ce sont des objets File valides
+    const appendFiles = (key, fileWrapper) => {
+      if (!fileWrapper) return
+      // If it's an array of wrappers
+      if (Array.isArray(fileWrapper)) {
+        fileWrapper.forEach((fw) => {
+          const f = toFile(fw)
+          if (f) submitData.append(`${key}[]`, f)
+        })
+        return
+      }
+      // single wrapper
+      const f = toFile(fileWrapper)
+      if (f) submitData.append(key, f)
+    }
+
+    // Documents - may be arrays
     if (formData.documents) {
-      
-      const file_idCard = getFile(formData.documents.idCard)
-      if (file_idCard) {
-        submitData.append('id_card', file_idCard)
-      }
-      
-      const file_anidCard = getFile(formData.documents.anidCard)
-      if (file_anidCard) {
-        submitData.append('anid_card', file_anidCard)
-      }
-      
-      const file_cfeCard = getFile(formData.documents.cfeCard)
-      if (file_cfeCard) {
-        submitData.append('cfe_document', file_cfeCard)
-      }
-      
-      // Legacy field names for backward compatibility
-      const file_residenceCard = getFile(formData.documents.residenceCard)
-      if (file_residenceCard) {
-        submitData.append('residence_card', file_residenceCard)
-      }
-      
-      const file_residenceProof = getFile(formData.documents.residenceProof)
-      if (file_residenceProof) {
-        submitData.append('residence_proof', file_residenceProof)
-      }
-      
-      const file_businessDocument = getFile(formData.documents.businessDocument)
-      if (file_businessDocument) {
-        submitData.append('business_document', file_businessDocument)
-      }
-      
-      const file_nifDocument = getFile(formData.documents.nifDocument)
-      if (file_nifDocument) {
-        submitData.append('nif_document', file_nifDocument)
-      }
+      appendFiles('id_card', formData.documents.idCard)
+      appendFiles('cfe_document', formData.documents.cfeCard)
+      appendFiles('residence_card', formData.documents.residenceCard)
+      appendFiles('residence_proof', formData.documents.residenceProof)
+      appendFiles('business_document', formData.documents.businessDocument)
+      appendFiles('nif_document', formData.documents.nifDocument)
     }
 
     // Debug: Log document processing and FormData being sent
@@ -377,6 +292,7 @@ class MerchantService {
       id_type: formData.idType || '',
       id_number: formData.idNumber || '',
       id_expiry_date: formData.idExpiryDate || '',
+      // ANID fields removed: use id_type === 'carte_anid' and `id_number` (no document upload)
       is_foreigner: formData.isForeigner ? 1 : 0,
       
       // Informations business
@@ -453,6 +369,7 @@ class MerchantService {
     submitData.append('id_type', formData.idType || '')
     submitData.append('id_number', (formData.idNumber && formData.idNumber.trim()) || '')
     submitData.append('id_expiry_date', formData.idExpiryDate || '')
+    // ANID fields removed from FormData
     submitData.append('is_foreigner', formData.isForeigner ? '1' : '0')
 
     // Informations business (required fields must always be included)
@@ -520,97 +437,47 @@ class MerchantService {
 
     // Documents - Individual fields (matching backend expectations)
     if (formData.documents) {
-      // Helper pour extraire les fichiers File d'un objet ou tableau
-      const getFiles = (docValue) => {
-        if (!docValue) return []
-        
-        const arr = Array.isArray(docValue) ? docValue : [docValue]
-        const files = []
-        
-        for (const item of arr) {
-          if (!item) continue
-          
-          // Skip uploaded files (already on server)
-          if (item.uploaded) continue
-          
-          if (item instanceof File) {
-            files.push(item)
-          } else if (item.file instanceof File) {
-            files.push(item.file)
-          } else if (item.dataUrl && item.name && item.type) {
-            // Convert dataUrl to File
-            try {
-              const arr = item.dataUrl.split(',')
-              const mime = arr[0].match(/:(.*?);/)[1]
-              const bstr = atob(arr[1])
-              let n = bstr.length
-              const u8arr = new Uint8Array(n)
-              while (n--) {
-                u8arr[n] = bstr.charCodeAt(n)
-              }
-              const blob = new Blob([u8arr], { type: mime })
-              const file = new File([blob], item.name, {
-                type: item.type || mime,
-                lastModified: item.lastModified || Date.now()
-              })
-              files.push(file)
-            } catch (error) {
-              console.error('Error reconstructing file:', error)
-            }
+      const toFile = (fileObj) => {
+        if (!fileObj) return null
+        if (fileObj.uploaded === true) return null
+        if (fileObj instanceof File) return fileObj
+        if (fileObj && typeof fileObj === 'object' && fileObj.file instanceof File) return fileObj.file
+        if (fileObj && typeof fileObj === 'object' && fileObj.dataUrl && fileObj.name) {
+          try {
+            const arr = fileObj.dataUrl.split(',')
+            const mime = arr[0].match(/:(.*?);/)[1]
+            const bstr = atob(arr[1])
+            let n = bstr.length
+            const u8arr = new Uint8Array(n)
+            while (n--) u8arr[n] = bstr.charCodeAt(n)
+            const blob = new Blob([u8arr], { type: mime })
+            return new File([blob], fileObj.name, { type: fileObj.type || mime, lastModified: fileObj.lastModified || Date.now() })
+          } catch (e) {
+            console.error('Error reconstructing file:', e)
           }
         }
-        
-        return files
+        return null
       }
-      
-      // Mapping des champs frontend vers backend
-      const documentMapping = {
-        idCard: 'id_card',
-        anidCard: 'anid_card',
-        cfeCard: 'cfe_document',
-        businessDocument: 'business_document',
-        residenceCard: 'residence_card',
-        residenceProof: 'residence_proof',
-        nifDocument: 'nif_document'
-      }
-      
-      // Pour chaque type de document
-      for (const [frontendKey, backendKey] of Object.entries(documentMapping)) {
-        const docValue = formData.documents[frontendKey]
-        const files = getFiles(docValue)
-        
-        console.log(`[Document ${frontendKey}]`, {
-          docValue,
-          filesCount: files.length,
-          isArray: Array.isArray(docValue),
-          isEmpty: !docValue || (Array.isArray(docValue) && docValue.length === 0)
-        })
-        
-        // Récupérer les fichiers uploadés existants (à garder)
-        const arr = Array.isArray(docValue) ? docValue : (docValue ? [docValue] : [])
-        const uploadedFiles = arr.filter(item => item && item.uploaded === true)
-        
-        // Si on a des fichiers uploadés à garder, envoyer leurs IDs
-        if (uploadedFiles.length > 0) {
-          const idsToKeep = uploadedFiles.map(f => f.id).filter(id => id)
-          
-          idsToKeep.forEach(id => {
-            submitData.append(`keep_${backendKey}_ids[]`, id)
+
+      const appendFiles = (key, wrapper) => {
+        if (!wrapper) return
+        if (Array.isArray(wrapper)) {
+          wrapper.forEach((w) => {
+            const f = toFile(w)
+            if (f) submitData.append(`${key}[]`, f)
           })
+          return
         }
-        
-        // Si on a de nouveaux fichiers à uploader, les envoyer
-        if (files.length > 0) {
-          files.forEach(file => {
-            submitData.append(`${backendKey}[]`, file)
-          })
-        }
-        
-        // Si aucun fichier uploadé ET aucun nouveau fichier, marquer pour suppression totale
-        if (uploadedFiles.length === 0 && files.length === 0) {
-          submitData.append(`delete_${backendKey}`, '1')
-        }
+        const f = toFile(wrapper)
+        if (f) submitData.append(key, f)
       }
+
+      appendFiles('id_card', formData.documents.idCard)
+      appendFiles('cfe_document', formData.documents.cfeCard)
+      appendFiles('business_document', formData.documents.businessDocument)
+      appendFiles('residence_card', formData.documents.residenceCard)
+      appendFiles('residence_proof', formData.documents.residenceProof)
+      appendFiles('nif_document', formData.documents.nifDocument)
     }
 
     try {

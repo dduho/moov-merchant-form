@@ -1164,7 +1164,8 @@ export default {
           'passport': 'Passeport',
           'driving_license': 'Permis de conduire',
           'residence': 'Carte de séjour',
-          'foreign_id': 'Carte d\'identité étrangère'
+          'foreign_id': 'Carte d\'identité étrangère',
+          'carte_anid': 'Carte ANID'
         }
         
         // Préparer les données pour Excel
@@ -1356,8 +1357,7 @@ export default {
         'passport': '03',      // Passeport
         'driving_license': '05', // Permis de conduire
         'residence': '07',     // Carte de séjour
-        'foreign_id': '10',     // Carte d'identité étrangère
-        'carte_anid': '12'     // Carte ANID
+        'foreign_id': '10'     // Carte d'identité étrangère
       }
       return mapping[idType] || '01'
     }

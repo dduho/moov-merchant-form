@@ -40,7 +40,7 @@ class DocumentController extends Controller
      * 
      * Body params:
      * - file: fichier à uploader (jpg, jpeg, png, pdf, max 5MB)
-     * - type: type de document (id_card, anid_card, residence_card, etc.)
+    * - type: type de document (id_card, residence_card, cfe_card, nif_document, business_license, other)
      * - description: description optionnelle
      * - merchant_application_id: ID de la candidature (optionnel)
      */
@@ -56,7 +56,7 @@ class DocumentController extends Controller
             ],
             'type' => [
                 'required',
-                'in:id_card,anid_card,residence_card,cfe_card,nif_document,business_license,other'
+                'in:id_card,residence_card,cfe_card,nif_document,business_license,other'
             ],
             'description' => 'sometimes|string|max:500|nullable',
             'merchant_application_id' => 'sometimes|exists:merchant_applications,id'
