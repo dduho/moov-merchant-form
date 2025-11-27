@@ -438,14 +438,20 @@ class MerchantApplicationController extends Controller
             // Extraire et retirer les documents des champs à mettre à jour
             $incomingDocuments = $validated['documents'] ?? null;
             unset($validated['documents']);
-            
+
             // Supprimer les champs système qui ne doivent pas être modifiés
             $protectedFields = [
-                'user_id', 'reference_number', 'submitted_at', 
+                'user_id', 'reference_number', 'submitted_at',
                 'created_at', 'updated_at', 'status', 'reviewed_at', 'reviewed_by'
             ];
-            
-            foreach ($protectedFields as $field) {
+
+            // Supprimer aussi les champs de fichiers qui ne sont pas dans fillable
+            $fileFields = [
+                'id_card', 'residence_card', 'residence_proof',
+                'business_document', 'cfe_document', 'nif_document'
+            ];
+
+            foreach (array_merge($protectedFields, $fileFields) as $field) {
                 unset($validated[$field]);
             }
 
@@ -468,16 +474,8 @@ class MerchantApplicationController extends Controller
                 
                 foreach ($documentFields as $fieldName => $documentType) {
                     if ($request->hasFile($fieldName)) {
-                        // Supprimer tous les anciens documents de ce type s'ils existent
-                        $existingDocuments = $merchantApplication->documents()
-                            ->where('document_type', $documentType)
-                            ->get();
-
-                        foreach ($existingDocuments as $existingDocument) {
-                            $this->documentStorage->delete($existingDocument->file_path);
-                            $existingDocument->delete();
-                        }
-
+                        // Ajouter les nouveaux documents sans supprimer les anciens
+                        // La suppression se fait manuellement via l'endpoint DELETE /documents/{id}
                         $files = $request->file($fieldName);
                         if (is_array($files)) {
                             foreach ($files as $file) {
@@ -492,14 +490,54 @@ class MerchantApplicationController extends Controller
             });
 
             $merchantApplication->load(['documents', 'reviewer', 'user.roles']);
-            
+
+            // Validation post-mise à jour : vérifier que les documents requis sont présents
+            $existingDocTypes = $merchantApplication->documents->pluck('document_type')->toArray();
+            $missingDocuments = [];
+
+            // Le document id_card est toujours requis
+            if (!in_array('id_card', $existingDocTypes)) {
+                $missingDocuments[] = 'Pièce d\'identité';
+            }
+
+            // Si étranger, carte de résidence requise
+            if ($merchantApplication->is_foreigner && !in_array('residence_card', $existingDocTypes)) {
+                $missingDocuments[] = 'Carte de résidence';
+            }
+
+            // Si CFE, document CFE requis
+            if ($merchantApplication->has_cfe && !in_array('cfe_card', $existingDocTypes)) {
+                $missingDocuments[] = 'Document CFE';
+            }
+
+            // Si NIF, document NIF requis
+            if ($merchantApplication->has_nif && !in_array('nif_document', $existingDocTypes)) {
+                $missingDocuments[] = 'Document NIF';
+            }
+
+            if (!empty($missingDocuments)) {
+                Log::warning('Documents requis manquants après mise à jour', [
+                    'application_id' => $merchantApplication->id,
+                    'missing_documents' => $missingDocuments,
+                    'existing_doc_types' => $existingDocTypes
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Documents requis manquants',
+                    'errors' => [
+                        'documents' => ['Les documents suivants sont requis : ' . implode(', ', $missingDocuments)]
+                    ]
+                ], 422);
+            }
+
             Log::info('Candidature mise à jour complètement', [
                 'application_id' => $merchantApplication->id,
                 'updated_by' => $user->id,
                 'updated_fields' => array_keys($validated),
                 'has_new_documents' => $request->hasFile('documents')
             ]);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Candidature mise à jour avec succès',

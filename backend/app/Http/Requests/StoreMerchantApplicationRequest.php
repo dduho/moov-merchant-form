@@ -207,7 +207,8 @@ class StoreMerchantApplicationRequest extends FormRequest
             'accept_terms' => 'required|accepted',
             
                 // Documents (fichiers) - Individual fields (support multiple files per type, max 3)
-                'id_card' => 'required|array|max:3',
+                // En mode édition, les fichiers ne sont pas obligatoires car les documents existants ne sont pas renvoyés
+                'id_card' => 'nullable|array|max:3',
             'id_card.*' => 'file|mimes:pdf,jpg,jpeg,png|max:5120',
             'cfe_document' => 'nullable|array|max:3',
             'cfe_document.*' => 'file|mimes:pdf,jpg,jpeg,png|max:5120',

@@ -581,6 +581,17 @@ class MerchantService {
       throw error
     }
   }
+
+  // Supprimer un document
+  async deleteDocument(documentId) {
+    try {
+      const response = await this.client.delete(`/documents/${documentId}`)
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la suppression du document:', error)
+      throw error
+    }
+  }
 }
 
 export default new MerchantService()

@@ -437,7 +437,8 @@
                     <label class="form-label">
                       Photo de la pièce d'identité *
                     </label>
-                    <FileUpload @file-uploaded="handleFileUpload('idCard', $event)" 
+                    <FileUpload @file-uploaded="handleFileUpload('idCard', $event)"
+                      @file-remove="handleFileRemove"
                       accept="image/*"
                       :current-file="formData.documents.idCard"
                       :has-error="!!errors.idCard"
@@ -750,7 +751,9 @@
 
                     <!-- Upload CFE Card -->
                     <div v-if="formData.hasCFE" class="mt-6">
-                      <FileUpload @file-uploaded="handleFileUpload('cfeCard', $event)" accept="image/*"
+                      <FileUpload @file-uploaded="handleFileUpload('cfeCard', $event)"
+                        @file-remove="handleFileRemove"
+                        accept="image/*"
                         :current-file="formData.documents.cfeCard" label="Photo de la carte CFE" :multiple="true" :max-files="3" />
                     </div>
                   </div>
@@ -1516,7 +1519,12 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
               
               const frontendKey = documentTypeMapping[doc.type];
               if (frontendKey) {
-                formData.value.documents[frontendKey] = documentObject;
+                // Initialiser comme tableau si pas déjà fait
+                if (!Array.isArray(formData.value.documents[frontendKey])) {
+                  formData.value.documents[frontendKey] = [];
+                }
+                // Ajouter le document au tableau
+                formData.value.documents[frontendKey].push(documentObject);
               }
             });
           }
@@ -1962,6 +1970,21 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
       setFiles([fileOrFiles])
     }
 
+    // Gestion de la suppression de fichier (appel API silencieux en arrière-plan)
+    const handleFileRemove = async (documentId) => {
+      // Appel API en arrière-plan sans bloquer l'UI
+      // Le fichier a déjà été retiré de l'affichage par le FileUpload
+      if (isEditMode.value) {
+        try {
+          await MerchantService.deleteDocument(documentId)
+        } catch (error) {
+          console.error('Erreur silencieuse lors de la suppression:', error)
+          // En cas d'erreur, on ne fait rien car le fichier est déjà retiré localement
+          // Il sera géré lors de la prochaine sauvegarde
+        }
+      }
+    }
+
     // Gestion de la localisation
     const handleLocationSelected = (location) => {
       formData.value.location = location
@@ -2359,6 +2382,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
       nextStep,
       prevStep,
       handleFileUpload,
+      handleFileRemove,
       handleLocationSelected,
       handleSignatureSaved,
       filterCities,
