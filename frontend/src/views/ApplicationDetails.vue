@@ -391,56 +391,58 @@
               <h2 class="text-xl font-semibold text-orange-600 mb-6">Documents</h2>
               
               <div v-if="application?.documents?.length > 0" class="space-y-4">
-                <div v-for="doc in application?.documents" :key="doc.id" 
-                     class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 transition-colors">
-                  <div class="flex items-center space-x-4">
-                    <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <div v-for="doc in application?.documents" :key="doc.id"
+                     class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-xl hover:bg-gray-50 transition-colors gap-3">
+                  <div class="flex items-center space-x-3 min-w-0">
+                    <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       <svg class="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <div>
-                      <h4 class="text-sm font-medium" style="color: #005BA4">{{ doc.type_label }}</h4>
-                      <p class="text-sm text-gray-500">
+                    <div class="min-w-0">
+                      <h4 class="text-sm font-medium truncate" style="color: #005BA4">{{ doc.type_label }}</h4>
+                      <p class="text-xs text-gray-500 truncate">
                         {{ doc.size || 'Taille inconnue' }}
                       </p>
                     </div>
                   </div>
-                  <div class="flex items-center space-x-3">
+                  <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
                     <span :class="[
-                      'inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full',
+                      'inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full flex-shrink-0',
                       doc.verified ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-gray-100 text-gray-700 border border-gray-200'
                     ]">
-                      <svg v-if="doc.verified" class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <svg v-if="doc.verified" class="w-3 h-3 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                       </svg>
-                      <svg v-else class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg v-else class="w-3 h-3 mr-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      {{ doc.verified ? 'Vérifié' : 'En attente' }}
+                      <span class="whitespace-nowrap">{{ doc.verified ? 'Vérifié' : 'En attente' }}</span>
                     </span>
-                    
-                    <!-- Bouton Vérifier (visible seulement si document non vérifié et user est admin) -->
-                    <button 
-                      v-if="!doc.verified && canVerifyDocuments"
-                      @click="verifyDocument(doc.id)"
-                      :disabled="loading"
-                      class="inline-flex items-center px-3 py-2 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-sm font-medium rounded-xl text-green-700 hover:from-green-100 hover:to-emerald-100 hover:border-green-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
-                      <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Vérifier
-                    </button>
 
-                    <a :href="getDocumentUrl(doc.id)"
-                       target="_blank"
-                       class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 text-sm font-medium rounded-xl text-orange-700 hover:from-orange-100 hover:to-amber-100 hover:border-orange-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200 shadow-sm hover:shadow-md">
-                      <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                      Consulter
-                    </a>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                      <!-- Bouton Vérifier (visible seulement si document non vérifié et user est admin) -->
+                      <button
+                        v-if="!doc.verified && canVerifyDocuments"
+                        @click="verifyDocument(doc.id)"
+                        :disabled="loading"
+                        class="inline-flex items-center justify-center px-3 py-2 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-sm font-medium rounded-xl text-green-700 hover:from-green-100 hover:to-emerald-100 hover:border-green-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-none">
+                        <svg class="w-4 h-4 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="hidden sm:inline">Vérifier</span>
+                      </button>
+
+                      <a :href="getDocumentUrl(doc.id)"
+                         target="_blank"
+                         class="inline-flex items-center justify-center px-3 py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 text-sm font-medium rounded-xl text-orange-700 hover:from-orange-100 hover:to-amber-100 hover:border-orange-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200 shadow-sm hover:shadow-md flex-1 sm:flex-none">
+                        <svg class="w-4 h-4 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        <span class="hidden sm:inline">Consulter</span>
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>

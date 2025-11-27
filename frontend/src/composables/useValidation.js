@@ -1,13 +1,16 @@
 /**
  * Composable pour validation en temps réel avec indicateurs visuels
  * Fournit des méthodes de validation debounced et des états visuels
+ * Utilise un état partagé (singleton) pour que tous les composants voient les mêmes validations
  */
 
 import { ref, computed } from 'vue'
 
+// État partagé entre toutes les instances (singleton pattern)
+const validations = ref({})
+const validationTimers = ref({})
+
 export function useValidation() {
-  const validations = ref({})
-  const validationTimers = ref({})
 
   /**
    * États de validation possibles
@@ -31,6 +34,45 @@ export function useValidation() {
   }
 
   /**
+   * Valide un champ de manière immédiate (sans debounce)
+   * Utilisé pour forcer la validation sans délai
+   */
+  const validateFieldImmediate = async (fieldName, value, validationFn) => {
+    // Annuler tout timer en cours
+    if (validationTimers.value[fieldName]) {
+      clearTimeout(validationTimers.value[fieldName])
+      delete validationTimers.value[fieldName]
+    }
+
+    // État en cours de validation
+    validations.value[fieldName] = {
+      state: ValidationState.VALIDATING,
+      message: ''
+    }
+
+    try {
+      const result = await validationFn(value)
+
+      if (result === true || result?.valid === true) {
+        validations.value[fieldName] = {
+          state: ValidationState.VALID,
+          message: result?.message || ''
+        }
+      } else {
+        validations.value[fieldName] = {
+          state: ValidationState.INVALID,
+          message: result?.message || result || 'Champ invalide'
+        }
+      }
+    } catch (error) {
+      validations.value[fieldName] = {
+        state: ValidationState.INVALID,
+        message: error.message || 'Erreur de validation'
+      }
+    }
+  }
+
+  /**
    * Valide un champ avec debounce
    */
   const validateField = (fieldName, value, validationFn, delay = 500) => {
@@ -49,7 +91,7 @@ export function useValidation() {
     validationTimers.value[fieldName] = setTimeout(async () => {
       try {
         const result = await validationFn(value)
-        
+
         if (result === true || result?.valid === true) {
           validations.value[fieldName] = {
             state: ValidationState.VALID,
@@ -351,23 +393,24 @@ export function useValidation() {
     // États
     validations,
     ValidationState,
-    
+
     // Méthodes principales
     validateField,
+    validateFieldImmediate,
     resetField,
     resetAll,
-    
+
     // Getters
     getFieldState,
     getFieldMessage,
     getInputClasses,
     getFieldIcon,
-    
+
     // Computed
     isAllValid,
     validationStats,
     completionScore,
-    
+
     // Validateurs prédéfinis
     validateEmail,
     validatePhone,

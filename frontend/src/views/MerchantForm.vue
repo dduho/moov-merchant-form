@@ -435,7 +435,7 @@
                   <!-- Upload pièce d'identité -->
                   <div class="mb-6">
                     <label class="form-label">
-                      Photo de la pièce d'identité *
+                      Photos de la pièce d'identité *
                     </label>
                     <FileUpload @file-uploaded="handleFileUpload('idCard', $event)"
                       @file-remove="handleFileRemove"
@@ -444,7 +444,7 @@
                       :has-error="!!errors.idCard"
                       :multiple="true"
                       :max-files="3" />
-                    <p v-if="errors.idCard" class="mt-1 text-sm text-red-600">{{ errors.idCard }}</p>
+                    <p v-if="errors.idCard" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.idCard }}</p>
                   </div>
 
                   <!-- ANID upload removed (handled via id_type + id_number only) -->
@@ -522,7 +522,7 @@
                         <option value="hotel">Hôtel</option>
                         <option value="autre">Autres</option>
                       </select>
-                      <p v-if="errors.businessType" class="mt-1 text-sm text-red-600">{{ errors.businessType }}</p>
+                      <p v-if="errors.businessType" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.businessType }}</p>
                     </div>
 
                     <div class="form-group md:col-span-2">
@@ -613,7 +613,7 @@
                           </div>
                         </div>
                       </div>
-                      <p v-if="errors.city" class="mt-1 text-sm text-red-600">{{ errors.city }}</p>
+                      <p v-if="errors.city" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.city }}</p>
                     </div>
 
                     <div class="form-group md:col-span-2">
@@ -642,7 +642,7 @@
                     
                     <div class="form-group md:col-span-2">
                       <label class="form-label flex items-center justify-between">
-                        <span>Numéro marchand *</span>
+                        <span>Numéro marchand</span>
                         <i v-if="formData.merchantPhone && !errors.merchantPhone" class="fas fa-check-circle text-green-500 text-sm"></i>
                         <i v-else-if="errors.merchantPhone" class="fas fa-exclamation-circle text-red-500 text-sm"></i>
                       </label>
@@ -754,22 +754,22 @@
                       <FileUpload @file-uploaded="handleFileUpload('cfeCard', $event)"
                         @file-remove="handleFileRemove"
                         accept="image/*"
-                        :current-file="formData.documents.cfeCard" label="Photo de la carte CFE" :multiple="true" :max-files="3" />
+                        :current-file="formData.documents.cfeCard" label="Photos de la carte CFE" :multiple="true" :max-files="3" />
                     </div>
                   </div>
 
                   <!-- Section Soumissionnaire (Commercial ou Personnel) -->
                   <div class="border-t pt-6 mt-6">
-                    <h3 class="text-base font-semibold mb-4 flex items-center dark:text-gray-400">
+                    <h3 class="text-base font-semibold mb-4 flex items-center dark:text-gray-100">
                       <i class="fas fa-user-tie text-orange-500 mr-2"></i>
                       Informations du Soumissionnaire
                     </h3>
                     
                     <!-- Note d'information si les champs ne sont pas modifiables -->
-                    <div v-if="isCommercialInfoDisabled" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div v-if="isCommercialInfoDisabled" class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
                       <div class="flex items-start">
-                        <i class="fas fa-info-circle text-blue-500 mr-2 mt-0.5"></i>
-                        <div class="text-sm text-blue-700">
+                        <i class="fas fa-info-circle text-blue-500 dark:text-blue-400 mr-2 mt-0.5"></i>
+                        <div class="text-sm text-blue-700 dark:text-blue-200">
                           <strong>Information :</strong> Ces informations ne peuvent pas être modifiées car cette candidature est liée à un utilisateur spécifique.
                         </div>
                       </div>
@@ -784,7 +784,7 @@
                           class="form-input h-12" :class="{ 'border-red-500': errors.commercialLastName }"
                           placeholder="Nom" :required="isCommercial || isPersonnel" :disabled="isSubmitterFieldsDisabled || isCommercialInfoDisabled"
                           :title="(isSubmitterFieldsDisabled || isCommercialInfoDisabled) ? 'Non modifiable - Candidature liée à un utilisateur' : ''">
-                        <p v-if="errors.commercialLastName" class="mt-1 text-sm text-red-600">{{ errors.commercialLastName }}</p>
+                        <p v-if="errors.commercialLastName" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.commercialLastName }}</p>
                       </div>
 
                       <div class="form-group">
@@ -795,7 +795,7 @@
                           class="form-input h-12" :class="{ 'border-red-500': errors.commercialFirstName }"
                           placeholder="Prénoms" :required="isCommercial || isPersonnel" :disabled="isSubmitterFieldsDisabled || isCommercialInfoDisabled"
                           :title="(isSubmitterFieldsDisabled || isCommercialInfoDisabled) ? 'Non modifiable - Candidature liée à un utilisateur' : ''">
-                        <p v-if="errors.commercialFirstName" class="mt-1 text-sm text-red-600">{{ errors.commercialFirstName }}</p>
+                        <p v-if="errors.commercialFirstName" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.commercialFirstName }}</p>
                       </div>
 
                       <div class="form-group">
@@ -806,7 +806,7 @@
                           :class="{ 'border-red-500': errors.commercialPhone }"
                           :required="isCommercial || isPersonnel" :disabled="isSubmitterFieldsDisabled || isCommercialInfoDisabled"
                           :title="(isSubmitterFieldsDisabled || isCommercialInfoDisabled) ? 'Non modifiable - Candidature liée à un utilisateur' : ''" />
-                        <p v-if="errors.commercialPhone" class="mt-1 text-sm text-red-600">{{ errors.commercialPhone }}</p>
+                        <p v-if="errors.commercialPhone" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.commercialPhone }}</p>
                       </div>
                     </div>
                   </div>
@@ -1528,7 +1528,21 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
               }
             });
           }
-          
+
+          // Nettoyer les erreurs pour afficher les bordures vertes sur les champs valides
+          errors.value = {};
+
+          // Forcer la validation de tous les ValidatedInput après le chargement
+          await nextTick();
+          await Promise.all([
+            lastNameInput.value?.forceValidate?.(),
+            firstNameInput.value?.forceValidate?.(),
+            birthDateInput.value?.forceValidate?.(),
+            genderInput.value?.forceValidate?.(),
+            emailInput.value?.forceValidate?.(),
+            addressInput.value?.forceValidate?.()
+          ].filter(Boolean));
+
           // logs retirés
         } else {
           throw new Error('Aucune donnée reçue');
@@ -1803,7 +1817,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
 
         // Require photo of identity (id_card) — must be present
         if (!formData.value.documents || !formData.value.documents.idCard) {
-          errors.value.idCard = "La photo de la pièce d'identité est obligatoire"
+          errors.value.idCard = "Au moins une photo de la pièce d'identité est obligatoire"
         }
 
         // ANID handled as id_type 'carte_anid' using idNumber only (no document upload required)
@@ -1819,8 +1833,7 @@ Tout différend portant sur la validité, l'interprétation ou l'exécution des 
         if (!formData.value.region) errors.value.region = 'Champ obligatoire'
         if (!formData.value.city) errors.value.city = 'Champ obligatoire'
         if (!formData.value.usageType) errors.value.usageType = 'Champ obligatoire'
-        if (!formData.value.merchantPhone) errors.value.merchantPhone = 'Champ obligatoire'
-        // businessPhone is now optional, no validation needed
+        // merchantPhone et businessPhone sont optionnels
         
         // Validate commercial info if user is commercial or personnel
         if (isCommercial.value || isPersonnel.value) {

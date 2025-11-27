@@ -189,13 +189,14 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'validation-change'])
 
-const { 
-  validateField, 
-  getFieldState, 
-  getFieldMessage, 
-  getInputClasses, 
+const {
+  validateField,
+  validateFieldImmediate,
+  getFieldState,
+  getFieldMessage,
+  getInputClasses,
   getFieldIcon,
-  ValidationState 
+  ValidationState
 } = useValidation()
 
 const localValue = ref(props.modelValue)
@@ -240,9 +241,9 @@ const handleBlur = () => {
 }
 
 // Méthode pour forcer la validation (appelée depuis le parent)
-const forceValidate = () => {
+const forceValidate = async () => {
   if (props.validationFn) {
-    validateField(props.fieldName, localValue.value, props.validationFn, 0)
+    await validateFieldImmediate(props.fieldName, localValue.value, props.validationFn)
   }
 }
 
