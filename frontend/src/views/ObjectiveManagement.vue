@@ -920,17 +920,36 @@ export default {
       const targetYear = objective.target_year
       const currentMonth = now.getMonth() + 1
       const currentYear = now.getFullYear()
-      
+
       const isPast = targetYear < currentYear || (targetYear === currentYear && targetMonth < currentMonth)
-      
+      const isCurrent = targetYear === currentYear && targetMonth === currentMonth
+      const isFuture = targetYear > currentYear || (targetYear === currentYear && targetMonth > currentMonth)
+
+      // Mois passé
       if (isPast) {
         return progress >= 100 ? 'fas fa-check-circle' : 'fas fa-times-circle'
       }
-      
-      if (progress >= 90) return 'fas fa-check-circle'
-      if (progress >= 70) return 'fas fa-thumbs-up'
-      if (progress >= 50) return 'fas fa-clock'
-      return 'fas fa-exclamation-triangle'
+
+      // Mois futur
+      if (isFuture) {
+        if (progress >= 50) return 'fas fa-thumbs-up'
+        if (progress > 0) return 'fas fa-play-circle'
+        return 'fas fa-calendar'
+      }
+
+      // Mois en cours - vérifier le retard par rapport au jour du mois
+      if (isCurrent) {
+        const currentDay = now.getDate()
+        const daysInMonth = new Date(currentYear, currentMonth, 0).getDate()
+        const expectedProgress = (currentDay / daysInMonth) * 100
+
+        if (progress >= 90) return 'fas fa-check-circle'
+        if (progress >= expectedProgress) return 'fas fa-thumbs-up'
+        if (progress >= expectedProgress * 0.8) return 'fas fa-clock'
+        return 'fas fa-exclamation-triangle'
+      }
+
+      return 'fas fa-calendar'
     }
 
     const getObjectiveStatusText = (objective) => {
@@ -940,17 +959,36 @@ export default {
       const targetYear = objective.target_year
       const currentMonth = now.getMonth() + 1
       const currentYear = now.getFullYear()
-      
+
       const isPast = targetYear < currentYear || (targetYear === currentYear && targetMonth < currentMonth)
-      
+      const isCurrent = targetYear === currentYear && targetMonth === currentMonth
+      const isFuture = targetYear > currentYear || (targetYear === currentYear && targetMonth > currentMonth)
+
+      // Mois passé
       if (isPast) {
         return progress >= 100 ? 'Objectif atteint' : 'Objectif manqué'
       }
-      
-      if (progress >= 90) return 'Excellent'
-      if (progress >= 70) return 'Bon'
-      if (progress >= 50) return 'Moyen'
-      return 'En retard'
+
+      // Mois futur - pas de notion de retard
+      if (isFuture) {
+        if (progress >= 50) return 'Bon démarrage'
+        if (progress > 0) return 'Démarré'
+        return 'À venir'
+      }
+
+      // Mois en cours - calculer le retard par rapport au jour du mois
+      if (isCurrent) {
+        const currentDay = now.getDate()
+        const daysInMonth = new Date(currentYear, currentMonth, 0).getDate()
+        const expectedProgress = (currentDay / daysInMonth) * 100
+
+        if (progress >= 90) return 'Excellent'
+        if (progress >= expectedProgress) return 'Dans les temps'
+        if (progress >= expectedProgress * 0.8) return 'Légèrement en retard'
+        return 'En retard'
+      }
+
+      return 'À venir'
     }
 
     const editObjective = (objective) => {
