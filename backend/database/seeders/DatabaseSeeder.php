@@ -17,6 +17,9 @@ class DatabaseSeeder extends Seeder
         // Créer les utilisateurs par défaut
         $this->call(UserSeeder::class);
         
+        // Créer la hiérarchie géographique (Régions, Préfectures, Communes du Togo)
+        $this->call(GeographicHierarchySeeder::class);
+        
         // (facultatif) repartir propre
         \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         \App\Models\ApplicationDocument::truncate();

@@ -22,7 +22,8 @@ class User extends Authenticatable
         'is_blocked',
         'must_change_password',
         'last_login_at',
-        'password_changed_at'
+        'password_changed_at',
+        'organization_id'
     ];
 
     protected $hidden = [
@@ -56,6 +57,38 @@ class User extends Authenticatable
     public function isPersonnel()
     {
         return $this->hasRole('personnel');
+    }
+
+    /**
+     * Check if the user is a dealer.
+     */
+    public function isDealer()
+    {
+        return $this->hasRole('dealer');
+    }
+
+    /**
+     * Check if the user is Moov staff (admin).
+     */
+    public function isMoovStaff()
+    {
+        return $this->hasRole('admin') || $this->hasRole('moov_staff');
+    }
+
+    /**
+     * Get the organization this user belongs to.
+     */
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * Get the points of sale created by this user.
+     */
+    public function pointsOfSale()
+    {
+        return $this->hasMany(PointOfSale::class, 'created_by');
     }
 
     public function canSubmitApplications()
