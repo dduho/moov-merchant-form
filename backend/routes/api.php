@@ -9,7 +9,11 @@ use App\Http\Controllers\{
     AuthController,
     NotificationController,
     UserManagementController,
-    ObjectiveController
+    ObjectiveController,
+    PointOfSaleController,
+    OrganizationController,
+    GeographyController,
+    ExportController
 };
 
 // Routes d'authentification
@@ -165,6 +169,66 @@ Route::middleware(['throttle:api'])->group(function () {
         Route::delete('/{objective}', [ObjectiveController::class, 'destroy'])->name('destroy');
         // Renvoie la liste fusionnée (objectifs particuliers + objectifs globaux appliqués virtuellement) pour un commercial
         Route::get('/for-commercial/{user}', [ObjectiveController::class, 'forCommercial'])->name('for-commercial');
+    });
+    
+    // ============================================================
+    // ROUTES POINTS DE VENTE (PointOfSaleController)
+    // ============================================================
+    Route::middleware(['web', 'auth:sanctum', 'force.password.change'])->prefix('point-of-sales')->name('pdv.')->group(function () {
+        Route::get('/', [PointOfSaleController::class, 'index'])->name('index');
+        Route::post('/', [PointOfSaleController::class, 'store'])->name('store');
+        Route::get('/regions', [PointOfSaleController::class, 'getRegions'])->name('regions');
+        Route::get('/map-data', [PointOfSaleController::class, 'mapData'])->name('map-data');
+        Route::get('/validation-queue', [PointOfSaleController::class, 'validationQueue'])->name('validation-queue');
+        Route::post('/check-proximity', [PointOfSaleController::class, 'checkProximity'])->name('check-proximity');
+        Route::get('/{pointOfSale}', [PointOfSaleController::class, 'show'])->name('show');
+        Route::put('/{pointOfSale}', [PointOfSaleController::class, 'update'])->name('update');
+        Route::delete('/{pointOfSale}', [PointOfSaleController::class, 'destroy'])->name('destroy');
+        Route::post('/{pointOfSale}/validate', [PointOfSaleController::class, 'validate'])->name('validate');
+        Route::post('/{pointOfSale}/reject', [PointOfSaleController::class, 'reject'])->name('reject');
+    });
+    
+    // ============================================================
+    // ROUTES ORGANISATIONS (OrganizationController)
+    // ============================================================
+    Route::middleware(['web', 'auth:sanctum', 'force.password.change'])->prefix('organizations')->name('organizations.')->group(function () {
+        Route::get('/', [OrganizationController::class, 'index'])->name('index');
+        Route::get('/list', [OrganizationController::class, 'list'])->name('list');
+        Route::post('/', [OrganizationController::class, 'store'])->name('store');
+        Route::get('/{organization}', [OrganizationController::class, 'show'])->name('show');
+        Route::put('/{organization}', [OrganizationController::class, 'update'])->name('update');
+        Route::delete('/{organization}', [OrganizationController::class, 'destroy'])->name('destroy');
+        Route::post('/{organization}/toggle-active', [OrganizationController::class, 'toggleActive'])->name('toggle-active');
+        Route::get('/{organization}/users', [OrganizationController::class, 'users'])->name('users');
+        Route::get('/{organization}/pdvs', [OrganizationController::class, 'pdvs'])->name('pdvs');
+    });
+    
+    // ============================================================
+    // ROUTES GEOGRAPHIE (GeographyController)
+    // ============================================================
+    Route::prefix('geography')->name('geography.')->group(function () {
+        Route::get('/regions', [GeographyController::class, 'regions'])->name('regions');
+        Route::get('/prefectures', [GeographyController::class, 'prefectures'])->name('prefectures');
+        Route::get('/communes', [GeographyController::class, 'communes'])->name('communes');
+        Route::get('/cantons', [GeographyController::class, 'cantons'])->name('cantons');
+        Route::get('/villes', [GeographyController::class, 'villes'])->name('villes');
+        Route::get('/children', [GeographyController::class, 'children'])->name('children');
+        Route::get('/full-hierarchy', [GeographyController::class, 'fullHierarchy'])->name('full-hierarchy');
+        Route::get('/search', [GeographyController::class, 'search'])->name('search');
+        Route::get('/{location}', [GeographyController::class, 'show'])->name('show');
+    });
+    
+    // ============================================================
+    // ROUTES EXPORT (ExportController)
+    // ============================================================
+    Route::middleware(['web', 'auth:sanctum', 'force.password.change'])->prefix('export')->name('export.')->group(function () {
+        Route::get('/xml', [ExportController::class, 'exportXml'])->name('xml');
+        Route::get('/xml/organization/{organizationId}', [ExportController::class, 'exportByOrganization'])->name('xml-organization');
+        Route::get('/xml/region/{region}', [ExportController::class, 'exportByRegion'])->name('xml-region');
+        Route::get('/csv', [ExportController::class, 'exportCsv'])->name('csv');
+        Route::get('/statistics', [ExportController::class, 'statistics'])->name('statistics');
+        Route::get('/heatmap', [ExportController::class, 'heatMapData'])->name('heatmap');
+        Route::get('/commercial-stats', [ExportController::class, 'commercialStats'])->name('commercial-stats');
     });
     
     // Route de test pour vérifier FormData

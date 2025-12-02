@@ -9,24 +9,34 @@ class RoleSeeder extends Seeder
 {
     public function run()
     {
-        Role::create([
-            'name' => 'Commercial',
-            'slug' => 'commercial',
-        ]);
+        Role::firstOrCreate(
+            ['slug' => 'commercial'],
+            ['name' => 'Commercial']
+        );
 
-        Role::create([
-            'name' => 'Admin',
-            'slug' => 'admin',
-        ]);
+        Role::firstOrCreate(
+            ['slug' => 'admin'],
+            ['name' => 'Admin']
+        );
 
-        Role::create([
-            'name' => 'Personnel',
-            'slug' => 'personnel',
-        ]);
+        Role::firstOrCreate(
+            ['slug' => 'personnel'],
+            ['name' => 'Personnel']
+        );
 
-        Role::create([
-            'name' => 'Client',
-            'slug' => 'client',
-        ]);
+        Role::firstOrCreate(
+            ['slug' => 'client'],
+            ['name' => 'Client']
+        );
+
+        Role::firstOrCreate(
+            ['slug' => 'dealer'],
+            ['name' => 'Dealer']
+        );
+
+        Role::firstOrCreate(
+            ['slug' => 'moov_staff'],
+            ['name' => 'Moov Staff']
+        );
     }
 }

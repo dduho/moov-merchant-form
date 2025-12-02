@@ -16,6 +16,12 @@ const NotificationPage = () => import('../views/NotificationPage.vue')
 const UserManagement = () => import('../views/UserManagement.vue')
 const ObjectiveManagement = () => import('../views/ObjectiveManagement.vue')
 
+// PDV Universe - New views
+const PointOfSaleForm = () => import('../views/PointOfSaleForm.vue')
+const MapView = () => import('../views/MapView.vue')
+const ValidationQueue = () => import('../views/ValidationQueue.vue')
+const Statistics = () => import('../views/Statistics.vue')
+
 const routes = [
   {
     path: '/',
@@ -117,6 +123,70 @@ const routes = [
       title: 'Gestion des objectifs',
       requiresAuth: true,
       requiresAdmin: true
+    }
+  },
+  // PDV Universe Routes
+  {
+    path: '/pdv/create',
+    name: 'PdvCreate',
+    component: PointOfSaleForm,
+    meta: {
+      title: 'Nouveau Point de Vente',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/pdv/success',
+    name: 'PdvSuccess',
+    component: FormSuccess,
+    meta: {
+      title: 'PDV soumis avec succès'
+    }
+  },
+  {
+    path: '/pdv/:id',
+    name: 'PdvDetails',
+    component: ApplicationDetails, // Reuse existing component
+    meta: {
+      title: 'Détails du PDV',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/pdv/:id/edit',
+    name: 'PdvEdit',
+    component: PointOfSaleForm,
+    meta: {
+      title: 'Modifier le PDV',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/map',
+    name: 'MapView',
+    component: MapView,
+    meta: {
+      title: 'Carte des PDV',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/validation',
+    name: 'ValidationQueue',
+    component: ValidationQueue,
+    meta: {
+      title: 'File de Validation',
+      requiresAuth: true,
+      requiresAdmin: true
+    }
+  },
+  {
+    path: '/statistics',
+    name: 'Statistics',
+    component: Statistics,
+    meta: {
+      title: 'Statistiques',
+      requiresAuth: true
     }
   }
 ]
