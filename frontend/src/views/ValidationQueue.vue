@@ -217,8 +217,10 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { usePointOfSaleStore } from '../stores/pointOfSale'
+import { useNotification } from '../composables/useNotification'
 
 const pdvStore = usePointOfSaleStore()
+const notify = useNotification()
 
 // State
 const loading = computed(() => pdvStore.loading)
@@ -245,9 +247,10 @@ const validatePdv = async (pdv) => {
   processingId.value = pdv.id
   try {
     await pdvStore.validatePdv(pdv.id)
+    notify.success(`PDV "${pdv.nom_point}" validé avec succès`)
   } catch (error) {
     console.error('Error validating PDV:', error)
-    alert('Erreur lors de la validation du PDV')
+    notify.error('Une erreur est survenue lors de la validation. Veuillez réessayer.')
   } finally {
     processingId.value = null
   }
@@ -266,9 +269,10 @@ const rejectPdv = async () => {
   try {
     await pdvStore.rejectPdv(rejectModal.pdv.id, rejectModal.reason)
     rejectModal.show = false
+    notify.success(`PDV "${rejectModal.pdv.nom_point}" rejeté`)
   } catch (error) {
     console.error('Error rejecting PDV:', error)
-    alert('Erreur lors du rejet du PDV')
+    notify.error('Une erreur est survenue lors du rejet. Veuillez réessayer.')
   } finally {
     processingId.value = null
   }

@@ -170,6 +170,9 @@
 import { ref, computed, onMounted } from 'vue'
 import StatsCards from '../components/StatsCards.vue'
 import ExportService from '../services/ExportService'
+import { useNotification } from '../composables/useNotification'
+
+const notify = useNotification()
 
 // State
 const loading = ref(false)
@@ -223,9 +226,10 @@ const exportCsv = async () => {
   try {
     const blob = await ExportService.exportCsv()
     ExportService.downloadBlob(blob, `pdv_export_${new Date().toISOString().slice(0, 10)}.csv`)
+    notify.success('Export CSV téléchargé avec succès')
   } catch (error) {
     console.error('Error exporting CSV:', error)
-    alert('Erreur lors de l\'export CSV')
+    notify.error('Une erreur est survenue lors de l\'export CSV. Veuillez réessayer.')
   } finally {
     exporting.value = false
   }
@@ -236,9 +240,10 @@ const exportXml = async () => {
   try {
     const blob = await ExportService.exportXml()
     ExportService.downloadBlob(blob, `pdv_export_${new Date().toISOString().slice(0, 10)}.xml`)
+    notify.success('Export XML téléchargé avec succès')
   } catch (error) {
     console.error('Error exporting XML:', error)
-    alert('Erreur lors de l\'export XML')
+    notify.error('Une erreur est survenue lors de l\'export XML. Veuillez réessayer.')
   } finally {
     exporting.value = false
   }

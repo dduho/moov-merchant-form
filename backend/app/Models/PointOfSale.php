@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ProximityAlertService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -260,8 +261,6 @@ class PointOfSale extends Model
      */
     public function distanceTo(float $lat, float $lng): float
     {
-        $earthRadius = 6371000; // meters
-
         $latFrom = deg2rad($this->latitude);
         $lonFrom = deg2rad($this->longitude);
         $latTo = deg2rad($lat);
@@ -276,7 +275,7 @@ class PointOfSale extends Model
         
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
 
-        return $earthRadius * $c;
+        return ProximityAlertService::EARTH_RADIUS_METERS * $c;
     }
 
     /**

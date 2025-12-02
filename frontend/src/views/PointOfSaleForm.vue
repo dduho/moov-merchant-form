@@ -475,6 +475,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePointOfSaleStore } from '../stores/pointOfSale'
 import { useOrganizationStore } from '../stores/organization'
+import { useNotification } from '../composables/useNotification'
 import GeographySelector from '../components/GeographySelector.vue'
 import GpsCapture from '../components/GpsCapture.vue'
 import ProximityAlert from '../components/ProximityAlert.vue'
@@ -482,6 +483,7 @@ import ProximityAlert from '../components/ProximityAlert.vue'
 const router = useRouter()
 const pdvStore = usePointOfSaleStore()
 const orgStore = useOrganizationStore()
+const notify = useNotification()
 
 // State
 const currentStep = ref(1)
@@ -628,7 +630,7 @@ const submitForm = async () => {
 
   // Check if proximity was detected but not acknowledged
   if (proximityAlert.value?.has_nearby && !proximityAcknowledged.value) {
-    alert('Veuillez confirmer que vous souhaitez créer ce PDV malgré la proximité avec d\'autres PDV existants.')
+    notify.warning('Veuillez confirmer que vous souhaitez créer ce PDV malgré la proximité avec d\'autres PDV existants.')
     return
   }
 
@@ -646,10 +648,12 @@ const submitForm = async () => {
     }
 
     await pdvStore.createPdv(data)
+    notify.success('PDV créé avec succès!')
     router.push({ name: 'PdvSuccess' })
   } catch (error) {
     console.error('Error submitting form:', error)
-    alert(error.response?.data?.error || 'Une erreur est survenue lors de l\'envoi du formulaire')
+    const errorMessage = error.response?.data?.error || 'Une erreur est survenue lors de l\'envoi du formulaire. Veuillez réessayer.'
+    notify.error(errorMessage)
   } finally {
     submitting.value = false
   }

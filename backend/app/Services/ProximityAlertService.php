@@ -9,6 +9,11 @@ use Illuminate\Support\Collection;
 class ProximityAlertService
 {
     /**
+     * Earth's radius in meters (used for distance calculations).
+     */
+    public const EARTH_RADIUS_METERS = 6371000;
+
+    /**
      * Check for nearby PDVs within the configured distance.
      *
      * @param float $latitude
@@ -84,8 +89,6 @@ class ProximityAlertService
      */
     public function calculateDistance(float $lat1, float $lon1, float $lat2, float $lon2): float
     {
-        $earthRadius = 6371000; // meters
-
         $latFrom = deg2rad($lat1);
         $lonFrom = deg2rad($lon1);
         $latTo = deg2rad($lat2);
@@ -100,7 +103,7 @@ class ProximityAlertService
         
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
 
-        return $earthRadius * $c;
+        return self::EARTH_RADIUS_METERS * $c;
     }
 
     /**
