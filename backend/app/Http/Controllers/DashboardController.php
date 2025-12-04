@@ -233,13 +233,13 @@ class DashboardController extends Controller
             
             // Temps de réponse moyen pour la période courante
             // Ne calculer que pour les candidatures approuvées ou rejetées (réellement traitées)
+            // Utiliser created_at si submitted_at est null
             $avgResponseTimeQuery = MerchantApplication::whereNotNull('reviewed_at')
-                ->whereNotNull('submitted_at')
                 ->whereIn('status', ['approved', 'rejected', 'exported_for_creation', 'exported_for_update']);
             $avgResponseTimeQuery = $this->applyPeriodFilter($avgResponseTimeQuery, $period);
             $avgResponseTimeQuery = $this->applyUserFilter($avgResponseTimeQuery, $request);
             $avgResponseTime = $avgResponseTimeQuery
-                ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, submitted_at, reviewed_at)) as avg')
+                ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, COALESCE(submitted_at, created_at), reviewed_at)) as avg')
                 ->value('avg');
             
             return response()->json([
@@ -792,9 +792,10 @@ class DashboardController extends Controller
     private function calculateAvgProcessingTime(): float
     {
         $avg = MerchantApplication::whereNotNull('reviewed_at')
-            ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, submitted_at, reviewed_at)) as avg')
+            ->whereIn('status', ['approved', 'rejected', 'exported_for_creation', 'exported_for_update'])
+            ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, COALESCE(submitted_at, created_at), reviewed_at)) as avg')
             ->value('avg');
-        
+
         return round($avg ?? 0, 1);
     }
     

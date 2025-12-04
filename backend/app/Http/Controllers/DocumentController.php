@@ -365,34 +365,89 @@ class DocumentController extends Controller
     public function destroy(ApplicationDocument $document): JsonResponse
     {
         try {
+            // Vérifier si le document appartient à une candidature
+            if ($document->merchant_application_id) {
+                $application = $document->merchantApplication;
+
+                // Compter combien de documents du même type existent pour cette candidature
+                $sameTypeCount = ApplicationDocument::where('merchant_application_id', $application->id)
+                    ->where('document_type', $document->document_type)
+                    ->count();
+
+                Log::info('Tentative de suppression de document', [
+                    'document_id' => $document->id,
+                    'document_type' => $document->document_type,
+                    'application_id' => $application->id,
+                    'same_type_count' => $sameTypeCount
+                ]);
+
+                // Vérifier si ce type de document est requis
+                $isRequired = false;
+                $documentLabel = '';
+
+                switch ($document->document_type) {
+                    case 'id_card':
+                        $isRequired = true; // Toujours requis
+                        $documentLabel = 'Pièce d\'identité';
+                        break;
+                    case 'residence_card':
+                        $isRequired = $application->is_foreigner;
+                        $documentLabel = 'Carte de résidence';
+                        break;
+                    case 'cfe_card':
+                        $isRequired = $application->has_cfe;
+                        $documentLabel = 'Document CFE';
+                        break;
+                    case 'nif_document':
+                        $isRequired = $application->has_nif;
+                        $documentLabel = 'Document NIF';
+                        break;
+                }
+
+                // Si c'est le dernier document de ce type et qu'il est requis, refuser la suppression
+                if ($isRequired && $sameTypeCount <= 1) {
+                    Log::warning('Tentative de suppression du dernier document requis', [
+                        'document_id' => $document->id,
+                        'document_type' => $document->document_type,
+                        'application_id' => $application->id,
+                        'user_id' => auth()->id()
+                    ]);
+
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Impossible de supprimer le dernier document de type \"{$documentLabel}\". Ce document est obligatoire pour cette candidature."
+                    ], 422);
+                }
+            }
+
             $documentId = $document->id;
             $filePath = $document->file_path;
-            
+
             // Supprimer le fichier physique
             if (Storage::exists($filePath)) {
                 Storage::delete($filePath);
             }
-            
+
             // Supprimer l'entrée en base (soft delete si configuré)
             $document->delete();
-            
+
             Log::warning('Document supprimé', [
                 'document_id' => $documentId,
                 'file_path' => $filePath,
                 'deleted_by' => auth()->id()
             ]);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Document supprimé avec succès'
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Erreur suppression document', [
                 'document_id' => $document->id,
                 'error' => $e->getMessage()
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la suppression',

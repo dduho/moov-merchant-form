@@ -113,7 +113,7 @@ class StoreMerchantApplicationRequest extends FormRequest
             'signature.required' => 'La signature est obligatoire',
             'accept_terms.accepted' => 'Vous devez accepter les conditions générales',
             // Document validation messages
-            'id_card.required' => 'La photo de la pièce d\'identité est obligatoire',
+            'id_card.required' => 'Au moins une photo de la pièce d\'identité est obligatoire',
             'id_card.*.mimes' => 'La pièce d\'identité doit être un fichier PDF, JPG ou PNG',
             'id_card.*.max' => 'La pièce d\'identité ne doit pas dépasser 5MB',
             'cfe_document.mimes' => 'Le document CFE doit être un fichier PDF, JPG ou PNG',
@@ -207,7 +207,8 @@ class StoreMerchantApplicationRequest extends FormRequest
             'accept_terms' => 'required|accepted',
             
                 // Documents (fichiers) - Individual fields (support multiple files per type, max 3)
-                'id_card' => 'required|array|max:3',
+                // En mode édition, les fichiers ne sont pas obligatoires car les documents existants ne sont pas renvoyés
+                'id_card' => 'nullable|array|max:3',
             'id_card.*' => 'file|mimes:pdf,jpg,jpeg,png|max:5120',
             'cfe_document' => 'nullable|array|max:3',
             'cfe_document.*' => 'file|mimes:pdf,jpg,jpeg,png|max:5120',

@@ -69,7 +69,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['file-uploaded'])
+const emit = defineEmits(['file-uploaded', 'file-remove'])
 
 const { error } = useNotification()
 
@@ -151,8 +151,18 @@ const files = ref([])
     }
     
     const removeFileAt = (idx) => {
+      const fileToRemove = files.value[idx]
+
+      // Si le fichier a un ID, demander au parent de le supprimer via l'API
+      if (fileToRemove && fileToRemove.id) {
+        emit('file-remove', fileToRemove.id)
+      }
+
+      // Retirer le fichier de l'affichage local
       files.value.splice(idx, 1)
       fileInput.value.value = ''
+
+      // Émettre la liste mise à jour au parent
       emit('file-uploaded', files.value.slice())
     }
     
@@ -165,6 +175,7 @@ const files = ref([])
       arr.forEach((f) => {
         if (!f) return
         const fileData = {
+          id: f.id || null,  // ID du document en base de données
           name: f.name || f.original_name || 'document',
           type: f.type || f.mime_type || '',
           size: f.size || f.file_size || 0,

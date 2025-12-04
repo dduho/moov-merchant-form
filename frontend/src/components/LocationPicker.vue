@@ -41,25 +41,25 @@
     </div>
     
     <!-- Sélection manuelle des coordonnées -->
-    <details class="border border-gray-200 rounded-xl" open>
-      <summary class="p-4 dark:text-gray-400 cursor-pointer text-sm font-medium text-gray-700 hover:bg-gray-50">
+    <details class="border border-gray-200 dark:border-gray-600 rounded-xl" open>
+      <summary class="p-4 cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
         <i class="fas fa-pencil-alt mr-2 text-orange-500"></i>
         Saisie manuelle des coordonnées
       </summary>
-      <div class="p-4 border-t border-gray-200 space-y-4">
+      <div class="p-4 border-t border-gray-200 dark:border-gray-600 space-y-4">
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="form-label dark:text-gray-400">Latitude</label>
-            <input v-model.number="manualLat" 
-                   type="number" 
+            <label class="form-label">Latitude</label>
+            <input v-model.number="manualLat"
+                   type="number"
                    step="any"
                    class="form-input"
                    placeholder="Ex: 6.1319">
           </div>
           <div>
-            <label class="form-label dark:text-gray-400">Longitude</label>
-            <input v-model.number="manualLng" 
-                   type="number" 
+            <label class="form-label">Longitude</label>
+            <input v-model.number="manualLng"
+                   type="number"
                    step="any"
                    class="form-input"
                    placeholder="Ex: 1.2225">
