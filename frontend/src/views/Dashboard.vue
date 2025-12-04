@@ -1358,7 +1358,7 @@ export default {
         'driving_license': '05', // Permis de conduire
         'residence': '07',     // Carte de séjour
         'foreign_id': '10',     // Carte d'identité étrangère
-        'carte_anid': '12'      // Carte d'identité étrangère
+        'carte_anid': '12'      // Carte anid
       }
       return mapping[idType] || '01'
     }
